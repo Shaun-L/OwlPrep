@@ -15,9 +15,9 @@ OwlPrep is an AI-powered study application designed to enhance students' learnin
 
 ## Tech Stack
 
-- **Frontend**: React.js with TypeScript for a responsive and intuitive user experience.
-- **Backend**: Flask/Django with Python, integrating NLP models and other AI functionalities.
-- **Database**: PostgreSQL or Firebase for secure and scalable data storage.
+- **Frontend**: JS React, with HTML/CSS
+- **Backend**: Flask with Python, integrating NLP models and other AI functionalities.
+- **Database**: Firebase for secure and scalable data storage.
 - **AI Models**: Utilizes open-source NLP models from platforms like Hugging Face for text extraction, quiz generation, and grading.
 - **Authentication**: Firebase and Google OAuth for secure login and registration.
 
@@ -25,7 +25,7 @@ OwlPrep is an AI-powered study application designed to enhance students' learnin
 
 1. **Clone the repository**:  
    ```bash
-   git clone [https://github.com/yourusername/owlprep.git](https://github.com/Shaun-L/OwlPrep.git)
+   git clone [https://github.com/Shaun-L/OwlPrep.git]
    cd owlprep
 
 #(TODO: Need to finish this README)
