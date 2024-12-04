@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { insertData, deleteData, listUsers } from "./firebaseUtils";
 import "./App.css";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import SignUp from "./pages/SignUp";
+import Home from "./pages/Home";
 
 function App() {
   const [users, setUsers] = useState([]);
@@ -54,53 +57,16 @@ function App() {
 
   return (
     <>
-      <div className="card">
-        <h1>Firebase Firestore Demo</h1>
-        
-        <div>
-          <label>
-            <strong>Name:</strong>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter name"
-            />
-          </label>
-        </div>
-        
-        <div>
-          <label>
-            <strong>Email:</strong>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter email"
-            />
-          </label>
-        </div>
-        
-        <button onClick={handleInsert}>Insert User</button>
-        <button onClick={handleDelete}>Delete User</button>
-        <button onClick={handleFetchUsers}>List All Users</button>
+    <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<Home/>}/>
+      <Route path="/SignUp" element={<SignUp/>}>
+      
 
-        <div>
-          <h2>Users:</h2>
-          {users.length === 0 ? (
-            <p>No users found.</p>
-          ) : (
-            <ul>
-              {users.map((user) => (
-                <li key={user.id}>
-                  <strong>Name:</strong> {user.name} <br />
-                  <strong>Email:</strong> {user.email}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
+
+      </Route>
+    </Routes>
+    </BrowserRouter>
     </>
   );
 }
