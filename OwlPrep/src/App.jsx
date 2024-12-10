@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { insertData, deleteData, listUsers } from "./firebaseUtils";
 import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {Routes, Route } from "react-router-dom";
+import {Link} from "react-router-dom"
 import SignUp from "./pages/SignUp";
 import Home from "./pages/Home";
 
@@ -10,54 +11,50 @@ function App() {
   const [name, setName] = useState(""); // State for user name
   const [email, setEmail] = useState(""); // State for user email
 
-  const handleInsert = async () => {
-    if (!name || !email) {
-      alert("Please enter both name and email!");
-      return;
-    }
+  const [loggedIn, setLoggedIn] = useState(true);
+  const [showAccountDropdown, setShowAccountDropDown] = useState(false);
 
-    const newUser = { name, email }; // Create user object
-    const documentId = name.toLowerCase().replace(/\s+/g, "_"); // Create document ID
-
-    try {
-      await insertData("users", documentId, newUser);
-      alert("User added successfully!");
-      setName(""); // Reset the name field
-      setEmail(""); // Reset the email field
-    } catch (error) {
-      alert("Error adding user: " + error.message);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!name) {
-      alert("Please enter the name of the user to delete!");
-      return;
-    }
-
-    const documentId = name.toLowerCase().replace(/\s+/g, "_"); // Use same ID format for deletion
-
-    try {
-      await deleteData("users", documentId);
-      alert("User deleted successfully!");
-      setName(""); // Reset the name field
-    } catch (error) {
-      alert("Error deleting user: " + error.message);
-    }
-  };
-
-  const handleFetchUsers = async () => {
-    try {
-      const fetchedUsers = await listUsers("users");
-      setUsers(fetchedUsers);
-    } catch (error) {
-      alert("Error fetching users: " + error.message);
-    }
-  };
+  function changeDropdownView(){
+    setShowAccountDropDown(!showAccountDropdown);
+  }
 
   return (
     <>
-    <BrowserRouter>
+
+    <header>
+      <div><Link to="/">OwlPrep</Link></div>
+
+      <div>
+        <input type="text" placeholder="Search for a test"></input>
+      </div>
+
+      <div id="header-btns">
+        <div>+ Create</div>
+        <div>
+          {loggedIn ? <button className="accountBtn" onClick={changeDropdownView}>F</button> : <Link to={"/SignUp"}>SignUp</Link> }
+        </div>
+        <div id="account-dropdown" className={`${showAccountDropdown ? "" : "hide"}`}>
+          <div id="account-dropdown-header">
+            <div >
+              F
+            </div>
+            <div>
+              <p>nikerun@gmail.com</p>
+              <p>Nikeisthebest</p>
+            </div>
+          </div>
+
+          <div>
+            <ul>
+              <li><Link>Settings</Link></li>
+              <li><button type="button">Dark Mode</button></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+    </header>
+    
     <Routes>
       <Route path="/" element={<Home/>}/>
       <Route path="/SignUp" element={<SignUp/>}>
@@ -66,7 +63,7 @@ function App() {
 
       </Route>
     </Routes>
-    </BrowserRouter>
+    
     </>
   );
 }
