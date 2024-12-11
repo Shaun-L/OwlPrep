@@ -5,6 +5,8 @@ import {Routes, Route } from "react-router-dom";
 import {Link} from "react-router-dom"
 import SignUp from "./pages/SignUp";
 import Home from "./pages/Home";
+import Default from "./Layouts/Default";
+import Settings from "./pages/Settings";
 
 function App() {
   const [users, setUsers] = useState([]);
@@ -21,47 +23,16 @@ function App() {
   return (
     <>
 
-    <header>
-      <div><Link to="/">OwlPrep</Link></div>
-
-      <div>
-        <input type="text" placeholder="Search for a test"></input>
-      </div>
-
-      <div id="header-btns">
-        <div>+ Create</div>
-        <div>
-          {loggedIn ? <button className="accountBtn" onClick={changeDropdownView}>F</button> : <Link to={"/SignUp"}>SignUp</Link> }
-        </div>
-        <div id="account-dropdown" className={`${showAccountDropdown ? "" : "hide"}`}>
-          <div id="account-dropdown-header">
-            <div >
-              F
-            </div>
-            <div>
-              <p>nikerun@gmail.com</p>
-              <p>Nikeisthebest</p>
-            </div>
-          </div>
-
-          <div>
-            <ul>
-              <li><Link>Settings</Link></li>
-              <li><button type="button">Dark Mode</button></li>
-            </ul>
-          </div>
-        </div>
-      </div>
-      
-    </header>
+    
     
     <Routes>
-      <Route path="/" element={<Home/>}/>
-      <Route path="/SignUp" element={<SignUp/>}>
-      
 
-
+      <Route path="/" element={<Default loggedIn={loggedIn} showAccountDropdown={showAccountDropdown} changeDropdownView={changeDropdownView}/>}>
+        <Route index element={<Home></Home>}></Route>
+        <Route path="/signup" element={<SignUp></SignUp>}></Route>
+        <Route path="/settings" element={<Settings/>}></Route>
       </Route>
+      
     </Routes>
     
     </>

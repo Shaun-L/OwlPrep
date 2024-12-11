@@ -2,6 +2,7 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 :root{
@@ -10,6 +11,13 @@
 
 body{
   background-color: var(--background-color);
+}
+
+#Logo a{
+  text-decoration: none;
+  font-weight: 600;
+  color: rgb(26, 163, 115);
+  font-size: 1.5rem;
 }
 
 header{
@@ -93,3 +101,27 @@ header input::placeholder{
   background-color: #f6f7fb;
 }
 
+#default-main{
+  display: flex;
+}
+
+#default-content{
+  padding: 2rem 20rem;
+  width: 100%;
+}
+
+#default-main nav{
+  padding: 1rem;
+  max-width: 200px;
+}
+
+#default-main nav a{
+  display: block;
+  padding: .5rem;
+  text-decoration: none;
+  color: gray;
+}
+
+#default-main nav a:hover{
+  background-color: #f6f7fb;
+}
