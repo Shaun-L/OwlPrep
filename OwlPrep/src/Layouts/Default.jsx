@@ -1,7 +1,13 @@
 import { Link, Outlet } from "react-router-dom"
+import { MdOutlineLightMode } from "react-icons/md";
+import { MdOutlineNightlight } from "react-icons/md";
 
-export default function Default({loggedIn, showAccountDropdown, changeDropdownView}){
+export default function Default({loggedIn, showAccountDropdown, changeDropdownView, theme, changeTheme}){
+    
     return(<>
+
+    
+
     <header>
       <div id="Logo"><Link to="/">OwlPrep</Link></div>
 
@@ -14,22 +20,26 @@ export default function Default({loggedIn, showAccountDropdown, changeDropdownVi
         <div>
           {loggedIn ? <button className="accountBtn" onClick={changeDropdownView}>F</button> : <Link to={"/SignUp"}>SignUp</Link> }
         </div>
-        <div id="account-dropdown" className={`${showAccountDropdown ? "" : "hide"}`}>
-          <div id="account-dropdown-header">
+        <div id="account-dropdown" onBlur={changeDropdownView} onBlurCapture={changeDropdownView} className={`${showAccountDropdown ? "" : "hide"}`}>
+          <div id="account-dropdown-header" className="account-dropdown-section">
             <div >
               F
             </div>
             <div>
-              <p>nikerun@gmail.com</p>
-              <p>Nikeisthebest</p>
+              <p id="user-account-email">nikerun@gmail.com</p>
+              <p id="user-account-name">Nikeisthebest</p>
             </div>
           </div>
 
-          <div>
+          <div className="account-dropdown-section">
             <ul>
               <li><Link to="/settings">Settings</Link></li>
-              <li><button type="button">Dark Mode</button></li>
+              <li><button type="button" onClick={changeTheme}>{theme ? <span><MdOutlineLightMode/> Light mode</span> : <span><MdOutlineNightlight/> Dark mode</span>}</button></li>
             </ul>
+          </div>
+
+          <div className="account-dropdown-section">
+            <button id="logout-btn">Log out</button>
           </div>
         </div>
       </div>
@@ -38,7 +48,7 @@ export default function Default({loggedIn, showAccountDropdown, changeDropdownVi
 
     
 
-    <main id="default-main">
+    <div id="default-main">
         <nav>
             <div>
                 <Link to="/">Home</Link>
@@ -49,9 +59,9 @@ export default function Default({loggedIn, showAccountDropdown, changeDropdownVi
                 <Link>Practice Test</Link>
             </div>
         </nav>
-        <div id="default-content">
+        <main id="default-content">
             <Outlet/>
-        </div>
-    </main>
+        </main>
+    </div>
     </>)
 }

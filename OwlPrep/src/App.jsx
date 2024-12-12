@@ -15,10 +15,33 @@ function App() {
 
   const [loggedIn, setLoggedIn] = useState(true);
   const [showAccountDropdown, setShowAccountDropDown] = useState(false);
+  const [darkTheme, setDarkTheme] = useState(false);
 
   function changeDropdownView(){
     setShowAccountDropDown(!showAccountDropdown);
   }
+
+  function changeTheme(){
+
+    if(darkTheme){
+      document.body.removeAttribute("data-theme")
+    }else{
+      document.body.setAttribute("data-theme", "dark")
+    }
+    setDarkTheme(!darkTheme)
+  }
+
+  function selectThemeChange(themeName){
+    console.log(themeName)
+    if(themeName == "light"){
+      document.body.removeAttribute("data-theme")
+      setDarkTheme(false)
+    }else{
+      document.body.setAttribute("data-theme", "dark")
+      setDarkTheme(true)
+    }
+  }
+
 
   return (
     <>
@@ -27,10 +50,10 @@ function App() {
     
     <Routes>
 
-      <Route path="/" element={<Default loggedIn={loggedIn} showAccountDropdown={showAccountDropdown} changeDropdownView={changeDropdownView}/>}>
+      <Route path="/" element={<Default loggedIn={loggedIn} showAccountDropdown={showAccountDropdown} theme={darkTheme} changeTheme={changeTheme} changeDropdownView={changeDropdownView}/>}>
         <Route index element={<Home></Home>}></Route>
         <Route path="/signup" element={<SignUp></SignUp>}></Route>
-        <Route path="/settings" element={<Settings/>}></Route>
+        <Route path="/settings" element={<Settings theme={darkTheme} selectThemeChange={selectThemeChange}/>}></Route>
       </Route>
       
     </Routes>
