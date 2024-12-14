@@ -127,5 +127,38 @@ export const loginWithEmailAndPassword = async (email, password) => {
     }
 };
 
+/**
+ * Function to logout the current user
+ */
+export const logout = async () => {
+    try {
+        await signOut(auth);
+    } catch (error) {
+        console.error("Logout error:", error);
+        throw error;
+    }
+};
+
+/**
+ * Function to reset user password
+ * @param {*} email 
+ */
+export const resetPassword = async (email) => {
+    try {
+        await sendPasswordResetEmail(auth, email);
+    } catch (error) {
+        console.error("Password reset error:", error);
+        throw error;
+    }
+};
+
+/**
+ * Function to get the current user
+ * @returns Current user object
+ */
+export const getCurrentUser = () => {
+    return auth.currentUser;
+};
+
 export { auth, db };
 
