@@ -1,5 +1,15 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from "firebase/firestore";
+// Import firebase/auth
+import {
+    getAuth,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    signOut,
+    sendPasswordResetEmail,
+    updateProfile
+} from "firebase/auth";
+
 
 // Firebase configuration (use your existing configuration here)
 const firebaseConfig = {
@@ -14,7 +24,8 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-
+// Initialize Auth
+const auth = getAuth(app);
 // Initialize Firestore
 const db = getFirestore(app);
 
@@ -32,7 +43,7 @@ export async function insertData(collectionName, documentId, data) {
   } catch (error) {
     console.error("Error adding document: ", error);
   }
-}
+};
 
 /**
  * Function to delete a document from Firestore
@@ -47,7 +58,13 @@ export async function deleteData(collectionName, documentId) {
   } catch (error) {
     console.error("Error deleting document: ", error);
   }
-}
+};
+
+/**
+ * Function to list all users from Firestore
+ * @param {*} collectionName - The name of the Firestore collection
+ * @returns [Array] - Array of user objects
+ */
 export async function listUsers(collectionName) {
   try {
     const querySnapshot = await getDocs(collection(db, collectionName));
@@ -61,7 +78,54 @@ export async function listUsers(collectionName) {
     console.error("Error fetching users: ", error);
     return [];
   }
-}
+};
 
-export { db };
+/**
+ * Function to conduct user registration with email and password
+ * @param {*} name 
+ * @param {*} email 
+ * @param {*} password 
+ */
+export const registerWithEmailAndPassword = async (name, email, password) => {
+    try {
+        // Store user with email and password
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Updates user profile with name
+        await updateProfile(user, {displayName: name});
+
+        // Optional: Store additional user information in Firestore
+        await setDoc(doc(db, "users", user.uid), {
+            uid: user.uid,
+            name,
+            email,
+            createdAt: new Date()
+        })
+
+        return user;
+    } catch (error) {
+        console.error("Error registering user: ", error);
+        throw error;
+    }
+};
+
+/**
+ * Function for user login with email and password
+ * @param {*} email 
+ * @param {*} password 
+ * @returns 
+ */
+export const loginWithEmailAndPassword = async (email, password) => {
+    try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        return user;
+    } catch (error) {
+        console.error("Error logging in: ", error);
+        throw error;
+    }
+};
+
+export { auth, db };
 
