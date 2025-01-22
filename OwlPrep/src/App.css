@@ -11,12 +11,16 @@
   --secondary-text-color: #586380;
   --primary-text-color: #282e3e;
   --border-color: #edeff4;
+  --search-background: white;
+  --hover-background: #edeff4;
 }
 
 [data-theme="dark"]{
   --background-color: #1b1b1b;
   --primary-text-color: #F6F7FB;
   --secondary-text-color: #D9DDE8;
+  --search-background: #272727;
+  --hover-background: rgb(37, 37, 37);
 }
 
 body{
@@ -44,7 +48,7 @@ header input{
   padding: 14px 10px;
   outline: none;
   border: none;
-  background-color: rgb(243, 240, 240);
+  background-color: var(--search-background);
   border-radius: 5px;
   font-weight: 600;
   color: rgb(175, 169, 169);
@@ -67,8 +71,17 @@ header input::placeholder{
 .hide{display: none;}
 
 .accountBtn{
-  padding: 5px 10px;
+  padding: 8px 10px;
   border-radius: 50%;
+  background-color: rgb(86, 95, 100);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.accountBtn svg{
+  fill: var(--primary-text-color);
+  
 }
 
 #account-dropdown{
@@ -101,8 +114,14 @@ header input::placeholder{
   font-weight: 600;
   width: 100%;
   text-align: left;
+  padding: .5rem .7rem;
   font-size: 14px;
 }
+
+#logout-btn:hover{
+  background-color: var(--hover-background);
+}
+
 
 div.account-dropdown-section:not(:last-child){
   border-bottom: 1px solid rgba(172, 172, 172, 0.556);
@@ -122,7 +141,6 @@ div.account-dropdown-section:not(:last-child){
   color: var(--secondary-text-color);
   font-size: 14px;
   border: none;
-  color: var(--primary-text-color);
   font-weight: 600;
 }
 
@@ -132,7 +150,7 @@ div.account-dropdown-section:not(:last-child){
 
 
 #account-dropdown ul li a:hover, #account-dropdown ul li button:hover{
-  background-color: #f6f7fb;
+  background-color: var(--hover-background);
 }
 
 #default-main{
@@ -161,7 +179,7 @@ div.account-dropdown-section:not(:last-child){
 }
 
 #default-main nav a:hover{
-  background-color: rgba(235, 235, 235, 0.671);
+  background-color: var(--hover-background);
 }
 
 div.settings-container{
@@ -186,6 +204,10 @@ input:read-only{
   padding: .8rem;
 }
 
+.settings-sub-section-container h3{
+  color: var(--primary-text-color)
+}
+
 .settings-sub-section-container:not(:last-child){
   border-bottom: 2px solid var(--border-color);
 }
@@ -193,7 +215,7 @@ input:read-only{
 .form-field-container{
   display: flex;
   justify-content: space-between;
-
+  align-items: center;
 }
 
 button{
@@ -212,7 +234,7 @@ button{
 }
 
 .form-field-container button:hover{
-  background-color: white;
+  background-color: var(--hover-background);
 }
 
 div.modal{
@@ -258,4 +280,32 @@ div.modal > div > button{
   margin: 0 1rem 0 0;
   border-radius: 3px;
   font-weight: 600;
+}
+
+select{
+  padding: 8px 12px;
+  color: var(--secondary-text-color);
+  background-color: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  font-weight: 600;
+}
+
+#create-btn{
+  background-color: var(--primary-color);
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 5px;
+  border: none;
+  color: var(--background-color)
+}
+
+#account-header-btn{
+  padding: 8px 10px;
+  border-radius: 50%;
+  background-color: rgb(86, 95, 100);
+}
+
+#dropdown-focus{
+  display:none;
 }

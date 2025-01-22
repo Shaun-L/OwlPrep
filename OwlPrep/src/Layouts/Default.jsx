@@ -1,13 +1,25 @@
 import { Link, Outlet } from "react-router-dom"
 import { MdOutlineLightMode } from "react-icons/md";
 import { MdOutlineNightlight } from "react-icons/md";
+import { FaUser } from "react-icons/fa";
+import { useRef } from "react";
 
-export default function Default({loggedIn, showAccountDropdown, changeDropdownView, theme, changeTheme}){
-    
+export default function Default({loggedIn, closeDropdown, showAccountDropdown, changeDropdownView, theme, changeTheme}){
+  
+  const dropdown = useRef(null)
+  
+  document.addEventListener("mousedown", (e)=>{
+
+    if(showAccountDropdown && !dropdown.current.contains(e.target)){
+      closeDropdown()
+    }
+  
+   })
+
     return(<>
 
+  
     
-
     <header>
       <div id="Logo"><Link to="/">OwlPrep</Link></div>
 
@@ -16,14 +28,14 @@ export default function Default({loggedIn, showAccountDropdown, changeDropdownVi
       </div>
 
       <div id="header-btns">
-        <div>+ Create</div>
+        <div id="create-btn">+ Create</div>
         <div>
-          {loggedIn ? <button className="accountBtn" onClick={changeDropdownView}>F</button> : <Link to={"/SignUp"}>SignUp</Link> }
+          {loggedIn ? <button className="accountBtn" onClick={changeDropdownView}><FaUser/></button> : <Link to={"/SignUp"}>SignUp</Link> }
         </div>
-        <div id="account-dropdown" onBlur={changeDropdownView} onBlurCapture={changeDropdownView} className={`${showAccountDropdown ? "" : "hide"}`}>
+        <div id="account-dropdown" ref={dropdown} className={`${showAccountDropdown ? "" : "hide"}`}>
           <div id="account-dropdown-header" className="account-dropdown-section">
-            <div >
-              F
+            <div id="account-header-btn">
+              <FaUser/>
             </div>
             <div>
               <p id="user-account-email">nikerun@gmail.com</p>
@@ -33,13 +45,13 @@ export default function Default({loggedIn, showAccountDropdown, changeDropdownVi
 
           <div className="account-dropdown-section">
             <ul>
-              <li><Link to="/settings">Settings</Link></li>
+              <li onClick={closeDropdown}><Link to="/settings">Settings</Link></li>
               <li><button type="button" onClick={changeTheme}>{theme ? <span><MdOutlineLightMode/> Light mode</span> : <span><MdOutlineNightlight/> Dark mode</span>}</button></li>
             </ul>
           </div>
 
           <div className="account-dropdown-section">
-            <button id="logout-btn">Log out</button>
+            <button onClick={closeDropdown} id="logout-btn">Log out</button>
           </div>
         </div>
       </div>
@@ -49,6 +61,7 @@ export default function Default({loggedIn, showAccountDropdown, changeDropdownVi
     
 
     <div id="default-main">
+        
         <nav>
             <div>
                 <Link to="/">Home</Link>

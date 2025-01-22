@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { insertData, deleteData, listUsers } from "./firebaseUtils";
 import "./App.css";
 import {Routes, Route } from "react-router-dom";
@@ -12,6 +12,7 @@ function App() {
   const [users, setUsers] = useState([]);
   const [name, setName] = useState(""); // State for user name
   const [email, setEmail] = useState(""); // State for user email
+  const checkboxRef = useRef(null);
 
   const [loggedIn, setLoggedIn] = useState(true);
   const [showAccountDropdown, setShowAccountDropDown] = useState(false);
@@ -19,6 +20,10 @@ function App() {
 
   function changeDropdownView(){
     setShowAccountDropDown(!showAccountDropdown);
+  }
+
+  function closeDropdown(){
+    setShowAccountDropDown(false);
   }
 
   function changeTheme(){
@@ -30,6 +35,7 @@ function App() {
     }
     setDarkTheme(!darkTheme)
   }
+
 
   function selectThemeChange(themeName){
     console.log(themeName)
@@ -45,12 +51,9 @@ function App() {
 
   return (
     <>
-
-    
     
     <Routes>
-
-      <Route path="/" element={<Default loggedIn={loggedIn} showAccountDropdown={showAccountDropdown} theme={darkTheme} changeTheme={changeTheme} changeDropdownView={changeDropdownView}/>}>
+      <Route path="/" element={<Default loggedIn={loggedIn} closeDropdown={closeDropdown} showAccountDropdown={showAccountDropdown} theme={darkTheme} changeTheme={changeTheme} changeDropdownView={changeDropdownView}/>}>
         <Route index element={<Home></Home>}></Route>
         <Route path="/signup" element={<SignUp></SignUp>}></Route>
         <Route path="/settings" element={<Settings theme={darkTheme} selectThemeChange={selectThemeChange}/>}></Route>

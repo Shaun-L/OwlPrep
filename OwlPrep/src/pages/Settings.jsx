@@ -65,7 +65,7 @@ export default function Settings({theme, selectThemeChange}){
         <div className="settings-container">
             <div>
                 <div className="settings-sub-section-container">
-                    Username
+                    <h3>Username</h3>
                     <div className="form-field-container">
                         <input value={username} onChange={(e)=>{setUsername(e.target.value)}} readOnly={!editUsername}></input>
                         
@@ -79,7 +79,7 @@ export default function Settings({theme, selectThemeChange}){
                 </div>
                 
                 <div className="settings-sub-section-container">
-                    Email
+                    <h3>Email</h3>
                     <div className="form-field-container">
                         <input value={email} onChange={(e)=>{setEmail(e.target.value)}} readOnly={!editEmail}></input>
                         
@@ -100,7 +100,7 @@ export default function Settings({theme, selectThemeChange}){
             <div>
                 <div className="settings-sub-section-container">
                     <div className="form-field-container">
-                        <p>Theme</p>
+                        <h3>Theme</h3>
                         
                         <div>
                             <select name="theme" value={theme ? "dark" : "light"} onChange={changeSelectedTheme}> 
@@ -119,7 +119,7 @@ export default function Settings({theme, selectThemeChange}){
         <div className="settings-container">
             <div>
             <div className="settings-sub-section-container">
-                    Password
+                    <h3>Password</h3>
                     <div className="form-field-container">
                         <input type="password" value={password} onChange={(e)=>{setEmail(e.target.value)}} readOnly={!editEmail}></input>
                         
