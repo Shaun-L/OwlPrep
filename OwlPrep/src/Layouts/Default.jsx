@@ -4,7 +4,7 @@ import { MdOutlineNightlight } from "react-icons/md";
 import { FaUser } from "react-icons/fa";
 import { useRef } from "react";
 
-export default function Default({loggedIn, closeDropdown, showAccountDropdown, changeDropdownView, theme, changeTheme}){
+export default function Default({loggedIn, logout,closeDropdown, showAccountDropdown, changeDropdownView, theme, changeTheme}){
   
   const dropdown = useRef(null)
   
@@ -30,7 +30,7 @@ export default function Default({loggedIn, closeDropdown, showAccountDropdown, c
       <div id="header-btns">
         <div id="create-btn">+ Create</div>
         <div>
-          {loggedIn ? <button className="accountBtn" onClick={changeDropdownView}><FaUser/></button> : <Link to={"/SignUp"}>SignUp</Link> }
+          {loggedIn ? <button className="accountBtn" onClick={changeDropdownView}><FaUser/></button> : <Link to={"/login"}>Log In</Link> }
         </div>
         <div id="account-dropdown" ref={dropdown} className={`${showAccountDropdown ? "" : "hide"}`}>
           <div id="account-dropdown-header" className="account-dropdown-section">
@@ -51,7 +51,8 @@ export default function Default({loggedIn, closeDropdown, showAccountDropdown, c
           </div>
 
           <div className="account-dropdown-section">
-            <button onClick={closeDropdown} id="logout-btn">Log out</button>
+            <button onClick={()=>{logout()
+            closeDropdown()}} id="logout-btn">Log out</button>
           </div>
         </div>
       </div>

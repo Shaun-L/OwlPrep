@@ -1,13 +1,4 @@
-<<<<<<< HEAD
 import { useState, useRef } from "react";
-import { insertData, deleteData, listUsers } from "./firebaseUtils";
-=======
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import LandingPage from "./pages/LandingPage";
-import ProfilePage from "./pages/ProfilePage";
->>>>>>> main
 import "./App.css";
 import {Routes, Route } from "react-router-dom";
 import {Link} from "react-router-dom"
@@ -15,9 +6,9 @@ import SignUp from "./pages/SignUp";
 import Home from "./pages/Home";
 import Default from "./Layouts/Default";
 import Settings from "./pages/Settings";
+import Login from "./pages/Login";
 
 function App() {
-<<<<<<< HEAD
   const [users, setUsers] = useState([]);
   const [name, setName] = useState(""); // State for user name
   const [email, setEmail] = useState(""); // State for user email
@@ -29,6 +20,14 @@ function App() {
 
   function changeDropdownView(){
     setShowAccountDropDown(!showAccountDropdown);
+  }
+
+  function logout(){
+    setLoggedIn(false)
+  }
+
+  function logginUser(){
+    setLoggedIn(true)
   }
 
   function closeDropdown(){
@@ -62,29 +61,16 @@ function App() {
     <>
     
     <Routes>
-      <Route path="/" element={<Default loggedIn={loggedIn} closeDropdown={closeDropdown} showAccountDropdown={showAccountDropdown} theme={darkTheme} changeTheme={changeTheme} changeDropdownView={changeDropdownView}/>}>
+      <Route path="/" element={<Default logout={logout} loggedIn={loggedIn} closeDropdown={closeDropdown} showAccountDropdown={showAccountDropdown} theme={darkTheme} changeTheme={changeTheme} changeDropdownView={changeDropdownView}/>}>
         <Route index element={<Home></Home>}></Route>
         <Route path="/signup" element={<SignUp></SignUp>}></Route>
+        <Route path="/login" element={<Login logginUser={logginUser}></Login>}></Route>
         <Route path="/settings" element={<Settings theme={darkTheme} selectThemeChange={selectThemeChange}/>}></Route>
       </Route>
       
     </Routes>
     
     </>
-=======
-  return (
-    <Router>
-      <div className="app">
-        <Routes>
-          <Route path="/" element={<Login />} /> {/* Default to Login page */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/landing" element={<LandingPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-        </Routes>
-      </div>
-    </Router>
->>>>>>> main
   );
 }
 

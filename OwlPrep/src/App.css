@@ -310,3 +310,20 @@ select{
 #dropdown-focus{
   display:none;
 }
+
+ul.upload-type-list{
+  list-style-type: none;
+  display: flex;
+  gap: 2rem;
+}
+
+ul.upload-type-list li button{
+  color: var(--secondary-text-color);
+  font-weight: 600;
+  padding: 0;
+  margin: 1rem 0;
+}
+
+ul.upload-type-list li button.type-selected{
+  border-bottom: 3px solid var(--primary-color);
+}

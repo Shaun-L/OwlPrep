@@ -4,6 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { db } from "../firebaseUtils";
 import { setDoc, doc } from "firebase/firestore";
+import SignUp from "./SignUp";
 
 function Register() {
   const [email, setEmail] = useState("");
@@ -76,4 +77,4 @@ function Register() {
   );
 }
 
-export default Register;
+export default SignUp;
