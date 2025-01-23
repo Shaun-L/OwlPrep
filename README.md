@@ -28,4 +28,7 @@ OwlPrep is an AI-powered study application designed to enhance students' learnin
    git clone [https://github.com/Shaun-L/OwlPrep.git]
    cd owlprep
 
-#(TODO: Need to finish this README)
+2. **Run the Application**:
+   ```bash
+   npm install
+   npm run dev
