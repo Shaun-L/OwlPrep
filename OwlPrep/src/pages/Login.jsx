@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 
-function Login() {
+function Login({logginUser}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
@@ -12,7 +12,9 @@ function Login() {
       const auth = getAuth();
       await signInWithEmailAndPassword(auth, email, password);
       alert("Login successful!");
-      navigate("/landing");
+      logginUser()
+      navigate("/");
+      
     } catch (error) {
       alert("Error logging in: " + error.message);
     }
@@ -23,13 +25,13 @@ function Login() {
       {/* Left Section */}
       <div className="login-left">
         <div className="login-header">
-          <a href="https://clipart-library.com/clipart/1910405.htm">
+          {/* <a href="https://clipart-library.com/clipart/1910405.htm">
             <img
               src="https://clipart-library.com/img/1910405.png"
               alt="OwlPrep Mascot"
               className="mascot"
             />
-          </a>
+          </a> */}
           <h1 className="app-name">OwlPrep</h1>
         </div>
         <div className="login-form">
@@ -47,7 +49,7 @@ function Login() {
           />
           <button onClick={handleLogin}>Login</button>
           <p>
-            Need an account? <Link to="/register">Register here</Link>
+            Need an account? <Link to="/signup">Sign Up</Link>
           </p>
         </div>
       </div>

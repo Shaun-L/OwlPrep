@@ -1,12 +1,10 @@
-// src/pages/Register.jsx
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { db } from "../firebaseUtils";
 import { setDoc, doc } from "firebase/firestore";
-import SignUp from "./SignUp";
 
-function Register() {
+function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState(""); // New state for first name
