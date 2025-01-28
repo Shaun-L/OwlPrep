@@ -1,16 +1,33 @@
 import {Link} from "react-router-dom"
 import File_Dropzone from "../components/File_Dropzone"
-
+import { FaFilter } from "react-icons/fa";
+import StudyItemContainer from "../components/StudyItemContainer";
 export default function Home(){
-    
+    const items = [{title: "Title", type: "Cheetsheet"},{title: "Title", type: "Cheetsheet"}, {title: "Title", type: "Cheetsheet"}]
 
     return(<>
-        <h2>Generate a practice test</h2>
-        <p>Choose or upload materials to generate practice questions designed for you</p>
-        <ul className="upload-type-list">
-            <li><button className="type-selected">Upload files</button></li>
-            <li><button>Paste text</button></li>
-        </ul>
-        <File_Dropzone/>
+        <div id="home-header">
+            <div>
+                <button>Math</button>
+                <button>Science</button>
+                <button>History</button>
+                <button>Math</button>
+            </div>
+            <div className="filter-container">
+                <button>Filters <FaFilter/></button>
+                <div id="filter-dropdown">
+                    <input value="all" type="checkbox" name="filter"></input><label>All</label>
+                    <input value="all" type="checkbox" name="filter"></input><label>Test</label>
+                    <input value="all" type="checkbox" name="filter"></input><label>Cheetsheet</label>
+                </div>
+            </div>
+        </div>
+    
+
+        <div id="itemsContainer">
+            {
+                items.map((item)=><StudyItemContainer title={item.title} type={item.type}/>)
+            }
+        </div>
         </>)
 }
