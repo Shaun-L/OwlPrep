@@ -12,8 +12,9 @@
   --secondary-text-color: #586380;
   --primary-text-color: #282e3e;
   --border-color: #edeff4;
-  --search-background: white;
+  --search-background: #edeff4;
   --hover-background: #edeff4;
+  --secondary-border-color: rgb(239, 239, 239);
 }
 
 [data-theme="dark"]{
@@ -22,6 +23,7 @@
   --secondary-text-color: #D9DDE8;
   --search-background: #272727;
   --hover-background: rgb(37, 37, 37);
+  --border-color: #454545;
 }
 
 body{
@@ -45,18 +47,18 @@ header{
 }
 
 header input{
-  width: 100%;
+  width: 80%;
   padding: 14px 10px;
   outline: none;
   border: none;
   background-color: var(--search-background);
   border-radius: 5px;
   font-weight: 600;
-  color: rgb(175, 169, 169);
+  color: var(--secondary-text-color);
 }
 
 header input::placeholder{
-  color: rgb(168, 168, 168);
+  color: var(--secondary-text-color)
 }
 
 #header-btns{
@@ -83,6 +85,25 @@ header input::placeholder{
 .accountBtn svg{
   fill: var(--primary-text-color);
   
+}
+
+.filter-container{
+  position: relative;
+}
+
+#filter-dropdown{
+  position: absolute;
+  background-color: var(--secondary-border-color);
+  right: 15px;
+  margin-top: .4rem;
+  border-radius: 5px;
+  width: max-content;
+  padding: 8px 12px;
+}
+
+#filter-dropdown label{
+  display: block;
+  color: var(--secondary-text-color)
 }
 
 #account-dropdown{
@@ -145,10 +166,11 @@ div.account-dropdown-section:not(:last-child){
   font-weight: 600;
 }
 
-#account-dropdown ul li button{
+#account-dropdown ul li a:hover, #account-dropdown ul li button div{
   display: flex;
+  align-items: center;
+  gap: .5rem;
 }
-
 
 #account-dropdown ul li a:hover, #account-dropdown ul li button:hover{
   background-color: var(--hover-background);
@@ -159,15 +181,34 @@ div.account-dropdown-section:not(:last-child){
 }
 
 #default-content{
-  width: 50%;
+  width: 75%;
+  max-width: 1250px;
   margin: 3rem auto;
-  
+  padding: 0 1.5rem;
+}
+
+.sideNavSubContainer{
+  padding: 1rem 0;
+}
+
+.sideNavSubContainer:not(:last-child){
+  border-bottom: 3px solid var(--border-color);
+}
+
+#default-main .sideNavSubContainer > a{
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.sideNavSubContainer > div svg{
+  fill: var(--secondary-text-color)
 }
 
 #default-main nav{
   padding: 1rem;
   width: 30%;
-  max-width: 200px;
+  max-width: 225px;
 }
 
 #default-main nav a{
@@ -293,12 +334,17 @@ select{
 }
 
 #create-btn{
+  color: var(--primary-color)
+}
+
+#loginBtn{
   background-color: var(--primary-color);
   cursor: pointer;
   padding: 8px 12px;
   border-radius: 5px;
   border: none;
-  color: var(--background-color)
+  color: var(--background-color);
+  text-decoration: none;
 }
 
 #account-header-btn{
@@ -326,4 +372,123 @@ ul.upload-type-list li button{
 
 ul.upload-type-list li button.type-selected{
   border-bottom: 3px solid var(--primary-color);
+}
+
+div.file-upload-container{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+div.file-upload-container > div:first-child{
+  min-width: 0;
+  width: 100%;
+}
+
+
+div.file-upload-container div span{
+  display: inline-block;
+  width: 90%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+div.file-dropzone{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  border-width: 2px;
+  border-radius: 2px;
+  border-color: var(--border-color);
+  border-style: dashed;
+  background-color: var(--hover-background);
+  color: var(--secondary-text-color);
+  transition: 'border .3s ease-in-out';
+}
+
+
+
+
+button.generate-btn{
+  background-color: var(--primary-color);
+  margin: 1rem 0;
+  color: var(--background-color);
+  font-weight: 500;
+  font-weight: 600;
+  border-radius: 2px;
+}
+
+#home-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+#home-header button{
+  background-color: var(--border-color);
+  color: var(--secondary-text-color);
+  padding: 8px 12px;
+  display: inline-block;
+  margin-right: 1rem;
+  border-radius: 5px;
+}
+
+@media only screen and (min-width: 768px){
+  #default-content #itemsContainer{
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media only screen and (min-width: 1050px) {
+  #default-content #itemsContainer{
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+#itemsContainer{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  max-width: 1000px;
+}
+
+div.studyItemContainer{
+  background-color: var(--border-color);
+  padding: 8px 12px;
+  border-radius: 5px;
+  height: 150px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+div.studyItemContainer h2{
+  color:var(--primary-text-color)
+}
+
+.studyItemHeader p{
+  margin: .5rem 0 ;
+  background-color: rgb(212, 212, 212);
+  color: var(--secondary-text-color);
+  width: max-content;
+  padding: 4px 6px;
+  border-radius: 20px;
+  font-size: .9rem;
+}
+
+.studyItemFooter{
+  color: var(--secondary-text-color);
+  font-weight: 600;
+}
+.studyItemFooter a{
+  background-color: red;
+  display: inline-flex;
+  font-size: .9rem;
+  padding: .3rem .4rem;
+  border-radius: 50%;
+  color: black;
 }
