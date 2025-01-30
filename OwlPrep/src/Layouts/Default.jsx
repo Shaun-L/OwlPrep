@@ -3,6 +3,11 @@ import { MdOutlineLightMode } from "react-icons/md";
 import { MdOutlineNightlight } from "react-icons/md";
 import { FaUser } from "react-icons/fa";
 import { useRef } from "react";
+import { FaHome } from "react-icons/fa";
+import { CiBookmark } from "react-icons/ci";
+import { RiProgress1Line } from "react-icons/ri";
+import { LuFileSpreadsheet } from "react-icons/lu";
+import { LuLetterText } from "react-icons/lu";
 
 export default function Default({loggedIn, logout,closeDropdown, showAccountDropdown, changeDropdownView, theme, changeTheme}){
   
@@ -30,7 +35,7 @@ export default function Default({loggedIn, logout,closeDropdown, showAccountDrop
       <div id="header-btns">
         <div id="create-btn">+ Create</div>
         <div>
-          {loggedIn ? <button className="accountBtn" onClick={changeDropdownView}><FaUser/></button> : <Link to={"/login"}>Log In</Link> }
+          {loggedIn ? <button className="accountBtn" onClick={changeDropdownView}><FaUser/></button> : <Link id="loginBtn" to={"/login"}>Log In</Link> }
         </div>
         <div id="account-dropdown" ref={dropdown} className={`${showAccountDropdown ? "" : "hide"}`}>
           <div id="account-dropdown-header" className="account-dropdown-section">
@@ -46,7 +51,7 @@ export default function Default({loggedIn, logout,closeDropdown, showAccountDrop
           <div className="account-dropdown-section">
             <ul>
               <li onClick={closeDropdown}><Link to="/settings">Settings</Link></li>
-              <li><button type="button" onClick={changeTheme}>{theme ? <span><MdOutlineLightMode/> Light mode</span> : <span><MdOutlineNightlight/> Dark mode</span>}</button></li>
+              <li><button type="button" onClick={changeTheme}>{theme ? <div><MdOutlineLightMode height={"100%"}/> Light mode</div> : <div><MdOutlineNightlight height={"100%"}/> Dark mode</div>}</button></li>
             </ul>
           </div>
 
@@ -63,14 +68,17 @@ export default function Default({loggedIn, logout,closeDropdown, showAccountDrop
 
     <div id="default-main">
         
-        <nav>
-            <div>
-                <Link to="/">Home</Link>
+        <nav id="sideNav">
+            <div className="sideNavSubContainer">
+                <Link to="/"><FaHome/>Home</Link>
+                
+                <Link to="/"><CiBookmark/> Saves</Link>
+                <Link to="/"><RiProgress1Line/> Progress</Link>
             </div>
-            <div>
-                <Link>Flashcards</Link>
-                <Link>Cheetsheet</Link>
-                <Link>Practice Test</Link>
+            <div className="sideNavSubContainer">
+                <h3>Start Here</h3>
+                <Link><LuFileSpreadsheet/> Cheetsheet</Link>
+                <Link><LuLetterText/> Practice Test</Link>
             </div>
         </nav>
         <main id="default-content">
