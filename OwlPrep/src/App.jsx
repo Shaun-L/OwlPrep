@@ -7,6 +7,8 @@ import Home from "./pages/Home";
 import Default from "./Layouts/Default";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
+import Profile from "./pages/Profile";
+import Page404 from "./pages/404";
 
 function App() {
   const [users, setUsers] = useState([]);
@@ -66,7 +68,11 @@ function App() {
         <Route path="/signup" element={<SignUp></SignUp>}></Route>
         <Route path="/login" element={<Login logginUser={logginUser}></Login>}></Route>
         <Route path="/settings" element={<Settings theme={darkTheme} selectThemeChange={selectThemeChange}/>}></Route>
+        <Route path="*" element={<Page404/>}></Route>
       </Route>
+
+      <Route path="/profile/:username" element={<Profile/>}></Route>
+      
       
     </Routes>
     
