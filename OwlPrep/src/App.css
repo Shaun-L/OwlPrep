@@ -14,6 +14,7 @@
   --border-color: #edeff4;
   --search-background: #edeff4;
   --hover-background: #edeff4;
+  --secondary-border-color: rgb(239, 239, 239);
 }
 
 [data-theme="dark"]{
@@ -57,7 +58,7 @@ header input{
 }
 
 header input::placeholder{
-  color: rgb(168, 168, 168);
+  color: var(--secondary-text-color)
 }
 
 #header-btns{
@@ -84,6 +85,25 @@ header input::placeholder{
 .accountBtn svg{
   fill: var(--primary-text-color);
   
+}
+
+.filter-container{
+  position: relative;
+}
+
+#filter-dropdown{
+  position: absolute;
+  background-color: var(--secondary-border-color);
+  right: 15px;
+  margin-top: .4rem;
+  border-radius: 5px;
+  width: max-content;
+  padding: 8px 12px;
+}
+
+#filter-dropdown label{
+  display: block;
+  color: var(--secondary-text-color)
 }
 
 #account-dropdown{
@@ -417,9 +437,21 @@ button.generate-btn{
   border-radius: 5px;
 }
 
+@media only screen and (min-width: 768px){
+  #default-content #itemsContainer{
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media only screen and (min-width: 1050px) {
+  #default-content #itemsContainer{
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
 #itemsContainer{
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 1rem;
   max-width: 1000px;
 }
@@ -438,7 +470,20 @@ div.studyItemContainer h2{
   color:var(--primary-text-color)
 }
 
+.studyItemHeader p{
+  margin: .5rem 0 ;
+  background-color: rgb(212, 212, 212);
+  color: var(--secondary-text-color);
+  width: max-content;
+  padding: 4px 6px;
+  border-radius: 20px;
+  font-size: .9rem;
+}
 
+.studyItemFooter{
+  color: var(--secondary-text-color);
+  font-weight: 600;
+}
 .studyItemFooter a{
   background-color: red;
   display: inline-flex;
