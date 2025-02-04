@@ -68,10 +68,11 @@ function App() {
         <Route path="/signup" element={<SignUp></SignUp>}></Route>
         <Route path="/login" element={<Login logginUser={logginUser}></Login>}></Route>
         <Route path="/settings" element={<Settings theme={darkTheme} selectThemeChange={selectThemeChange}/>}></Route>
+        <Route path="/profile/:username" element={<Profile/>}></Route>
         <Route path="*" element={<Page404/>}></Route>
       </Route>
 
-      <Route path="/profile/:username" element={<Profile/>}></Route>
+      
       
       
     </Routes>

@@ -50,6 +50,7 @@ export default function Default({loggedIn, logout,closeDropdown, showAccountDrop
 
           <div className="account-dropdown-section">
             <ul>
+              <li onClick={closeDropdown}><Link to="/profile/">Account</Link></li>
               <li onClick={closeDropdown}><Link to="/settings">Settings</Link></li>
               <li><button type="button" onClick={changeTheme}>{theme ? <div><MdOutlineLightMode height={"100%"}/> Light mode</div> : <div><MdOutlineNightlight height={"100%"}/> Dark mode</div>}</button></li>
             </ul>
