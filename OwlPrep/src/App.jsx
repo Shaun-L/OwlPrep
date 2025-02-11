@@ -104,6 +104,12 @@ function App() {
         </Route>
         <Route path="/profile/:username" element={<Profile />} />
       </Routes>
+      <div>
+        <input value ={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
+        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
+        <button onClick={handleRegister}>Register</button>
+        <button onClick={handleLogin}>Login</button>
+      </div>
     </>
   );
 }
