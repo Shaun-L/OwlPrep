@@ -1,7 +1,7 @@
-import { useState, useRef } from "react";
+// import { useState, useRef } from "react";
 import { useState } from "react";
 import { Routes, Route } from "react-router-dom";
-import { Link } from "react-router-dom";
+// import { Link } from "react-router-dom";
 import File_Dropzone from "./components/File_Dropzone";  // Import your File_Dropzone component
 import { register, login } from "./firebaseUtils";
 
