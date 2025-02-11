@@ -1,7 +1,9 @@
 import { useState, useRef } from "react";
+import { useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import { Link } from "react-router-dom";
 import File_Dropzone from "./components/File_Dropzone";  // Import your File_Dropzone component
+import { register, login } from "./firebaseUtils";
 
 import SignUp from "./pages/SignUp";
 import Home from "./pages/Home";
@@ -13,11 +15,11 @@ import Page404 from "./pages/404";
 import "./App.css"; 
 
 function App() {
-  const [users, setUsers] = useState([]);
-  const [name, setName] = useState(""); // State for user name
+  // const [users, setUsers] = useState([]);
+  // const [name, setName] = useState(""); // State for user name
   const [email, setEmail] = useState(""); // State for user email
   const [password, setPassword] = useState(""); // State for user password
-  const checkboxRef = useRef(null);
+  // const checkboxRef = useRef(null);
 
   const [loggedIn, setLoggedIn] = useState(true);
   const [showAccountDropdown, setShowAccountDropDown] = useState(false);
@@ -37,6 +39,24 @@ function App() {
 
   function closeDropdown() {
     setShowAccountDropDown(false);
+  }
+
+  const handleRegister = async () => {
+    try {
+        const user = await register(email, password);
+        console.log("User registered:", user);
+    } catch(error) {
+        console.error("Registration error:", error);
+    }
+  }
+
+  const handleLogin = async () => {
+    try {
+        const user = await login(email, password);
+        console.log("User logged in:", user);
+    } catch(error) {
+        console.log("Login error:", error);
+    }
   }
 
   function changeTheme() {
