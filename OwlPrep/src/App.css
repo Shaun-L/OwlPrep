@@ -1,42 +1,494 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+
+*{
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+:root{
+  --background-color: white;
+  --primary-color: #90C7C1;
+  --secondary-text-color: #586380;
+  --primary-text-color: #282e3e;
+  --border-color: #edeff4;
+  --search-background: #edeff4;
+  --hover-background: #edeff4;
+  --secondary-border-color: rgb(239, 239, 239);
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+[data-theme="dark"]{
+  --background-color: #1b1b1b;
+  --primary-text-color: #F6F7FB;
+  --secondary-text-color: #D9DDE8;
+  --search-background: #272727;
+  --hover-background: rgb(37, 37, 37);
+  --border-color: #454545;
+}
+
+body{
+  background-color: var(--background-color);
+}
+
+#Logo a{
+  text-decoration: none;
+  font-weight: 600;
+  color: rgb(26, 163, 115);
+  font-size: 1.5rem;
+}
+
+header{
+  padding: 12px 1.5rem;
+  display: grid;
+  background-color: var(--background-color);
+  grid-template-columns: max-content 60% max-content;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header input{
+  width: 80%;
+  padding: 14px 10px;
+  outline: none;
+  border: none;
+  background-color: var(--search-background);
+  border-radius: 5px;
+  font-weight: 600;
+  color: var(--secondary-text-color);
+}
+
+header input::placeholder{
+  color: var(--secondary-text-color)
+}
+
+#header-btns{
+  display: flex;
+  gap: 1rem;
+  color: var(--secondary-text-color);
+  align-items: center;
+  position: relative;
+}
+
+
+
+.hide{display: none;}
+
+.accountBtn{
+  padding: 8px 10px;
+  border-radius: 50%;
+  background-color: rgb(86, 95, 100);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.accountBtn svg{
+  fill: var(--primary-text-color);
+  
+}
+
+.filter-container{
+  position: relative;
+}
+
+#filter-dropdown{
+  position: absolute;
+  background-color: var(--secondary-border-color);
+  right: 15px;
+  margin-top: .4rem;
+  border-radius: 5px;
+  width: max-content;
+  padding: 8px 12px;
+}
+
+#filter-dropdown label{
+  display: block;
+  color: var(--secondary-text-color)
+}
+
+#account-dropdown{
+  position: absolute;
+  width: fit-content;
+  top: 110%;
+  right: 0;
+  background-color: var(--background-color);
+  
+  border: 1px solid rgba(172, 172, 172, 0.556);
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+#user-account-email{
+  color: var(--primary-text-color)
+}
+
+#account-dropdown-header{
+  display: flex;
+  gap: 1rem;
+  padding: 14px 12px;
+  justify-content: space-between;
+  align-items: center;
+  
+}
+
+#logout-btn{
+  color: var(--secondary-text-color);
+  font-weight: 600;
+  width: 100%;
+  text-align: left;
+  padding: .5rem .7rem;
+  font-size: 14px;
+}
+
+#logout-btn:hover{
+  background-color: var(--hover-background);
+}
+
+
+div.account-dropdown-section:not(:last-child){
+  border-bottom: 1px solid rgba(172, 172, 172, 0.556);
+}
+
+#account-dropdown ul{
+  list-style-type: none;
+  padding: .5rem 0;
+}
+
+#account-dropdown ul li a, #account-dropdown ul li button{
+  padding: .5rem .7rem;
+  width: 100%;
+  text-align: left;
+  text-decoration: none;
+  display: block;
+  color: var(--secondary-text-color);
+  font-size: 14px;
+  border: none;
+  font-weight: 600;
+}
+
+#account-dropdown ul li a:hover, #account-dropdown ul li button div{
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+#account-dropdown ul li a:hover, #account-dropdown ul li button:hover{
+  background-color: var(--hover-background);
+}
+
+#default-main{
+  display: flex;
+}
+
+#default-content{
+  width: 75%;
+  max-width: 1250px;
+  margin: 3rem auto;
+  padding: 0 1.5rem;
+}
+
+.sideNavSubContainer{
+  padding: 1rem 0;
+}
+
+.sideNavSubContainer:not(:last-child){
+  border-bottom: 3px solid var(--border-color);
+}
+
+#default-main .sideNavSubContainer > a{
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.sideNavSubContainer > div svg{
+  fill: var(--secondary-text-color)
+}
+
+#default-main nav{
+  padding: 1rem;
+  width: 30%;
+  max-width: 225px;
+}
+
+#default-main nav a{
+  display: block;
+  padding: .5rem;
+  border-radius: 5px;
+  text-decoration: none;
+  color: var(--secondary-text-color);
+  font-weight: 550;
+}
+
+#default-main nav a:hover{
+  background-color: var(--hover-background);
+}
+
+div.settings-container{
+  border: 2px solid var(--border-color);
+  border-radius: 5px;
+
+}
+
+h2.settings-title{
+  margin: 1rem 0;
+  font-size: 1rem;
+  color: var(--secondary-text-color)
+}
+
+input:read-only{
+  background-color: var(--background-color);
+  border: none;
+  color: var(--secondary-text-color);
+}
+
+.settings-sub-section-container{
+  padding: .8rem;
+}
+
+.settings-sub-section-container h3{
+  color: var(--primary-text-color)
+}
+
+.settings-sub-section-container:not(:last-child){
+  border-bottom: 2px solid var(--border-color);
+}
+
+.form-field-container{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+button{
+  cursor: pointer;
+  background-color: unset;
+  border: none;
+  padding: 8px 10px;
+}
+
+.form-field-container button{
+  padding: 10px 16px;
+  color: var(--primary-color);
+  font-weight: 600;
+  background-color: var(--background-color);
+  border: none;
+}
+
+.form-field-container button:hover{
+  background-color: var(--hover-background);
+}
+
+div.modal{
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #0a092d80;
+  transform: translateY(-100%);
+  transition: .5s ease-in-out linear;
+}
+
+div.showModal{
+  transform: translateY(0);
+}
+
+div.modal > div{
+  background-color: var(--background-color);
+  width: fit-content;
+  padding: .8rem 1.2rem;
+  margin: 2rem auto ;
+  border-radius: 5px;
+}
+
+div.modal > div > h2{
+  margin: 1.5rem 0;
+}
+
+div.modal > div > input{
+  padding: 8px 12px;
+  display: block;
+  width: 80%;
+  margin: .5rem 0;
+}
+
+h1{
+  color: var(--primary-text-color)
+}
+
+div.modal > div > button{
+  display: inline-block;
+  margin: 0 1rem 0 0;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+select{
+  padding: 8px 12px;
+  color: var(--secondary-text-color);
+  background-color: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  font-weight: 600;
+}
+
+#create-btn{
+  color: var(--primary-color)
+}
+
+#loginBtn{
+  background-color: var(--primary-color);
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 5px;
+  border: none;
+  color: var(--background-color);
+  text-decoration: none;
+}
+
+#account-header-btn{
+  padding: 8px 10px;
+  border-radius: 50%;
+  background-color: rgb(86, 95, 100);
+}
+
+#dropdown-focus{
+  display:none;
+}
+
+ul.upload-type-list{
+  list-style-type: none;
+  display: flex;
+  gap: 2rem;
+}
+
+ul.upload-type-list li button{
+  color: var(--secondary-text-color);
+  font-weight: 600;
+  padding: 0;
+  margin: 1rem 0;
+}
+
+ul.upload-type-list li button.type-selected{
+  border-bottom: 3px solid var(--primary-color);
+}
+
+div.file-upload-container{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+div.file-upload-container > div:first-child{
+  min-width: 0;
+  width: 100%;
+}
+
+
+div.file-upload-container div span{
+  display: inline-block;
+  width: 90%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+div.file-dropzone{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  border-width: 2px;
+  border-radius: 2px;
+  border-color: var(--border-color);
+  border-style: dashed;
+  background-color: var(--hover-background);
+  color: var(--secondary-text-color);
+  transition: 'border .3s ease-in-out';
+}
+
+
+
+
+button.generate-btn{
+  background-color: var(--primary-color);
+  margin: 1rem 0;
+  color: var(--background-color);
+  font-weight: 500;
+  font-weight: 600;
+  border-radius: 2px;
+}
+
+#home-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+#home-header button{
+  background-color: var(--border-color);
+  color: var(--secondary-text-color);
+  padding: 8px 12px;
+  display: inline-block;
+  margin-right: 1rem;
+  border-radius: 5px;
+}
+
+@media only screen and (min-width: 768px){
+  #default-content #itemsContainer{
+    grid-template-columns: 1fr 1fr;
   }
-  to {
-    transform: rotate(360deg);
+}
+
+@media only screen and (min-width: 1050px) {
+  #default-content #itemsContainer{
+    grid-template-columns: 1fr 1fr 1fr;
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+#itemsContainer{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  max-width: 1000px;
 }
 
-.card {
-  padding: 2em;
+div.studyItemContainer{
+  background-color: var(--border-color);
+  padding: 8px 12px;
+  border-radius: 5px;
+  height: 150px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
-.read-the-docs {
-  color: #888;
+div.studyItemContainer h2{
+  color:var(--primary-text-color)
+}
+
+.studyItemHeader p{
+  margin: .5rem 0 ;
+  background-color: rgb(212, 212, 212);
+  color: var(--secondary-text-color);
+  width: max-content;
+  padding: 4px 6px;
+  border-radius: 20px;
+  font-size: .9rem;
+}
+
+.studyItemFooter{
+  color: var(--secondary-text-color);
+  font-weight: 600;
+}
+.studyItemFooter a{
+  background-color: red;
+  display: inline-flex;
+  font-size: .9rem;
+  padding: .3rem .4rem;
+  border-radius: 50%;
+  color: black;
 }

@@ -1,108 +1,91 @@
-import { useState } from "react";
-import { insertData, deleteData, listUsers } from "./firebaseUtils";
-import "./App.css";
+import { useState, useRef } from "react";
+import { Routes, Route } from "react-router-dom";
+import { Link } from "react-router-dom";
+import File_Dropzone from "./components/File_Dropzone";  // Import your File_Dropzone component
+
+import SignUp from "./pages/SignUp";
+import Home from "./pages/Home";
+import Default from "./Layouts/Default";
+import Settings from "./pages/Settings";
+import Login from "./pages/Login";
+import Profile from "./pages/Profile";
+import Page404 from "./pages/404";
+import "./App.css"; 
 
 function App() {
-    const [users, setUsers] = useState([]);
-    const [name, setName] = useState(""); // State for user name
-    const [email, setEmail] = useState(""); // State for user email
+  const [users, setUsers] = useState([]);
+  const [name, setName] = useState(""); // State for user name
+  const [email, setEmail] = useState(""); // State for user email
+  const [password, setPassword] = useState(""); // State for user password
+  const checkboxRef = useRef(null);
 
-    const handleInsert = async () => {
-        if (!name || !email) {
-            alert("Please enter both name and email!");
-            return;
-        }
+  const [loggedIn, setLoggedIn] = useState(true);
+  const [showAccountDropdown, setShowAccountDropDown] = useState(false);
+  const [darkTheme, setDarkTheme] = useState(false);
 
-        const newUser = { name, email }; // Create user object
-        const documentId = name.toLowerCase().replace(/\s+/g, "_"); // Create document ID
+  function changeDropdownView() {
+    setShowAccountDropDown(!showAccountDropdown);
+  }
 
-        try {
-            await insertData("users", documentId, newUser);
-            alert("User added successfully!");
-            setName(""); // Reset the name field
-            setEmail(""); // Reset the email field
-        } catch (error) {
-            alert("Error adding user: " + error.message);
-        }
-    };
+  function logout() {
+    setLoggedIn(false);
+  }
 
-    const handleDelete = async () => {
-        if (!name) {
-            alert("Please enter the name of the user to delete!");
-            return;
-        }
+  function logginUser() {
+    setLoggedIn(true);
+  }
 
-        const documentId = name.toLowerCase().replace(/\s+/g, "_"); // Use same ID format for deletion
+  function closeDropdown() {
+    setShowAccountDropDown(false);
+  }
 
-        try {
-            await deleteData("users", documentId);
-            alert("User deleted successfully!");
-            setName(""); // Reset the name field
-        } catch (error) {
-            alert("Error deleting user: " + error.message);
-        }
-    };
+  function changeTheme() {
+    if (darkTheme) {
+      document.body.removeAttribute("data-theme");
+    } else {
+      document.body.setAttribute("data-theme", "dark");
+    }
+    setDarkTheme(!darkTheme);
+  }
 
-    const handleFetchUsers = async () => {
-        try {
-            const fetchedUsers = await listUsers("users");
-            setUsers(fetchedUsers);
-        } catch (error) {
-            alert("Error fetching users: " + error.message);
-        }
-    };
+  function selectThemeChange(themeName) {
+    console.log(themeName);
+    if (themeName === "light") {
+      document.body.removeAttribute("data-theme");
+      setDarkTheme(false);
+    } else {
+      document.body.setAttribute("data-theme", "dark");
+      setDarkTheme(true);
+    }
+  }
 
-    return (
-        <>
-            <div className="card">
-            <h1>Firebase Firestore Demo</h1>
-            
-            <div>
-                <label>
-                <strong>Name:</strong>
-                <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter name"
-                />
-                </label>
-            </div>
-            
-            <div>
-                <label>
-                <strong>Email:</strong>
-                <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter email"
-                />
-                </label>
-            </div>
-            
-            <button onClick={handleInsert}>Insert User</button>
-            <button onClick={handleDelete}>Delete User</button>
-            <button onClick={handleFetchUsers}>List All Users</button>
-
-            <div>
-                <h2>Users:</h2>
-                {users.length === 0 ? (
-                <p>No users found.</p>
-                ) : (
-                <ul>
-                    {users.map((user) => (
-                    <li key={user.id}>
-                        <strong>Name:</strong> {user.name} <br />
-                        <strong>Email:</strong> {user.email}
-                    </li>
-                    ))}
-                </ul>
-                )}
-            </div>
-            </div>
-        </>
-    );
+  return (
+    <>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <Default
+              logout={logout}
+              loggedIn={loggedIn}
+              closeDropdown={closeDropdown}
+              showAccountDropdown={showAccountDropdown}
+              theme={darkTheme}
+              changeTheme={changeTheme}
+              changeDropdownView={changeDropdownView}
+            />
+          }
+        >
+          <Route index element={<><Home /><File_Dropzone /></>} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/login" element={<Login logginUser={logginUser} />} />
+          <Route path="/settings" element={<Settings theme={darkTheme} selectThemeChange={selectThemeChange} />} />
+          <Route path="*" element={<Page404 />} />
+        </Route>
+        <Route path="/profile/:username" element={<Profile />} />
+      </Routes>
+    </>
+  );
 }
 
 export default App;
