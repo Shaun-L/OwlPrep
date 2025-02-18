@@ -32,3 +32,19 @@ OwlPrep is an AI-powered study application designed to enhance students' learnin
    ```bash
    npm install
    npm run dev
+
+3. **Run Backend**
+    ```bash
+    cd backend
+    ```
+    If starting from scratch:
+    ```bash
+    python -m venv venv
+    ```
+    Once Virtual Environment is initialized:
+   ```bash
+    source venv/bin/activate #For Mac
+    venv\Scripts\activate #For Winddows
+    pip install -r requirements.txt
+    flask run
+   ```
