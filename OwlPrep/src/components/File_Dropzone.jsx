@@ -1,16 +1,82 @@
+
+import React, { useCallback, useMemo, useEffect, useState, useRef } from 'react';
+import { useDropzone } from 'react-dropzone';
+import FileUploadComponent from './FileUploadComponent';
+import { byteConverter } from '../utils/byteconverter';
+
+const baseStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    padding: '20px',
+    borderWidth: 2,
+    borderRadius: 2,
+    borderColor: '#eeeeee',
+    borderStyle: 'dashed',
+    backgroundColor: '#fafafa',
+    color: '#bdbdbd',
+    transition: 'border .3s ease-in-out'
+  };
+  
+  const activeStyle = {
+    borderColor: '#2196f3'
+  };
+  
+  const acceptStyle = {
+    borderColor: '#00e676'
+  };
+  
+  const rejectStyle = {
+    borderColor: '#ff1744'
+  };
 import React, { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 
-function File_Dropzone() {
+
+function File_Dropzone({submitFunc, changeTopics}) {
     const [files, setFiles] = useState([]);
+
+    const first = useRef(false)
+
+    console.log(files)
+    useEffect(()=>{
+      // Once files have been uploaded 
+      
+        
+    },[files])
+
     const [uploadStatus, setUploadStatus] = useState("");
     const [loading, setLoading] = useState(false);
+  
+    function removeFile(key){
+      console.log("berreo")
 
-    const onDrop = useCallback((acceptedFiles) => {
-        setFiles(acceptedFiles);
-        setUploadStatus(""); // Clear previous messages
-    }, []);
+      setFiles(files.filter(file=>file.name!=key))
+    }
 
+
+    const onDrop = useCallback(acceptedFiles => {
+        setFiles(oldFiles=>([...oldFiles,...acceptedFiles.map(file => Object.assign(file, {
+            preview: URL.createObjectURL(file)
+          })).filter((file=>!oldFiles.some((oldFile) => oldFile.name === file.name && oldFile.size === file.size)))]));
+        setUploadStatus("");
+          // Send files to backend to extract topics
+
+         changeTopics([{name: "Math", keep: true}, {name: "Physics", keep: true}])
+      }, []);
+
+      const {
+        getRootProps,
+        getInputProps,
+        isDragActive,
+        isDragAccept,
+        isDragReject
+      } = useDropzone({
+        onDrop,
+        accept: 'image/jpeg, image/png, application/pdf',
+        
+      });
+  
     const handleUpload = async () => {
         if (files.length === 0) {
             setUploadStatus("No file selected.");
@@ -23,13 +89,16 @@ function File_Dropzone() {
         setLoading(true); // Start loading state
         setUploadStatus("Processing file...");
 
+
         try {
             const response = await fetch("http://127.0.0.1:5000/upload", {
                 method: "POST",
                 body: formData,
             });
 
+
             const data = await response.json();
+
 
             if (response.ok) {
                 setUploadStatus(`File uploaded successfully! Processed topics: ${Object.keys(data.topics).join(", ")}`);
@@ -51,52 +120,31 @@ function File_Dropzone() {
         multiple: false, // Only accept a single file
     });
 
+  const thumbs = files.map(file => {
+    console.log(files)
+    return <FileUploadComponent key={file.name}  filename={file.name} filesize={byteConverter(file.size)} removeFile={removeFile}/>
+  });
+
     return (
-        <div
-            style={{
-                border: "2px dashed #ccc",
-                padding: "20px",
-                textAlign: "center",
-                margin: "20px",
-            }}
-        >
-            <div {...getRootProps()}>
-                <input {...getInputProps()} />
-                <p>Drop a PDF file here, or click to select one</p>
-            </div>
-
-            {files.length > 0 && (
-                <div>
-                    <h4>Selected File:</h4>
-                    <p>{files[0].name}</p>
-                    <button
-                        onClick={handleUpload}
-                        disabled={loading}
-                        style={{
-                            padding: "10px 20px",
-                            margin: "10px",
-                            backgroundColor: loading ? "#aaa" : "#4CAF50",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "4px",
-                            cursor: loading ? "not-allowed" : "pointer",
-                        }}
-                    >
-                        {loading ? "Processing..." : "Upload File"}
-                    </button>
-                </div>
-            )}
-
-            {loading && (
+    <section>
+      <div className='file-dropzone' {...getRootProps({style})}>
+        <input {...getInputProps()}  />
+        {files.length != 0 ? thumbs : <div>Drag and drop your files here.</div>}
+        {loading && (
                 <div style={{ marginTop: "10px" }}>
                     <span className="spinner" style={{ marginRight: "10px" }}>⏳</span>
                     Processing file...
                 </div>
-            )}
+          )}
+          {uploadStatus && <p>{uploadStatus}</p>}
+      </div>
 
-            {uploadStatus && <p>{uploadStatus}</p>}
-        </div>
-    );
+      <button className="generate-btn" onClick={submitFunc}  type="button" disabled={files.length == 0}>Generate</button>
+    </section>
+  )
+
+             
+    
 }
 
 export default File_Dropzone;

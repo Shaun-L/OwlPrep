@@ -10,7 +10,10 @@ import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import Page404 from "./pages/404";
+
+import CreateTest from "./pages/CreateTest";
 import "./App.css"; 
+
 
 function App() {
   const [users, setUsers] = useState([]);
@@ -60,29 +63,24 @@ function App() {
 
   return (
     <>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <Default
-              logout={logout}
-              loggedIn={loggedIn}
-              closeDropdown={closeDropdown}
-              showAccountDropdown={showAccountDropdown}
-              theme={darkTheme}
-              changeTheme={changeTheme}
-              changeDropdownView={changeDropdownView}
-            />
-          }
-        >
-          <Route index element={<><Home /><File_Dropzone /></>} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/login" element={<Login logginUser={logginUser} />} />
-          <Route path="/settings" element={<Settings theme={darkTheme} selectThemeChange={selectThemeChange} />} />
-          <Route path="*" element={<Page404 />} />
-        </Route>
-        <Route path="/profile/:username" element={<Profile />} />
-      </Routes>
+    
+    <Routes>
+      <Route path="/" element={<Default logout={logout} loggedIn={loggedIn} closeDropdown={closeDropdown} showAccountDropdown={showAccountDropdown} theme={darkTheme} changeTheme={changeTheme} changeDropdownView={changeDropdownView}/>}>
+        <Route index element={<Home></Home>}></Route>
+        <Route path="/signup" element={<SignUp></SignUp>}></Route>
+        <Route path="/login" element={<Login logginUser={logginUser}></Login>}></Route>
+        <Route path="/settings" element={<Settings theme={darkTheme} selectThemeChange={selectThemeChange}/>}></Route>
+        <Route path="/profile/:username" element={<Profile/>}></Route>
+        <Route path="/create-test" element={<CreateTest/>}></Route>
+        <Route path="*" element={<Page404/>}></Route>
+      </Route>
+
+      
+
+      
+      
+      
+    </Routes>
     </>
   );
 }

@@ -1,18 +1,26 @@
-import { Link, Outlet } from "react-router-dom"
+import { Link, Outlet, useLocation } from "react-router-dom"
 import { MdOutlineLightMode } from "react-icons/md";
 import { MdOutlineNightlight } from "react-icons/md";
 import { FaUser } from "react-icons/fa";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FaHome } from "react-icons/fa";
 import { CiBookmark } from "react-icons/ci";
 import { RiProgress1Line } from "react-icons/ri";
 import { LuFileSpreadsheet } from "react-icons/lu";
 import { LuLetterText } from "react-icons/lu";
+import { GiOwl } from "react-icons/gi";
+import { RxHamburgerMenu } from "react-icons/rx";
+
 
 export default function Default({loggedIn, logout,closeDropdown, showAccountDropdown, changeDropdownView, theme, changeTheme}){
-  
+  const [searchQuery, setSearchQuery] = useState("")
+  const [showMobileNav, setShowMobileNav] = useState(false)
   const dropdown = useRef(null)
-  
+  const location = useLocation()
+
+  useEffect(()=>{
+    setShowMobileNav(false)
+  },[location])
   document.addEventListener("mousedown", (e)=>{
 
     if(showAccountDropdown && !dropdown.current.contains(e.target)){
@@ -26,10 +34,15 @@ export default function Default({loggedIn, logout,closeDropdown, showAccountDrop
   
     
     <header>
-      <div id="Logo"><Link to="/">OwlPrep</Link></div>
+    
+      <div id="Logo">
+      
+        <RxHamburgerMenu className="mobileNavMenu" onClick={()=>setShowMobileNav(true)}/>
+        
+        <GiOwl color="#90C7C1" strokeWidth={20} width={"20px"} height={"40px"}></GiOwl><Link to="/">OwlPrep</Link></div>
 
       <div>
-        <input type="text" placeholder="Search for a test"></input>
+        <input type="text" placeholder="Search for a test" value={searchQuery} onChange={(e)=>setSearchQuery(e.currentTarget.value)}></input>
       </div>
 
       <div id="header-btns">
@@ -50,6 +63,7 @@ export default function Default({loggedIn, logout,closeDropdown, showAccountDrop
 
           <div className="account-dropdown-section">
             <ul>
+              <li onClick={closeDropdown}><Link to="/profile/">Account</Link></li>
               <li onClick={closeDropdown}><Link to="/settings">Settings</Link></li>
               <li><button type="button" onClick={changeTheme}>{theme ? <div><MdOutlineLightMode height={"100%"}/> Light mode</div> : <div><MdOutlineNightlight height={"100%"}/> Dark mode</div>}</button></li>
             </ul>
@@ -68,7 +82,15 @@ export default function Default({loggedIn, logout,closeDropdown, showAccountDrop
 
     <div id="default-main">
         
-        <nav id="sideNav">
+        
+
+        <nav id="sideNav" className={showMobileNav? "showNav": ""}>
+          
+          <div id="mobileNavHeader" >
+            <RxHamburgerMenu className="mobileNavMenu" onClick={()=>setShowMobileNav(false)}/>
+            <GiOwl color="#90C7C1" strokeWidth={20}/>
+          </div>
+
             <div className="sideNavSubContainer">
                 <Link to="/"><FaHome/>Home</Link>
                 
@@ -77,8 +99,8 @@ export default function Default({loggedIn, logout,closeDropdown, showAccountDrop
             </div>
             <div className="sideNavSubContainer">
                 <h3>Start Here</h3>
-                <Link><LuFileSpreadsheet/> Cheetsheet</Link>
-                <Link><LuLetterText/> Practice Test</Link>
+                <Link ><LuFileSpreadsheet/> Cheetsheet</Link>
+                <Link to="/create-test"><LuLetterText/> Practice Test</Link>
             </div>
         </nav>
         <main id="default-content">
