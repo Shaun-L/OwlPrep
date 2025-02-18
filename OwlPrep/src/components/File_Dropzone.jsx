@@ -29,8 +29,7 @@ const baseStyle = {
   const rejectStyle = {
     borderColor: '#ff1744'
   };
-import React, { useCallback, useState } from "react";
-import { useDropzone } from "react-dropzone";
+
 
 
 function File_Dropzone({submitFunc, changeTopics}) {
@@ -114,11 +113,7 @@ function File_Dropzone({submitFunc, changeTopics}) {
         }
     };
 
-    const { getRootProps, getInputProps } = useDropzone({
-        onDrop,
-        accept: "application/pdf",
-        multiple: false, // Only accept a single file
-    });
+
 
   const thumbs = files.map(file => {
     console.log(files)
@@ -127,7 +122,7 @@ function File_Dropzone({submitFunc, changeTopics}) {
 
     return (
     <section>
-      <div className='file-dropzone' {...getRootProps({style})}>
+      <div className='file-dropzone' {...getRootProps({baseStyle})}>
         <input {...getInputProps()}  />
         {files.length != 0 ? thumbs : <div>Drag and drop your files here.</div>}
         {loading && (
@@ -142,8 +137,6 @@ function File_Dropzone({submitFunc, changeTopics}) {
       <button className="generate-btn" onClick={submitFunc}  type="button" disabled={files.length == 0}>Generate</button>
     </section>
   )
-
-             
     
 }
 
