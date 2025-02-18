@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useEffect, useState } from 'react';
+import React, { useCallback, useMemo, useEffect, useState, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import FileUploadComponent from './FileUploadComponent';
 import { byteConverter } from '../utils/byteconverter';
@@ -29,19 +29,27 @@ const baseStyle = {
     borderColor: '#ff1744'
   };
 
-function File_Dropzone() {
+function File_Dropzone({submitFunc, changeTopics}) {
     const [files, setFiles] = useState([]);
+    const first = useRef(false)
+
     console.log(files)
     useEffect(()=>{
-        console.log(files.forEach(file=>console.log(file.name, file.size)))
+      // Once files have been uploaded 
+      
+        
     },[files])
 
     
 
     const onDrop = useCallback(acceptedFiles => {
-        setFiles(acceptedFiles.map(file => Object.assign(file, {
+        setFiles(oldFiles=>([...oldFiles,...acceptedFiles.map(file => Object.assign(file, {
             preview: URL.createObjectURL(file)
-          })));
+          })).filter((file=>!oldFiles.some((oldFile) => oldFile.name === file.name && oldFile.size === file.size)))]));
+
+          // Send files to backend to extract topics
+
+          changeTopics([{name: "Math", keep: true}, {name: "Physics", keep: true}])
       }, []);
 
       const {
@@ -52,7 +60,8 @@ function File_Dropzone() {
         isDragReject
       } = useDropzone({
         onDrop,
-        accept: 'image/jpeg, image/png, application/pdf'
+        accept: 'image/jpeg, image/png, application/pdf',
+        
       });
 
   const style = useMemo(() => ({
@@ -67,25 +76,27 @@ function File_Dropzone() {
 
   function removeFile(key){
     console.log("berreo")
+
     setFiles(files.filter(file=>file.name!=key))
 
   }
 
-  const thumbs = files.map(file => (
-    <FileUploadComponent key={file.name}  filename={file.name} filesize={byteConverter(file.size)} removeFile={removeFile}/>
-  ));
+  const thumbs = files.map(file => {
+    console.log(files)
+    return <FileUploadComponent key={file.name}  filename={file.name} filesize={byteConverter(file.size)} removeFile={removeFile}/>
+  });
 
   
 
   return (
     <section>
       <div className='file-dropzone' {...getRootProps({style})}>
-        <input {...getInputProps()} disabled={files.length != 0} />
+        <input {...getInputProps()}  />
         {files.length != 0 ? thumbs : <div>Drag and drop your files here.</div>}
         
       </div>
 
-      <button className="generate-btn" type="button" disabled={files.length == 0}>Generate</button>
+      <button className="generate-btn" onClick={submitFunc}  type="button" disabled={files.length == 0}>Generate</button>
     </section>
   )
 }

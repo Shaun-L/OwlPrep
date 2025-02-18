@@ -33,8 +33,9 @@ body{
 #Logo a{
   text-decoration: none;
   font-weight: 600;
-  color: rgb(26, 163, 115);
+  color: var(--primary-color);
   font-size: 1.5rem;
+  display: none;
 }
 
 header{
@@ -47,7 +48,7 @@ header{
 }
 
 header input{
-  width: 80%;
+  width: 100%;
   padding: 14px 10px;
   outline: none;
   border: none;
@@ -181,18 +182,36 @@ div.account-dropdown-section:not(:last-child){
 }
 
 #default-content{
-  width: 75%;
+  width: 100%;
   max-width: 1250px;
-  margin: 3rem auto;
+  margin: 1rem 0;
   padding: 0 1.5rem;
 }
 
 .sideNavSubContainer{
   padding: 1rem 0;
+  
 }
 
 .sideNavSubContainer:not(:last-child){
   border-bottom: 3px solid var(--border-color);
+}
+
+#sideNav{
+  position: fixed;
+  z-index: 100;
+  background-color: var(--background-color);
+  min-width: 250px;
+  width: 80%;
+  height: 100%;
+  left: 0;
+  top: 0;
+  transform: translateX(-100%);
+  transition: .5s ease-in-out;
+}
+
+#sideNav.showNav{
+  transform: translate(0);
 }
 
 #default-main .sideNavSubContainer > a{
@@ -206,7 +225,7 @@ div.account-dropdown-section:not(:last-child){
 }
 
 #default-main nav{
-  padding: 1rem;
+  padding: 12px 1rem;
   width: 30%;
   max-width: 225px;
 }
@@ -334,7 +353,8 @@ select{
 }
 
 #create-btn{
-  color: var(--primary-color)
+  color: var(--primary-color);
+  display: none
 }
 
 #loginBtn{
@@ -441,12 +461,84 @@ button.generate-btn{
   #default-content #itemsContainer{
     grid-template-columns: 1fr 1fr;
   }
+
+  #Logo svg{
+    display: none;
+  }
+
+  #Logo a{
+    display: unset;
+  }
+
+  #mobileNavHeader{
+    display: none;
+  }
+
+  #sideNav{
+    all: unset;
+  }
+
+
+
+  #default-main nav{
+    padding: 1rem;
+    width: 30%;
+    max-width: 225px;
+  }
+
+  #Logo svg.mobileNavMenu{
+    display: none;
+  }
+
+  #default-content{
+    width: 75%;
+    max-width: 1250px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+  }
+
+  header input{
+    width: 80%;
+    padding: 14px 10px;
+    outline: none;
+    border: none;
+    background-color: var(--search-background);
+    border-radius: 5px;
+    font-weight: 600;
+    color: var(--secondary-text-color);
+  }
+
+  #create-btn{
+    display: block;
+  }
+
+  
+  
 }
 
 @media only screen and (min-width: 1050px) {
   #default-content #itemsContainer{
     grid-template-columns: 1fr 1fr 1fr;
   }
+
+ 
+  #default-content #TestForm{
+    max-width: 900px;
+    width: 80%;
+    display: grid;
+    grid-template-columns: 45% 45%;
+    justify-content: space-between;
+  }
+
+  .testNameInput{
+    grid-column: 1 / 3;
+    display: block;
+  }
+  
+  .formContainer{
+    grid-column: 1 / 3;
+  }
+  
 }
 
 #itemsContainer{
@@ -464,11 +556,17 @@ div.studyItemContainer{
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  min-width: 0;
 }
 
 div.studyItemContainer h2{
-  color:var(--primary-text-color)
+  color:var(--primary-text-color);
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
+
+
 
 .studyItemHeader p{
   margin: .5rem 0 ;
@@ -491,4 +589,165 @@ div.studyItemContainer h2{
   padding: .3rem .4rem;
   border-radius: 50%;
   color: black;
+}
+
+label.checkbox-label{
+  display: block;
+  width: max-content;
+  font-size: 1rem;
+  margin-bottom: .2rem;
+}
+
+label.checkbox-label input{
+  margin: 0 .5rem;
+}
+
+#TestForm .form-heading{
+  display: block;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--primary-text-color);
+  margin: .5rem 0;
+}
+
+#TestForm{
+  max-width: 900px;
+  width: 80%;
+  display: grid;
+  grid-template-columns: 1fr;
+  justify-content: space-between;
+}
+
+div.testFormDifficultyContainer button{
+  background-color: rgb(235, 234, 234);
+  margin-right: .5rem;
+  font-weight: 600;
+  color: var(--primary-text-color);
+  border-radius: .2rem;
+}
+
+.form-heading input[type="text"]{
+  display: block;
+  width: 100%;
+  padding: 10px 8px;
+  font-size: 1.2rem;
+  outline: none;
+  border: none;
+  border-bottom: 1px solid rgb(77, 76, 76);
+  color: var(--primary-text-color)
+}
+
+div.testFormDifficultyContainer button.diffSelected{
+  background-color: var(--primary-color);
+  color: var(--background-color);
+}
+
+
+
+.formCheckbox{
+  opacity: 0;
+  position: relative;
+  z-index: 0;
+}
+
+label.custom-checkbox{
+  position: relative;
+  cursor: pointer;
+}
+
+label.custom-checkbox > input{
+  opacity: 0;
+}
+
+label.custom-checkbox span.custom-check{
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  content: "";
+  display: block;
+  background-color: var(--border-color);
+  top: 1px;
+  left: 0;
+}
+
+label.custom-checkbox span.custom-check::after{
+  display: none;
+  content: "";
+  width: 3px;
+  height: 8px;
+  position: absolute;
+  top: 1px;
+  left: 5px;
+  border-bottom: 2px solid var(--border-color);
+  border-right: 2px solid var(--border-color);
+  -webkit-transform: rotate(45deg);
+  -ms-transform: rotate(45deg);
+  transform: rotate(45deg)
+}
+
+label.custom-checkbox input:checked ~ span.custom-check{
+  background-color: var(--primary-color);
+}
+
+label.custom-checkbox input:checked ~ span.custom-check::after{
+  display: block;
+}
+
+div.topicsContainer{
+  background-color: var(--search-background);
+  width: 100%;
+  height: 150px;
+  padding: 10px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+
+div.topic-item{
+  width: max-content;
+  background-color: #cbcbcb;
+  height: fit-content;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: .9rem;
+  color: var(--primary-text-color);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+div.topic-item.topicCrossed{
+  text-decoration: line-through;
+  color: var(--secondary-text-color);
+  background-color: #b9b9b9;
+}
+
+div.mobileNavContainer{
+  margin-top: 1rem;
+  margin-left: 1rem;
+}
+
+#Logo svg{
+  width: 40px;
+  height: 50px;
+}
+
+#Logo svg.mobileNavMenu{
+  width: 20px;
+  margin-right: .5rem;
+}
+
+#mobileNavHeader{
+  padding-left: .5rem;
+}
+
+#mobileNavHeader svg{
+  width: 40px;
+  height: 50px;
+}
+
+#mobileNavHeader svg.mobileNavMenu{
+  width: 20px;
+  margin-right: .5rem;
 }

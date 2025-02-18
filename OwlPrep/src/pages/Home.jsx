@@ -2,11 +2,29 @@ import {Link} from "react-router-dom"
 import File_Dropzone from "../components/File_Dropzone"
 import { FaFilter } from "react-icons/fa";
 import StudyItemContainer from "../components/StudyItemContainer";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getDocs, collection } from "firebase/firestore";
+import { db } from "../firebaseUtils";
+
 export default function Home(){
-    const items = [{title: "Title", type: "Cheetsheet", creator: "Sean"},{title: "Title", type: "Cheetsheet", creator: "Kabir"}, {title: "Title", type: "Cheetsheet", creator: "Zain"}]
+    const [items, setItems] = useState([])
     const [showFilterDropdown, setShowFilterDropdown] = useState(false);
     const [filter, setFilter] = useState(0)
+
+    useEffect(() => {
+        const fetchData = async () => {
+          try {
+            const querySnapshot = await getDocs(collection(db, 'tests'));
+            const dataList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            console.log(dataList)
+            setItems(dataList);
+          } catch (error) {
+            console.error("Error fetching data: ", error);
+          }
+        };
+    
+        fetchData();
+      }, []);
 
     function filterCheckboxClick(e){
         console.log(e.currentTarget.value)
@@ -40,7 +58,7 @@ export default function Home(){
 
         <div id="itemsContainer">
             {
-                items.map((item)=><StudyItemContainer title={item.title} type={item.type} creator={item.creator}/>)
+                items.map((item)=><StudyItemContainer title={item.name} type={item.type} creator={item.creator} key={item.id}/>)
             }
         </div>
         </>)
