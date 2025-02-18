@@ -1,6 +1,5 @@
 import openai
 import PyPDF2
-import re
 import os
 from dotenv import load_dotenv
 
@@ -57,26 +56,57 @@ def extract_topics_with_openai(text):
         response_text = chat_completion.choices[0].message.content
 
         # Convert response into a list of topics
-        topics = re.findall(r"[-•*] (.+)", response_text)  # Extract bullet-pointed topics
+        topics = [line.strip("-•* ") for line in response_text.split("\n") if line.strip()]
 
         return topics
     except Exception as e:
         print(f"Error generating response: {e}")
         return []
 
-def extract_relevant_text(text, topics):
+def extract_relevant_text_with_openai(text, topics):
     """
-    Extracts relevant text chunks for each topic from the given text.
+    Uses OpenAI to extract relevant text chunks for each topic from the given text.
     """
-    topic_text_mapping = {topic: {"text": [], "files": []} for topic in topics}
+    topic_text_mapping = {}
 
     for topic in topics:
-        #pattern below did not work 
-        pattern = re.compile(rf".{{0,200}}{re.escape(topic)}.{{0,200}}", re.IGNORECASE)
-        matches = pattern.findall(text)
-        
-        if matches:
-            topic_text_mapping[topic]["text"].extend(matches)
+        prompt = f"""
+        Extract relevant passages from the provided text that relate to the topic: "{topic}".
+        Provide only the most relevant text snippets (3-5 sentences each) that discuss the topic.
+        Ensure the extracted snippets are useful for understanding or testing knowledge on the topic.
+
+        Text:
+        {text}
+
+        Return only the extracted text without any additional explanation.
+        """
+
+        try:
+            chat_completion = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are an AI that extracts relevant text based on given topics.",
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    },
+                ],
+                temperature=0.5,
+            )
+
+            relevant_text = chat_completion.choices[0].message.content.strip()
+
+            if relevant_text:
+                topic_text_mapping[topic] = {
+                    "text": relevant_text.split("\n\n"),  # Splitting into snippets
+                    "files": [],
+                }
+
+        except Exception as e:
+            print(f"Error extracting relevant text for '{topic}': {e}")
 
     return topic_text_mapping
 
@@ -94,9 +124,10 @@ def process_pdf(pdf_path, topic_data):
 
     # Extract topics from the text
     topics = extract_topics_with_openai(text)
+    print("Extracted Topics:", topics)
 
     # Extract relevant text chunks for each topic
-    topic_text_mapping = extract_relevant_text(text, topics)
+    topic_text_mapping = extract_relevant_text_with_openai(text, topics)
 
     # Merge with existing topic data
     for topic, data in topic_text_mapping.items():
@@ -112,8 +143,7 @@ def process_pdf(pdf_path, topic_data):
 
 if __name__ == "__main__":
     pdf_files = [
-        "/Users/shaun/OwlPrep_testing/files/CECS_327_Notes_Networks_and_Distributed_Computing.pdf",
-        "/Users/shaun/OwlPrep_testing/files/Another_File.pdf"
+        "./files/CECS 327 Notes_ Networks and Distributed Computing.pdf",
     ]
 
     topic_data = {}
