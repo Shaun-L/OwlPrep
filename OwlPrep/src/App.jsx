@@ -1,7 +1,8 @@
 import { useState, useRef } from "react";
-import "./App.css";
-import {Routes, Route } from "react-router-dom";
-import {Link} from "react-router-dom"
+import { Routes, Route } from "react-router-dom";
+import { Link } from "react-router-dom";
+import File_Dropzone from "./components/File_Dropzone";  // Import your File_Dropzone component
+
 import SignUp from "./pages/SignUp";
 import Home from "./pages/Home";
 import Default from "./Layouts/Default";
@@ -9,7 +10,10 @@ import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import Page404 from "./pages/404";
+
 import CreateTest from "./pages/CreateTest";
+import "./App.css"; 
+
 
 function App() {
   const [users, setUsers] = useState([]);
@@ -21,44 +25,41 @@ function App() {
   const [showAccountDropdown, setShowAccountDropDown] = useState(false);
   const [darkTheme, setDarkTheme] = useState(false);
 
-  function changeDropdownView(){
+  function changeDropdownView() {
     setShowAccountDropDown(!showAccountDropdown);
   }
 
-  function logout(){
-    setLoggedIn(false)
+  function logout() {
+    setLoggedIn(false);
   }
 
-  function logginUser(){
-    setLoggedIn(true)
+  function logginUser() {
+    setLoggedIn(true);
   }
 
-  function closeDropdown(){
+  function closeDropdown() {
     setShowAccountDropDown(false);
   }
 
-  function changeTheme(){
-
-    if(darkTheme){
-      document.body.removeAttribute("data-theme")
-    }else{
-      document.body.setAttribute("data-theme", "dark")
+  function changeTheme() {
+    if (darkTheme) {
+      document.body.removeAttribute("data-theme");
+    } else {
+      document.body.setAttribute("data-theme", "dark");
     }
-    setDarkTheme(!darkTheme)
+    setDarkTheme(!darkTheme);
   }
 
-
-  function selectThemeChange(themeName){
-    console.log(themeName)
-    if(themeName == "light"){
-      document.body.removeAttribute("data-theme")
-      setDarkTheme(false)
-    }else{
-      document.body.setAttribute("data-theme", "dark")
-      setDarkTheme(true)
+  function selectThemeChange(themeName) {
+    console.log(themeName);
+    if (themeName === "light") {
+      document.body.removeAttribute("data-theme");
+      setDarkTheme(false);
+    } else {
+      document.body.setAttribute("data-theme", "dark");
+      setDarkTheme(true);
     }
   }
-
 
   return (
     <>
@@ -80,7 +81,6 @@ function App() {
       
       
     </Routes>
-    
     </>
   );
 }
