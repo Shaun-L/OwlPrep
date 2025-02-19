@@ -10,7 +10,7 @@ import { LuFileSpreadsheet } from "react-icons/lu";
 import { LuLetterText } from "react-icons/lu";
 import { GiOwl } from "react-icons/gi";
 import { RxHamburgerMenu } from "react-icons/rx";
-
+import File_Dropzone from "../components/File_Dropzone";
 
 export default function Default({loggedIn, logout,closeDropdown, showAccountDropdown, changeDropdownView, theme, changeTheme}){
   const [searchQuery, setSearchQuery] = useState("")
@@ -101,6 +101,11 @@ export default function Default({loggedIn, logout,closeDropdown, showAccountDrop
                 <h3>Start Here</h3>
                 <Link ><LuFileSpreadsheet/> Cheetsheet</Link>
                 <Link to="/create-test"><LuLetterText/> Practice Test</Link>
+            </div>
+
+            <div className="formContainer">
+                <h2 className="form-heading">Upload Files:</h2>
+                <File_Dropzone />
             </div>
         </nav>
         <main id="default-content">

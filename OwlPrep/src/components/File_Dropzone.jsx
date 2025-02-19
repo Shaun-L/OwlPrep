@@ -78,7 +78,6 @@ function File_Dropzone({submitFunc, changeTopics}) {
     console.log("berreo")
 
     setFiles(files.filter(file=>file.name!=key))
-
   }
 
   const thumbs = files.map(file => {

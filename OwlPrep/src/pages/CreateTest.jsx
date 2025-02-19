@@ -104,10 +104,6 @@ export default function CreateTest(){
 
             </div>
 
-            <div className="formContainer">
-                <h2 className="form-heading">Upload Files:</h2>
-                <File_Dropzone submitFunc={submitTestForm} changeTopics={changeTopics}/>
-            </div>
             
         </form>
         

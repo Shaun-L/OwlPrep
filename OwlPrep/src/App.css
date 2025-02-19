@@ -401,6 +401,14 @@ div.file-upload-container{
   width: 100%;
 }
 
+div.file-upload-container div:first-child{
+  display: flex;
+}
+
+div.file-upload-container svg{
+  fill: var(--primary-text-color)
+}
+
 div.file-upload-container > div:first-child{
   min-width: 0;
   width: 100%;
@@ -619,7 +627,7 @@ label.checkbox-label input{
 }
 
 div.testFormDifficultyContainer button{
-  background-color: rgb(235, 234, 234);
+  background-color: var(--search-background);
   margin-right: .5rem;
   font-weight: 600;
   color: var(--primary-text-color);
@@ -634,12 +642,13 @@ div.testFormDifficultyContainer button{
   outline: none;
   border: none;
   border-bottom: 1px solid rgb(77, 76, 76);
-  color: var(--primary-text-color)
+  background-color: var(--search-background);
+  color: var(--secondary-text-color)
 }
 
 div.testFormDifficultyContainer button.diffSelected{
   background-color: var(--primary-color);
-  color: var(--background-color);
+  color: #F6F7FB;
 }
 
 
@@ -679,8 +688,8 @@ label.custom-checkbox span.custom-check::after{
   position: absolute;
   top: 1px;
   left: 5px;
-  border-bottom: 2px solid var(--border-color);
-  border-right: 2px solid var(--border-color);
+  border-bottom: 2px solid white;
+  border-right: 2px solid white;
   -webkit-transform: rotate(45deg);
   -ms-transform: rotate(45deg);
   transform: rotate(45deg)
