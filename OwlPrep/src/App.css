@@ -7,14 +7,16 @@
 }
 
 :root{
+  --unselected-color: rgb(184, 184, 184);
   --background-color: white;
   --primary-color: #90C7C1;
   --secondary-text-color: #586380;
   --primary-text-color: #282e3e;
-  --border-color: #edeff4;
+  --border-color: #586380;
   --search-background: #edeff4;
   --hover-background: #edeff4;
-  --secondary-border-color: rgb(239, 239, 239);
+  --secondary-border-color: rgb(212, 212, 212);
+  --error-color: rgb(192, 67, 67);
 }
 
 [data-theme="dark"]{
@@ -24,6 +26,12 @@
   --search-background: #272727;
   --hover-background: rgb(37, 37, 37);
   --border-color: #454545;
+}
+
+.errorMsg{
+  color: var(--error-color);
+  font-weight: 600;
+  margin-bottom: .5rem;
 }
 
 body{
@@ -47,12 +55,13 @@ header{
   align-items: center;
 }
 
-header input{
+header div input{
   width: 100%;
   padding: 14px 10px;
   outline: none;
-  border: none;
+  border: 1px solid var(--border-color);
   background-color: var(--search-background);
+  border: 1px solid var(--border-color);
   border-radius: 5px;
   font-weight: 600;
   color: var(--secondary-text-color);
@@ -85,7 +94,10 @@ header input::placeholder{
 
 .accountBtn svg{
   fill: var(--primary-text-color);
-  
+}
+
+#TestForm .addQuestionBtn{
+  color: white;
 }
 
 .filter-container{
@@ -179,6 +191,7 @@ div.account-dropdown-section:not(:last-child){
 
 #default-main{
   display: flex;
+  padding-bottom: 2rem;
 }
 
 #default-content{
@@ -194,7 +207,7 @@ div.account-dropdown-section:not(:last-child){
 }
 
 .sideNavSubContainer:not(:last-child){
-  border-bottom: 3px solid var(--border-color);
+  border-bottom: 3px solid var(--secondary-border-color);
 }
 
 #sideNav{
@@ -206,6 +219,7 @@ div.account-dropdown-section:not(:last-child){
   height: 100%;
   left: 0;
   top: 0;
+  overflow-y: auto;
   transform: translateX(-100%);
   transition: .5s ease-in-out;
 }
@@ -405,8 +419,13 @@ div.file-upload-container div:first-child{
   display: flex;
 }
 
+div.file-upload-container.fileNotSelected div:first-child span{
+  text-decoration:line-through;
+  color: var(--unselected-color);
+}
+
 div.file-upload-container svg{
-  fill: var(--primary-text-color)
+  fill: var(--secondary-text-color)
 }
 
 div.file-upload-container > div:first-child{
@@ -427,14 +446,16 @@ div.file-dropzone{
   display: flex;
   flex-direction: column;
   align-items: center;
+  height: 250px;
   padding: 20px;
   border-width: 2px;
-  border-radius: 2px;
+  border-radius: 5px;
   border-color: var(--border-color);
   border-style: dashed;
   background-color: var(--hover-background);
   color: var(--secondary-text-color);
   transition: 'border .3s ease-in-out';
+  overflow-y: auto;
 }
 
 
@@ -443,10 +464,15 @@ div.file-dropzone{
 button.generate-btn{
   background-color: var(--primary-color);
   margin: 1rem 0;
-  color: var(--background-color);
+  color: white;
   font-weight: 500;
   font-weight: 600;
   border-radius: 2px;
+}
+
+div.file-dropzone ~ p{
+  color: var(--primary-text-color);
+  margin-top: 1rem;
 }
 
 #home-header{
@@ -465,9 +491,35 @@ button.generate-btn{
   border-radius: 5px;
 }
 
+@media only screen and (min-width: 560px){
+
+  #createTestPageContainer #TestForm{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  #createTestPageContainer #TestForm label{
+    grid-column: 1 / 3;
+  }
+}
+
+
 @media only screen and (min-width: 768px){
   #default-content #itemsContainer{
     grid-template-columns: 1fr 1fr;
+  }
+
+  #default-content #createTestPageContainer #TestForm{
+    display: block;
+  }
+
+  #default-content #createTestPageContainer{
+    display: grid;
+    grid-template-columns: 60% 35%;
+    grid-template-rows: max-content 1fr;
+    min-height: 500px;
+    row-gap: .5rem;
+    column-gap: 5%;
   }
 
   #Logo svg{
@@ -524,18 +576,25 @@ button.generate-btn{
   
 }
 
+#default-content #TestForm > div:last-child{
+  align-self: self-end;
+}
+
+
+
 @media only screen and (min-width: 1050px) {
   #default-content #itemsContainer{
     grid-template-columns: 1fr 1fr 1fr;
   }
 
  
-  #default-content #TestForm{
-    max-width: 900px;
-    width: 80%;
+  #default-content #createTestPageContainer #TestForm{
+    max-width: 100%;
+    width: 100%;
     display: grid;
-    grid-template-columns: 45% 45%;
+    grid-template-columns: max-content 55%;
     justify-content: space-between;
+    row-gap: .5rem;
   }
 
   .testNameInput{
@@ -543,10 +602,22 @@ button.generate-btn{
     display: block;
   }
   
-  .formContainer{
-    grid-column: 1 / 3;
-  }
-  
+}
+
+#default-main nav .fileUploadArea h2{
+  font-size: 1.1rem;
+  margin: .2rem 0;
+  color: var(--primary-text-color)
+}
+
+#default-main nav .fileUploadArea a{
+  background-color: var(--primary-color);
+  margin: .5rem 0;
+  color: white;
+  padding: 8px 10px;
+  width: fit-content;
+  font-weight: 600;
+  border-radius: .2rem;
 }
 
 #itemsContainer{
@@ -604,24 +675,45 @@ label.checkbox-label{
   width: max-content;
   font-size: 1rem;
   margin-bottom: .2rem;
+  color: var(--primary-text-color);
 }
 
 label.checkbox-label input{
   margin: 0 .5rem;
 }
 
-#TestForm .form-heading{
+.formSubmitButton{
+  background-color: var(--primary-color);
+  margin: 1rem 0;
+  padding: 8px 16px;
+  color: var(--background-color);
+ border-radius: 2px;
+ font-weight: 600;
+ font-size: 1.1rem;
+
+}
+
+.form-label{
   display: block;
   font-size: 1.2rem;
   font-weight: 500;
   color: var(--primary-text-color);
   margin: .5rem 0;
+  font-weight: 600;
+}
+
+#TestForm .form-heading, #createTestPageContainer #TestForm .form-heading{
+  display: block;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--primary-text-color);
+  margin: .5rem 0;
+  font-weight: 600;
 }
 
 #TestForm{
-  max-width: 900px;
-  width: 80%;
-  display: grid;
+  
+  width: 100%;
   grid-template-columns: 1fr;
   justify-content: space-between;
 }
@@ -642,8 +734,8 @@ div.testFormDifficultyContainer button{
   outline: none;
   border: none;
   border-bottom: 1px solid rgb(77, 76, 76);
-  background-color: var(--search-background);
-  color: var(--secondary-text-color)
+  background-color: var(--background-color);
+  color: var(--primary-text-color)
 }
 
 div.testFormDifficultyContainer button.diffSelected{
@@ -675,7 +767,8 @@ label.custom-checkbox span.custom-check{
   border-radius: 2px;
   content: "";
   display: block;
-  background-color: var(--border-color);
+  background-color: var(--search-background);
+  border: 1px solid var(--border-color);
   top: 1px;
   left: 0;
 }
@@ -705,31 +798,37 @@ label.custom-checkbox input:checked ~ span.custom-check::after{
 
 div.topicsContainer{
   background-color: var(--search-background);
+  color: var(--secondary-text-color);
+  border-radius: 5px;
+  border: 1px solid var(--border-color);
   width: 100%;
   height: 150px;
-  padding: 10px;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: .5rem;
+  padding-top: 4px;
+
+}
+
+.fileNotSelected{
+
 }
 
 div.topic-item{
-  width: max-content;
-  background-color: #cbcbcb;
+  cursor: pointer;
+  overflow-x: hidden;
+  text-wrap: nowrap;
+  text-overflow: ellipsis;
+  background-color: var(--secondary-gray);
   height: fit-content;
-  padding: 3px 8px;
-  border-radius: 10px;
+  padding: 2px 12px;
+  border-radius: 2px;
   font-size: .9rem;
-  color: var(--primary-text-color);
+  color: var(--);
   font-weight: 600;
   cursor: pointer;
 }
 
 div.topic-item.topicCrossed{
   text-decoration: line-through;
-  color: var(--secondary-text-color);
-  background-color: #b9b9b9;
+  color: var(--unselected-color);
 }
 
 div.mobileNavContainer{
@@ -760,3 +859,197 @@ div.mobileNavContainer{
   width: 20px;
   margin-right: .5rem;
 }
+
+#createTestPageContainer{
+  padding-bottom: 1rem;
+  grid-template-columns: 1fr;
+  min-height: 500px;
+  row-gap: .5rem;
+  column-gap: 5%;
+}
+
+#createTestPageContainer div:first-child{
+  grid-column: 1 / 3;
+
+}
+
+#createTestPageContainer div:first-child p{
+  color: var(--secondary-text-color)
+}
+
+.fileUploadedArea h2{
+  color: var(--primary-text-color);
+  margin: .2rem 0;
+}
+
+.fileUploadedArea{
+  display: grid;
+  grid-template-rows: max-content 1fr;
+  grid-template-columns: 1fr;
+  width: 100%s;
+}
+
+.fileUploadedArea > div:first-child p{
+  color: var(--secondary-text-color)
+}
+
+.filesUploadedContainer{
+  color:var(--secondary-text-color);
+  background-color: var(--hover-background);
+  height: 100%;
+  border-radius: 5px;
+  width: 100%;
+  padding: 1rem;
+  border-color: var(--border-color);
+  border-width: 1px;
+  border-style: solid;
+  min-width: 0;
+  min-height: 150px;
+  overflow-y: auto;
+}
+
+.topics-in-grid{
+  grid-column: 1 / 3;
+}
+
+#topicsDropdownBtn{
+  background-color: var(--search-background);
+  color: var(--secondary-text-color);
+  display: flex;
+  align-items: center;
+}
+
+#sideNavTopicsContainer{
+  max-height: 0px;
+  overflow: hidden;
+  padding: 0 .5rem;
+  border-radius: 5px;
+  transition: max-height 1s ease-in-out;
+  transition: padding .1s ease-in-out;
+  background-color: var(--search-background);
+  margin-top: .5rem;
+  transform-origin: top;
+}
+
+#sideNavTopicsContainer.show{
+  max-height: 500px;
+  padding: .5rem;
+}
+
+#sideNavTopicsContainer{
+  background-color: var(--search-background);
+  color: var(--secondary-text-color);
+}
+
+#sideNavTopicsContainer > div:not(:last-child){
+  border-bottom: 1px solid var(--primary-text-color);
+  padding: .2rem 0;
+}
+
+.flex{
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.button{
+  background-color: var(--primary-color);
+  border-radius: 2px;
+  height: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: var(--primary-text-color)
+
+}
+
+.sampleQuestionContainer{
+  background-color: var(--search-background);
+  padding: 1rem;
+  border-radius: 5px;
+  overflow-y: auto;
+  max-height: 120px;
+  min-width: 100%;
+  width: 0;
+  border: 1px solid var(--border-color);
+  color: var(--secondary-text-color)
+}
+
+input[type="text"]::placeholder{
+  color: var(--secondary-text-color);
+}
+
+.sampleQuestionFormField{
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: max-content 1fr;
+}
+
+.sampleQuestionModal{
+  position: fixed;
+  height: 100vh;
+  width: 100vw;
+  background-color: rgba(0,0,0,0.5);
+  top: 0;
+  left: 0;
+  z-index: 100;
+}
+
+.sampleQuestionForm{
+  width: fit-content;
+  background-color: var(--background-color);
+  margin: 4rem auto;
+  padding: 3rem 1rem 1rem 1rem;
+  border-radius: 5px;
+  position: relative;
+}
+
+.sampleQuestionForm h2{
+  font-size: 1rem;
+  color: var(--secondary-text-color);
+  margin-bottom: .2rem;
+}
+
+.sampleQuestionModalClose{
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 30px;
+  height: 30px;
+}
+
+.sampleQuestionForm textarea{
+  width: 100%;
+  height: 100px;
+  resize: none;
+  padding: .5rem;
+  background-color: var(--search-background);
+  color: var(--secondary-text-color);
+  margin: 0 0 .5rem 0;
+
+}
+
+.sampleQuestionForm label{
+  display: block;
+}
+
+.sampleQuestionItem{
+  padding: .2rem 0;
+  color: var(--secondary-text-color);
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  text-wrap: nowrap;
+}
+
+.sampleQuestionItem p{
+  
+  text-overflow:ellipsis;
+  text-wrap: nowrap;
+  overflow: hidden;
+}
+

@@ -11,16 +11,23 @@ import { LuLetterText } from "react-icons/lu";
 import { GiOwl } from "react-icons/gi";
 import { RxHamburgerMenu } from "react-icons/rx";
 import File_Dropzone from "../components/File_Dropzone";
+import { IoMdArrowDropdown } from "react-icons/io";
 
-export default function Default({loggedIn, logout,closeDropdown, showAccountDropdown, changeDropdownView, theme, changeTheme}){
+
+export default function Default({loggedIn, topics, setTopics, logout,closeDropdown, setUploadedFiles, showAccountDropdown, changeDropdownView, theme, changeTheme}){
   const [searchQuery, setSearchQuery] = useState("")
   const [showMobileNav, setShowMobileNav] = useState(false)
+  const [showTopics, setShowTopics] = useState(false)
+
   const dropdown = useRef(null)
   const location = useLocation()
+  
 
   useEffect(()=>{
     setShowMobileNav(false)
-  },[location])
+  },[location]) 
+  
+
   document.addEventListener("mousedown", (e)=>{
 
     if(showAccountDropdown && !dropdown.current.contains(e.target)){
@@ -103,9 +110,13 @@ export default function Default({loggedIn, logout,closeDropdown, showAccountDrop
                 <Link to="/create-test"><LuLetterText/> Practice Test</Link>
             </div>
 
-            <div className="formContainer">
-                <h2 className="form-heading">Upload Files:</h2>
-                <File_Dropzone />
+            <div className="fileUploadArea">
+                <h2>Upload Files:</h2>
+                <File_Dropzone setTopics={setTopics} setUploadedFiles={setUploadedFiles} />
+                <button id="topicsDropdownBtn" onClick={()=>{setShowTopics(!showTopics)}} disabled={topics.length == 0} >Topics({topics.length}): <IoMdArrowDropdown/></button>
+                <div id="sideNavTopicsContainer" className={`${showTopics ? "show" : ""}`} >
+                    {topics.map((topic)=><div className="sideNavTopicsContainer" key={topic.name}>{topic.name}</div>)}
+                </div>
             </div>
         </nav>
         <main id="default-content">
