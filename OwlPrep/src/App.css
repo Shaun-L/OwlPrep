@@ -686,7 +686,7 @@ label.checkbox-label input{
   background-color: var(--primary-color);
   margin: 1rem 0;
   padding: 8px 16px;
-  color: var(--background-color);
+  color: white;
  border-radius: 2px;
  font-weight: 600;
  font-size: 1.1rem;

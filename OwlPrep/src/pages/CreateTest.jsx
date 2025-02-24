@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
 import File_Dropzone from "../components/File_Dropzone";
 import { db } from "../firebaseUtils";
@@ -25,25 +25,9 @@ export default function CreateTest({topics, uploadedFiles, changeUploadedFiles, 
     const [smSelected, setSMSelected] = useState(true)
     const navigate = useNavigate()
 
-    function handleFileRemove(filename){
-        let removed = false;
-        changeUploadedFiles(old=>old.map((file)=>{
-            if(file.name != filename){
-                return file
-            }else{
-                removed = file.keep
-                return {...file, keep:!file.keep}
-            }
-        }))
-
-        if(removed){
-            let allUnselected = true;
-            for(let i = 0; i < uploadedFiles[filename].length; i++){
-
-            }
-            
-        }
-    }
+    useEffect(()=>{
+        setFormError(false)
+    }, [uploadedFiles, topics, mcSelected, tfSelected, sampleQuestions, smSelected, saSelected, diff, length])
 
     async function submitTestForm(){
         console.log(mcSelected,tfSelected,saSelected)
@@ -52,11 +36,28 @@ export default function CreateTest({topics, uploadedFiles, changeUploadedFiles, 
             setErrorMsg("Must select at least one question type");
             return
         }else if(uploadedFiles.length == 0){
-            setErrorMsg("Missing Files");
+            setErrorMsg("Need to upload Files");
             setFormError(true)
         }else if(testName == ""){
             setErrorMsg("Test requires a name");
             setFormError(true)
+        }else{
+            let noSelectedTopics = true;
+            console.log("Nice")
+            for(let i = 0; i < topics.length; i++){
+                if(!topics[i].keep){
+                    continue;
+                }else{
+                    noSelectedTopics = false;
+                    break;
+                    
+                }
+            }
+
+            if(noSelectedTopics){
+                setErrorMsg("Select a topic from the topic bank")
+                setFormError(true);
+            }
         }
 
         const questionTypeList = []
