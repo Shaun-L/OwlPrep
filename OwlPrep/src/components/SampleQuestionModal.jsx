@@ -6,9 +6,14 @@ export default function SampleQuestionModal({closeModal, setSampleQuestions, sam
     const [question,setQuestion] = useState("")
     const [answer,setAnswer] = useState("")
     const [showError, setShowError] = useState(false)
+    const [errMsg, setErrMsg] = useState("")
 
     const handleSubmit = ()=>{
         if(question == "" || answer==""){
+            setErrMsg("Missing Field Required")
+            setShowError(true)
+        }else if(sampleQuestions.find((val)=>val.question==question)){
+            setErrMsg("There already exist a similiar question")
             setShowError(true)
         }
         else{
@@ -20,7 +25,7 @@ export default function SampleQuestionModal({closeModal, setSampleQuestions, sam
     return(
         <div className="sampleQuestionModal">
             <div className="sampleQuestionForm">
-                <IoClose className="sampleQuestionModalClose" onClick={closeModal}/>
+                <IoClose className="sampleQuestionModalClose pointer" onClick={closeModal}/>
 
                 <h1>Sample Entry</h1>
                 <h2>Provide a sample question and answer for reference</h2>
@@ -32,7 +37,7 @@ export default function SampleQuestionModal({closeModal, setSampleQuestions, sam
                 <textarea value={answer} onFocus={()=>{setShowError(false)}} onChange={(e)=>{
                     setAnswer(e.target.value)}}></textarea>
                 
-                {showError && <p className="errorMsg">Missing Field Required</p>}
+                {showError && <p className="errorMsg">{errMsg}</p>}
                 <button className="formSubmitButton" onClick={handleSubmit}>Add</button>
 
                 <div className="sampleQuestionContainer">

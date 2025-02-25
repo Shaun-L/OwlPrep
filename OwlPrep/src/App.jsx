@@ -25,7 +25,7 @@ function App() {
   const [loggedIn, setLoggedIn] = useState(true);
   const [showAccountDropdown, setShowAccountDropDown] = useState(false);
   const [darkTheme, setDarkTheme] = useState(false);
-  const [topics,setTopics] = useState([])
+  const [topics,setTopics] = useState([{name: "fddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", keep: true, files: []} ])
   const [uploadedFiles, setUploadedFiles] = useState([])
 
   function changeDropdownView() {
