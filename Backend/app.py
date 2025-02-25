@@ -1,13 +1,14 @@
 from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
-from flask_cors import CORS  # Import CORS
+from flask_cors import CORS
 import os
 from processing import process_pdf
 from firebase_config import db
+import firebase_admin
+from firebase_admin import firestore
 
 app = Flask(__name__)
 CORS(app)
-#origins=["http://localhost:5173"]
 
 UPLOAD_FOLDER = "./uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -25,19 +26,47 @@ def upload_file():
     filename = secure_filename(file.filename)
     file_path = os.path.join(UPLOAD_FOLDER, filename)
     file.save(file_path)
+    filename = filename.replace("_", " ")
 
     # Process PDF
     topic_data = process_pdf(file_path)
 
-    # Store results in Firebase
-    for topic, data in topic_data.items():
-        db.collection("topics").add({
+    # Create a document for the file
+    file_doc_ref = db.collection("files").document(filename)
+
+    # Get current timestamp
+    timestamp = firestore.SERVER_TIMESTAMP
+
+    # Store topics under the file document
+    topics_list = [
+        {
             "topic": topic,
             "text": data["text"],
-            "files": data["files"]
-        })
+            "parent_file": filename
+        }
+        for topic, data in topic_data.items()
+    ]
 
-    return jsonify({"message": "File processed successfully", "topics": topic_data})
+    # Set the document, ensuring it creates or updates the file entry
+    file_doc_ref.set({
+        "filename": filename,
+        "topics": topics_list,
+        "uploaded_at": timestamp  # Add the timestamp field
+    }, merge=True)
+
+    # Fetch the file document with its topics and timestamp
+    file_doc = file_doc_ref.get()
+    if file_doc.exists:
+        file_data = file_doc.to_dict()
+    else:
+        file_data = {}
+
+    # Return both the processed topic_data and the file data from Firebase
+    return jsonify({
+        "message": "File processed successfully",
+        "topics": topic_data,  # Return the topics from PDF processing
+        "file_data": file_data  # Return the file document with topics and timestamp
+    })
 
 if __name__ == "__main__":
     app.run(debug=True)
