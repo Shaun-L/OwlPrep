@@ -51,6 +51,9 @@ function Login({logginUser}) {
           <p>
             Need an account? <Link to="/signup">Sign Up</Link>
           </p>
+          <p>
+            Forgot your password? <Link to="/forgot-password">Reset Password</Link>
+          </p>
         </div>
       </div>
 
