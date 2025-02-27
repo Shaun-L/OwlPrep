@@ -7,8 +7,6 @@ import { setDoc, doc } from "firebase/firestore";
 function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  // const [firstName, setFirstName] = useState(""); // New state for first name
-  // const [lastName, setLastName] = useState("");   // New state for last name
   const [userName, setUserName] = useState(""); // New state for username
   const navigate = useNavigate();
 
@@ -21,11 +19,9 @@ function SignUp() {
       // Save first and last name to Firestore under the user's document
       const user = userCredential.user;
       await setDoc(doc(db, "users", user.uid), {
-        //firstName: firstName,
-        //lastName: lastName,
         userName: userName, // Save username to Firestore
-        email: email, // Save email to Firestore as well
-        password: password, // Save password to Firestore as well
+        email: email, // Save email to Firestore
+        password: password, // Save password to Firestore
       });
 
       alert("Registration successful!");
