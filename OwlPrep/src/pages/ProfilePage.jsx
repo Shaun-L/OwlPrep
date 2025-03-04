@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { db, auth } from "../firebaseUtils";
+import { db, auth } from "../firebaseUtils"; // Ensure auth and db imports
 import { doc, getDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 
@@ -28,16 +28,21 @@ function ProfilePage() {
 
   return (
     <div className="profile-page">
-      <h1>Profile Page</h1>
-      {userInfo ? (
-        <div>
-          <p>First Name: {userInfo.firstName}</p>
-          <p>Last Name: {userInfo.lastName}</p>
-          <button onClick={handleLogout}>Logout</button>
-        </div>
-      ) : (
-        <p>Loading...</p>
-      )}
+        <h1>Profile Page</h1>
+        {userInfo ? (
+            <div>
+                {/* Replace first name & last name with username 
+                <p>First Name: {userInfo.firstName}</p>
+                <p>Last Name: {userInfo.lastName}</p>
+                */}
+                <p>User Name: {userInfo.userName}</p>
+                <p>Email: {userInfo.email}</p>
+                <p>Password: {userInfo.password}</p>
+                <button onClick={handleLogout}>Logout</button>
+            </div>
+        ) : (
+            <p>Loading...</p>
+        )}
     </div>
   );
 }

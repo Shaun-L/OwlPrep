@@ -1,18 +1,38 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "../firebaseUtils"; // For user authentication and pulling data
 
 export default function Settings({theme, selectThemeChange}){
-    const [username, setUsername] = useState("nikeisthebest");
+    const [username, setUsername] = useState("");
     const [editUsername, setEditUsername] = useState(false);
 
-    const [email, setEmail] = useState("someemail@email.com");
+    const [email, setEmail] = useState("");
     const [editEmail, setEditEmail] = useState(false);
     
-    const [password, setPassword] = useState("password");
+    const [password, setPassword] = useState("");
     const [editPassword, setEditPassword] = useState(false);
 
     const [selectedTheme, setSelectedTheme] = useState(theme ? "dark" : "light");
 
-    const [showAuthenticationModal, setShowAuthenticationModal] = useState(false)
+    const [showAuthenticationModal, setShowAuthenticationModal] = useState(false);
+
+    // Pulls the user's data from the database
+    useEffect(()=>{
+        const fetchUserData = async () => {
+            const user = auth.currentUser;
+            if (user) {
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    setUsername(userData.username);
+                    setEmail(userData.email);
+                    setPassword(userData.password);
+                }
+            }
+        };
+
+        fetchUserData();
+    }, []);
 
     function changeSelectedTheme(e){
         console.log(e.target.value)
@@ -50,7 +70,7 @@ export default function Settings({theme, selectThemeChange}){
     <div className={`modal ${showAuthenticationModal ? "showModal" : ""}`}>
         <div>
             <h2>Changing Password?</h2>
-            <p>To confirm it's really you, please authenticate with you old password.</p>
+            <p>To confirm it&apos;s really you, please authenticate with you old password.</p>
             <input type="password" placeholder="password"></input>
             <button type="button">Cancle</button>
             <button type="button">Confirm</button>
