@@ -145,7 +145,7 @@ export default function Settings({theme, selectThemeChange}){
                         
                         <div>
                             <button type="button" className={editPassword ? "hide" : ""} onClick={editField} data-field="password">Edit</button>
-                            <button type="button" onClick={()=>setEditUsername(false)} className={!editPassword ? "hide" : ""}>Cancle</button>
+                            <button type="button" onClick={()=>setEditUsername(false)} className={!editPassword ? "hide" : ""}>Cancel</button>
                             <button type="button" className={!editPassword ? "hide" : ""}>Save</button>
                         </div>
                         

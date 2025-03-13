@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PropTypes from 'prop-types';
 import { useNavigate, Link } from "react-router-dom";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 
@@ -60,5 +61,9 @@ function Login({logginUser}) {
         </div>
     );
 }
+
+Login.propTypes = {
+    logginUser: PropTypes.func.isRequired,
+};
 
 export default Login;
