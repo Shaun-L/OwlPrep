@@ -1,8 +1,13 @@
 import { useState, useEffect } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "../firebaseUtils"; // For user authentication and pulling data
+import PropTypes from "prop-types";
 
-export default function Settings({theme, selectThemeChange}){
+export default function Settings({theme, selectThemeChange}) {
+    Settings.propTypes = {
+        theme: PropTypes.bool.isRequired,
+        selectThemeChange: PropTypes.func.isRequired,
+    };
     const [username, setUsername] = useState("");
     const [editUsername, setEditUsername] = useState(false);
 
@@ -35,19 +40,27 @@ export default function Settings({theme, selectThemeChange}){
     }, []);
 
     function changeSelectedTheme(e){
-        console.log(e.target.value)
-        selectThemeChange(e.target.value)
-        setSelectedTheme(e.target.value)
+        // Updating the theme changing function
+        const newTheme = e.target.value;
+        console.log("Theme Changed to: " + newTheme);
+        selectThemeChange(newTheme);
+        setSelectedTheme(newTheme);
     }
 
     function editField(e){
         setEditUsername(false)
         setEditEmail(false)
-        
+        setEditPassword(false) // Resetting password edit field
+        selectedTheme(false)
+
         const editFieldName = e.target.dataset.field;
         console.log(editFieldName)
 
         switch(editFieldName){
+            // Changing light or dark mode
+            case "theme":
+                selectedTheme(true)
+                break;
             case "email":
                 console.log("hello")
                 setEditEmail(()=>true)
@@ -57,6 +70,7 @@ export default function Settings({theme, selectThemeChange}){
                 break;
             case "password":
                 setShowAuthenticationModal(true);
+                setEditPassword(true)
                 document.body.style.overflowY = "hidden";
                 break;
         }
@@ -123,7 +137,7 @@ export default function Settings({theme, selectThemeChange}){
                         <h3>Theme</h3>
                         
                         <div>
-                            <select name="theme" value={theme ? "dark" : "light"} onChange={changeSelectedTheme}> 
+                            <select name="theme" value={selectedTheme} onChange={changeSelectedTheme}> 
                                 <option value={"light"}>Light</option>
                                 <option value={"dark"}>Dark</option>
                             </select>
