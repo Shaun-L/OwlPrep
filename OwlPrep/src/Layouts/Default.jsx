@@ -106,7 +106,7 @@ export default function Default({loggedIn, topics, setTopics, logout,closeDropdo
             </div>
             <div className="sideNavSubContainer">
                 <h3>Start Here</h3>
-                <Link ><LuFileSpreadsheet/> Cheetsheet</Link>
+                <Link to="/create-cheat-sheet"><LuFileSpreadsheet/> Cheatsheet</Link>
                 <Link to="/create-test"><LuLetterText/> Practice Test</Link>
             </div>
 
