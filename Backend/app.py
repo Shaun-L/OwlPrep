@@ -6,6 +6,7 @@ from processing import process_pdf
 from firebase_config import db
 import firebase_admin
 from firebase_admin import firestore
+from testgenerator import generate_test
 
 app = Flask(__name__)
 CORS(app)
@@ -60,6 +61,7 @@ def upload_file():
         file_data = file_doc.to_dict()
     else:
         file_data = {}
+    
 
     # Return both the processed topic_data and the file data from Firebase
     return jsonify({
@@ -68,5 +70,26 @@ def upload_file():
         "file_data": file_data  # Return the file document with topics and timestamp
     })
 
+
+@app.route("/generate-test", methods=["POST"])
+def generate_test_route():
+    data = request.json
+    user = data.get("user")
+    topics = data.get("topics")  # Topics should be a list of topic names
+    test_length = data.get("test_length")  # Short, Medium, Long
+    difficulty = data.get("difficulty")  # Easy, Medium, Hard
+    question_types = data.get("question_types")  # List of question types: ['MCQ', 'T/F', 'Short Answer', 'Select Many']
+
+    if not user or not topics or not test_length or not difficulty or not question_types:
+        return jsonify({"error": "Missing required fields"}), 400
+
+    # Generate the test
+    test = generate_test(user, topics, test_length, difficulty, question_types)
+
+    # Return the generated test
+    return jsonify({
+        "message": "Test generated successfully",
+        "test": test
+    })
 if __name__ == "__main__":
     app.run(debug=True)
