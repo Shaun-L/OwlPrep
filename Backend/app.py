@@ -44,12 +44,6 @@ def register():
         return jsonify ({"error": str(e)}), 400
 
 
-
-@app.route("/login", methods=["POST"])
-def login():
-    pass #The login function has to be handled on the frontend, and then the user id gets passed to the backend
-
-
 @app.route("/upload", methods=["POST"])
 def upload_file():
     if "file" not in request.files:
@@ -111,21 +105,37 @@ def upload_file():
 def generate_test_route():
     data = request.json
     user = data.get("user")
-    topics = data.get("topics")  # Topics should be a list of topic names
+    test_name = data.get("test_name")  # New field
+    test_description = data.get("test_description")  # New field
+    topics = data.get("topics")  # List of topic names
     test_length = data.get("test_length")  # Short, Medium, Long
     difficulty = data.get("difficulty")  # Easy, Medium, Hard
     question_types = data.get("question_types")  # List of question types: ['MCQ', 'T/F', 'Short Answer', 'Select Many']
 
-    if not user or not topics or not test_length or not difficulty or not question_types:
+    # Validate required fields
+    if not all([user, test_name, test_description, topics, test_length, difficulty, question_types]):
         return jsonify({"error": "Missing required fields"}), 400
 
-    # Generate the test
-    test = generate_test(user, topics, test_length, difficulty, question_types)
+    # Generate the test questions
+    questions = generate_test(user, topics, test_length, difficulty, question_types)
 
-    # Return the generated test
+    # Create the final test object
+    test = {
+        "user": user,
+        "test_name": test_name,
+        "test_description": test_description,
+        "difficulty": difficulty,
+        "topics": topics,
+        "type": "Practice Test",
+        "question_types": question_types,
+        "test_length": test_length,
+        "questions": questions
+    }
+
     return jsonify({
         "message": "Test generated successfully",
         "test": test
     })
+
 if __name__ == "__main__":
     app.run(debug=True)

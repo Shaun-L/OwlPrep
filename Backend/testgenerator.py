@@ -2,6 +2,8 @@ import openai
 from firebase_config import db
 import os
 from dotenv import load_dotenv
+# Extract the JSON r
+import json
 
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
@@ -27,140 +29,168 @@ import openai
 
 def MCQ_prompt(topic, text, difficulty, current_question_pull):
     """
-    Generate a multiple-choice question using OpenAI API.
+    Generate a multiple-choice question using OpenAI API with structured output.
     """
-
     prompt = f"""
-    Generate a unique, {difficulty} difficulty multiple-choice question based on the following topic and provided text:
+    Generate a unique, {difficulty}-difficulty multiple-choice question based on the following topic and text. 
+    Avoid repeating previous questions.
 
     Topic: {topic}
     Text: {text}
-    Previous Questions: {current_question_pull}  # To avoid repetition
+    Previous Questions: {current_question_pull}
 
-    Question:
+    Return the response in **strict JSON format** with the following structure:
+    {{
+        "question": "The generated multiple-choice question as a string.",
+        "options": [
+            "Option A",
+            "Option B",
+            "Option C",
+            "Option D"
+        ],
+        "answer": 2  # Index of the correct answer (zero-based)
+    }}
     """
-    
+
     response = openai.ChatCompletion.create(
         model="gpt-4",
         messages=[{"role": "system", "content": prompt}]
     )
 
-    question = response["choices"][0]["message"]["content"].strip()
-
-    # Now generate the answer choices for the MCQ
-    choices_prompt = f"""
-    Generate 4 multiple choice options for the question:
-
-    {question}
-
-    Provide options and indicate the correct one. Format them like:
-    A) Option 1
-    B) Option 2
-    C) Option 3
-    D) Option 4
-    Correct answer: [letter]
-    """
-    
-    choices_response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[{"role": "system", "content": choices_prompt}]
-    )
-    choices = choices_response["choices"][0]["message"]["content"].strip()
-
-    return question, choices
+    # Extract and parse JSON response
+    try:
+        result = json.loads(response["choices"][0]["message"]["content"].strip())
+        return {
+            "question": result["question"],
+            "options": result["options"],
+            "answer": result["answer"]  # Correct answer index
+        }
+    except json.JSONDecodeError:
+        raise ValueError("Failed to parse JSON response from OpenAI.")
 
 
 def TrueFalse_prompt(topic, text, difficulty, current_question_pull):
     """
-    Generate a true/false question using OpenAI API.
+    Generate a unique true/false question using OpenAI API with structured output.
     """
     prompt = f"""
-    Generate a {difficulty} difficulty true/false question based on the following topic and text:
+    Generate a unique, {difficulty}-difficulty true/false question based on the following topic and text. 
+    Avoid repeating previous questions.
 
     Topic: {topic}
     Text: {text}
-    Previous Questions: {current_question_pull}  # To avoid repetition
+    Previous Questions: {current_question_pull}
 
-    Question:
+    Return the response in **strict JSON format** with the following structure:
+    {{
+        "question": "The generated true/false question as a string.",
+        "answer": "True or False"  # The correct answer as a string
+    }}
     """
-    
+
     response = openai.ChatCompletion.create(
         model="gpt-4",
         messages=[{"role": "system", "content": prompt}]
     )
 
-    question = response["choices"][0]["message"]["content"].strip()
+    
+    try:
+        result = json.loads(response["choices"][0]["message"]["content"].strip())
+        question = result["question"]
+        answer_str = result["answer"]
+        answer_index = 0 if answer_str.lower() == "true" else 1  # Convert "True"/"False" to index
 
-    # Now generate the answer choices for the True/False
-    return question, "True or False"
+        return {
+            "question": question,
+            "options": ["True", "False"],  # Standard options
+            "answer": answer_index  # Index of correct answer
+        }
 
+    except json.JSONDecodeError:
+        raise ValueError("Failed to parse JSON response from OpenAI.")
+
+import json
+import openai
 
 def SelectMultiple_prompt(topic, text, difficulty, current_question_pull):
     """
-    Generate a select-multiple question using OpenAI API.
+    Generate a select-multiple question using OpenAI API with structured output.
     """
     prompt = f"""
-    Generate a {difficulty} difficulty select-multiple question based on the following topic and text:
+    Generate a unique, {difficulty}-difficulty select-multiple question based on the following topic and text. 
+    Avoid repeating previous questions.
 
     Topic: {topic}
     Text: {text}
-    Previous Questions: {current_question_pull}  # To avoid repetition
+    Previous Questions: {current_question_pull}
 
-    Question:
+    Return the response in **strict JSON format** with the following structure:
+    {{
+        "question": "The generated select-multiple question as a string.",
+        "options": [
+            "Option A",
+            "Option B",
+            "Option C",
+            "Option D"
+        ],
+        "answers": [0, 2]  # Indices of the correct answers (zero-based)
+    }}
     """
-    
+
     response = openai.ChatCompletion.create(
         model="gpt-4",
         messages=[{"role": "system", "content": prompt}]
     )
 
-    question = response["choices"][0]["message"]["content"].strip()
+    # Extract and parse JSON response
+    try:
+        result = json.loads(response["choices"][0]["message"]["content"].strip())
+        return {
+            "question": result["question"],
+            "options": result["options"],
+            "answers": result["answers"]  # List of correct answer indices
+        }
+    except json.JSONDecodeError:
+        raise ValueError("Failed to parse JSON response from OpenAI.")
 
-    # Now generate the answer choices for Select Multiple
-    choices_prompt = f"""
-    Generate 4 possible options for this question where more than one answer could be correct:
 
-    {question}
 
-    Provide options. Indicate the correct ones by saying, for example: "Correct answers: A, C".
-    Format them like:
-    A) Option 1
-    B) Option 2
-    C) Option 3
-    D) Option 4
-    """
-    
-    choices_response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[{"role": "system", "content": choices_prompt}]
-    )
-    choices = choices_response["choices"][0]["message"]["content"].strip()
-
-    return question, choices
-
+import json
+import openai
 
 def ShortAnswer_prompt(topic, text, difficulty, current_question_pull):
     """
-    Generate a short-answer question using OpenAI API.
+    Generate a short-answer question using OpenAI API with an expected answer description.
     """
     prompt = f"""
-    Generate a {difficulty} difficulty short-answer question based on the following topic and text:
+    Generate a unique, {difficulty}-difficulty short-answer question based on the following topic and text. 
+    Avoid repeating previous questions.
 
     Topic: {topic}
     Text: {text}
-    Previous Questions: {current_question_pull}  # To avoid repetition
+    Previous Questions: {current_question_pull}
 
-    Question:
+    Return the response in **strict JSON format** with the following structure:
+    {{
+        "question": "The generated short-answer question as a string.",
+        "expected_answer": "A brief description of what a correct response should generally include."
+    }}
     """
-    
+
     response = openai.ChatCompletion.create(
         model="gpt-4",
         messages=[{"role": "system", "content": prompt}]
     )
 
-    question = response["choices"][0]["message"]["content"].strip()
-
-    return question, None  # No answer choices for short answer
+    # Extract and parse JSON response
+    try:
+        result = json.loads(response["choices"][0]["message"]["content"].strip())
+        return {
+            "question": result["question"],
+            "expected_answer": result["expected_answer"]  # A description of what the response should include
+        }
+    except json.JSONDecodeError:
+        raise ValueError("Failed to parse JSON response from OpenAI.")
 
 
 def generate_question(topic, text, question_type, difficulty, current_question_pull):
@@ -170,48 +200,94 @@ def generate_question(topic, text, question_type, difficulty, current_question_p
     """
     question_data = []
 
-    # Generate multiple questions
     for _ in range(3):  # Generate 3 questions per call (adjust as needed)
         if question_type == "MCQ":
-            question, choices = MCQ_prompt(topic, text, difficulty, current_question_pull)
+            result = MCQ_prompt(topic, text, difficulty, current_question_pull)
         elif question_type == "TrueFalse":
-            question, choices = TrueFalse_prompt(topic, text, difficulty, current_question_pull)
+            result = TrueFalse_prompt(topic, text, difficulty, current_question_pull)
         elif question_type == "SelectMultiple":
-            question, choices = SelectMultiple_prompt(topic, text, difficulty, current_question_pull)
+            result = SelectMultiple_prompt(topic, text, difficulty, current_question_pull)
         elif question_type == "Short":
-            question, choices = ShortAnswer_prompt(topic, text, difficulty, current_question_pull)
+            result = ShortAnswer_prompt(topic, text, difficulty, current_question_pull)
         else:
             continue
 
         question_data.append({
-            "question": question,
-            "choices": choices,
+            "question": result["question"],
+            "choices": result.get("options", []),  # MCQ/TF/SelectMultiple have options, Short Answer does not
+            "answer": result.get("answer", result.get("expected_answer", "")),  # Handle expected_answer for short-answer
             "type": question_type,
             "difficulty": difficulty
         })
     
     return question_data
 
+
 def generate_test(user, topics, test_length, difficulty, question_types):
     """
     Create a test by generating questions for the selected topics.
     """
-    test = {"user": user, "questions": []}
+    test = {"user": user, "questions": {}}  # Store questions as a dictionary
     num_questions = {"Short": 5, "Medium": 10, "Long": 15}.get(test_length, 10)
 
+    question_number = 1  # Track question numbers
+    current_question_pull = []  # Maintain a list of already generated questions
+
     for topic in topics:
-        text = fetch_topic_text(topic, topics[topic])
+        text = fetch_topic_text(topic, user)
         if not text:
             continue  # Skip if no text found
 
         for _ in range(num_questions // len(topics)):  # Distribute questions across topics
             for q_type in question_types:
-                question = generate_question(topic, text, q_type, difficulty)
-                test["questions"].append({
-                    "topic": topic,
-                    "question": question,
-                    "type": q_type,
-                    "difficulty": difficulty
-                })
+                question_data = generate_question(topic, text, q_type, difficulty, current_question_pull)
+
+                for q in question_data:  # Iterate through generated questions
+                    test["questions"][str(question_number)] = {
+                        "question": q["question"],
+                        "options": q["choices"],
+                        "answer": q["answer"],
+                        "type": q["type"],
+                        "difficulty": q["difficulty"]
+                    }
+                    current_question_pull.append(q["question"])  # Avoid duplicates
+                    question_number += 1  # Increment question number
 
     return test
+"""
+Excpected output of test:
+test:
+{
+    "user": "example_user",
+    "questions": {
+        "1": {
+            "question": "What is the capital of France?",
+            "options": ["Berlin", "Madrid", "Paris", "Rome"],
+            "answer": 2,
+            "type": "MCQ",
+            "difficulty": "Medium"
+        },
+        "2": {
+            "question": "Is water composed of hydrogen and oxygen?",
+            "options": ["True", "False"],
+            "answer": 0,
+            "type": "TrueFalse",
+            "difficulty": "Easy"
+        },
+        "3": {
+            "question": "Select all prime numbers below.",
+            "options": ["2", "3", "4", "5"],
+            "answer": [0, 1, 3],
+            "type": "SelectMultiple",
+            "difficulty": "Hard"
+        },
+        "4": {
+            "question": "What is the process by which plants make their food?",
+            "options": [],
+            "answer": "Photosynthesis",
+            "type": "Short",
+            "difficulty": "Medium"
+        }
+    }
+}
+"""
