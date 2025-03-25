@@ -2,10 +2,10 @@ from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
 import os
+import firebase_admin
 from processing import process_pdf
 from firebase_config import db
-import firebase_admin
-from firebase_admin import firestore
+from firebase_admin import firestore, auth, credentials
 from testgenerator import generate_test
 
 app = Flask(__name__)
@@ -13,6 +13,42 @@ CORS(app)
 
 UPLOAD_FOLDER = "./uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+DEFAULT_PROFILE_PIC = "https://example.com/default-profile.jpg"  #
+
+
+@app.route("/register", methods=["POST"])
+def register():
+    data = request.json
+    email = data.get("email")
+    password = data.get("password")
+    username = data.get("username")
+
+    if not email or not password or not username:
+        return jsonify({"error": "Missing required fields"}), 400
+
+    try:
+        #Create user in Firebase Auth
+        user = auth.create_user(email=email, password=password)
+
+        #Store user details from firebase
+        user_doc_ref = db.collection("users").document(user.uid)
+        user_doc_ref.set({
+            "email": email,
+            "username": username,
+            "profile_pic": DEFAULT_PROFILE_PIC
+        })
+
+        return jsonify({"message": "User registered successfully", "uid": user.uid})
+    except Exception as e:
+        return jsonify ({"error": str(e)}), 400
+
+
+
+@app.route("/login", methods=["POST"])
+def login():
+    pass #The login function has to be handled on the frontend, and then the user id gets passed to the backend
+
 
 @app.route("/upload", methods=["POST"])
 def upload_file():
