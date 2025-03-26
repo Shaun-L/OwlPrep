@@ -53,6 +53,10 @@ def upload_file():
     if file.filename == "":
         return jsonify({"error": "No selected file"}), 400
 
+    user = request.form.get("user")  # Get user from the request
+    if not user:
+        return jsonify({"error": "User not provided"}), 400
+
     # Save file
     filename = secure_filename(file.filename)
     file_path = os.path.join(UPLOAD_FOLDER, filename)
@@ -62,56 +66,38 @@ def upload_file():
     # Process PDF
     topic_data = process_pdf(file_path)
 
-    # Create a document for the file
-    file_doc_ref = db.collection("files").document(filename)
+    # Store topics under the user instead of files
+    user_doc_ref = db.collection("users").document(user)
 
-    # Get current timestamp
-    timestamp = firestore.SERVER_TIMESTAMP
-
-    # Store topics under the file document
     topics_list = [
         {
             "topic": topic,
-            "text": data["text"],
-            "parent_file": filename
+            "text": data["text"]
         }
         for topic, data in topic_data.items()
     ]
 
-    # Set the document, ensuring it creates or updates the file entry
-    file_doc_ref.set({
-        "filename": filename,
-        "topics": topics_list,
-        "uploaded_at": timestamp  # Add the timestamp field
+    # Add the topics to the user document
+    user_doc_ref.set({
+        "topics": topics_list
     }, merge=True)
 
-    # Fetch the file document with its topics and timestamp
-    file_doc = file_doc_ref.get()
-    if file_doc.exists:
-        file_data = file_doc.to_dict()
-    else:
-        file_data = {}
-    
-
-    # Return both the processed topic_data and the file data from Firebase
     return jsonify({
         "message": "File processed successfully",
-        "topics": topic_data,  # Return the topics from PDF processing
-        "file_data": file_data  # Return the file document with topics and timestamp
+        "topics": topic_data
     })
-
 
 @app.route("/generate-test", methods=["POST"])
 def generate_test_route():
     data = request.json
-    user = data.get("user")
+    user = data.get("user") # passes the uid
     test_name = data.get("test_name")  # New field
     test_description = data.get("test_description")  # New field
     topics = data.get("topics")  # List of topic names
     test_length = data.get("test_length")  # Short, Medium, Long
     difficulty = data.get("difficulty")  # Easy, Medium, Hard
-    question_types = data.get("question_types")  # List of question types: ['MCQ', 'T/F', 'Short Answer', 'Select Many']
-
+    question_types = data.get("question_types")  # List of question types: ['MCQ', 'T/F', 'SAQ', 'SMQ'], for Multiple Choice, True/False, Short Answer Question, and Select Many
+    
     # Validate required fields
     if not all([user, test_name, test_description, topics, test_length, difficulty, question_types]):
         return jsonify({"error": "Missing required fields"}), 400
@@ -132,10 +118,22 @@ def generate_test_route():
         "questions": questions
     }
 
-    return jsonify({
-        "message": "Test generated successfully",
-        "test": test
-    })
+    # Save the generated test in the user's test collection
+    try:
+        user_doc_ref = db.collection("users").document(user)
+        # Add the test to the "tests" subcollection under the user
+        _, test_ref = user_doc_ref.collection("tests").add(test)
+        print(test_ref)
+        
+        # Return the response including the test ID for reference
+        return jsonify({
+            "message": "Test generated and saved successfully",
+            "test_id": test_ref.id,
+            "test": test
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
 
 if __name__ == "__main__":
     app.run(debug=True)
