@@ -80,7 +80,6 @@ def MCQ_prompt(topic, text, difficulty, current_question_pull):
     # Clean up any unwanted characters like backticks or extra quotations
     content = content.replace("```json", "").replace("```", "").strip()
 
-    print(content)
 
     try:
         if not content:
@@ -171,10 +170,10 @@ def TrueFalse_prompt(topic, text, difficulty, current_question_pull):
 
 def SelectMultiple_prompt(topic, text, difficulty, current_question_pull):
     """
-    Generate a select-multiple question using OpenAI API with structured output.
+    Generate a select-many question using OpenAI API with structured output.
     """
     prompt = f"""
-    Generate a unique, {difficulty}-difficulty select-multiple question based on the following topic and text. 
+    Generate a unique, {difficulty}-difficulty select-many question based on the following topic and text. 
     Avoid repeating previous questions.
 
     Topic: {topic}
@@ -190,7 +189,7 @@ def SelectMultiple_prompt(topic, text, difficulty, current_question_pull):
             "Option C",
             "Option D"
         ],
-        "answers": [0, 2]  # Indices of the correct answers (zero-based)
+        "answers": [0, 2]  # List of Indices of the correct answers (zero-based)
     }}
     """
     chat_completion = client.chat.completions.create(
@@ -211,6 +210,8 @@ def SelectMultiple_prompt(topic, text, difficulty, current_question_pull):
         # Clean up any unwanted characters like backticks or extra quotations
         content = content.replace("```json", "").replace("```", "").strip()
 
+        print(content)
+
         result = json.loads(content)
 
         # Validate required fields
@@ -220,7 +221,7 @@ def SelectMultiple_prompt(topic, text, difficulty, current_question_pull):
         return {
             "question": result["question"],
             "options": result["options"],
-            "answers": result["answers"]  # List of correct answer indices
+            "answer": result["answers"]  # List of correct answer indices
         }
 
     except (json.JSONDecodeError, ValueError) as e:

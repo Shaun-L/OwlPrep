@@ -94,35 +94,58 @@ def generate_test_route():
     test_name = data.get("test_name")  # New field
     test_description = data.get("test_description")  # New field
     topics = data.get("topics")  # List of topic names
-    test_length = data.get("test_length")  # Short, Medium, Long
-    difficulty = data.get("difficulty")  # Easy, Medium, Hard
+    # test_length = data.get("test_length")  # Short, Medium, Long
+    # difficulty = data.get("difficulty")  # Easy, Medium, Hard
     question_types = data.get("question_types")  # List of question types: ['MCQ', 'T/F', 'SAQ', 'SMQ'], for Multiple Choice, True/False, Short Answer Question, and Select Many
+
+    # Map difficulty levels
+    og_difficulty = data.get("difficulty")
+    difficulty_map = {0: "Easy", 1: "Medium", 2: "Hard"}
+    difficulty = difficulty_map.get(og_difficulty, "Medium")  # Default to "Medium" if invalid 
     
+    # Map Test Lengths
+    og_test_length = data.get("test_length")
+    test_length_map = {0: "Short", 1: "Medium", 2: "Long"}
+    test_length = test_length_map.get(og_test_length, "Medium")
+
     # Validate required fields
     if not all([user, test_name, test_description, topics, test_length, difficulty, question_types]):
         return jsonify({"error": "Missing required fields"}), 400
 
+    # Fetch the user's username
+    user_doc_ref = db.collection("users").document(user)
+    user_doc = user_doc_ref.get()
+
+    if user_doc.exists:
+        user_data = user_doc.to_dict()
+        creator_name = user_data.get("username", "Unknown")
+    else:
+        creator_name = "Unknown"
+
+
     # Generate the test questions
     questions = generate_test(user, topics, test_length, difficulty, question_types)
+
 
     # Create the final test object
     test = {
         "user": user,
+        "creator_name": creator_name,
         "test_name": test_name,
         "test_description": test_description,
-        "difficulty": difficulty,
+        "difficulty": og_difficulty,
         "topics": topics,
         "type": "Practice Test",
         "question_types": question_types,
-        "test_length": test_length,
+        "test_length": og_test_length,
         "questions": questions
     }
 
     # Save the generated test in the user's test collection
     try:
-        user_doc_ref = db.collection("users").document(user)
-        # Add the test to the "tests" subcollection under the user
-        _, test_ref = user_doc_ref.collection("tests").add(test)
+
+        _, test_ref = db.collection("tests").add(test)
+        # _, test_ref = user_doc_ref.collection("tests").add(test)
         print(test_ref)
         
         # Return the response including the test ID for reference
