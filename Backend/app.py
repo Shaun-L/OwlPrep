@@ -152,5 +152,30 @@ def serve_image(filename):
     image_path = os.path.join('static\\images', filename)
     return send_file(image_path, mimetype='image/jpeg')
 
+@app.route('/login', methods=['POST'])
+def login():
+    # Parse user email and password from the request
+    data = request.json
+    email = data.get("email")
+    password = data.get("password")
+    
+    if not email or not password:
+        return jsonify({"error": "Email and password are required"}), 400
+
+    try:
+        # Authenticate the user via Firebase (requires Firebase Auth client-side)
+        user = auth.get_user_by_email(email)
+        # Normally you would verify the password yourself or delegate it to the frontend
+        
+        # Generate a custom token for the authenticated user
+        custom_token = auth.create_custom_token(user.uid)
+        
+        return jsonify({"uid": user.uid, "token": custom_token.decode("utf-8")}), 200
+    except firebase_admin._auth_utils.UserNotFoundError:
+        return jsonify({"error": "Invalid email or user not found"}), 404
+    except Exception as e:
+        return jsonify({"error": f"Something went wrong: {str(e)}"}), 500
+
+
 if __name__ == "__main__":
     app.run(debug=True)

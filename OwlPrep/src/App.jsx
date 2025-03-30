@@ -14,6 +14,7 @@ import Home from "./pages/Home";
 import Default from "./Layouts/Default";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword"; // Adding the ForgotPassword component
 import Profile from "./pages/Profile";
 import Page404 from "./pages/404";
 
@@ -65,7 +66,8 @@ function App() {
       document.body.setAttribute("data-theme", "dark");
     }
     setDarkTheme(!darkTheme);
-  }
+
+}
 
   function changeUploadedFiles(fileName){
     let removeFile = false
@@ -82,15 +84,14 @@ function App() {
     }
     
     setUploadedFiles(old=>old.map((file)=>{
-    
-      if(file.name != fileName){
-          return file
-      }else{
-        console.log(file.keep)
-        removeFile = file.keep
-        return {...file, keep:!file.keep}
-      }
-  }))
+        if(file.name != fileName){
+            return file
+        }else{
+            console.log(file.keep)
+            removeFile = file.keep
+            return {...file, keep:!file.keep}
+        }
+    }))
   console.log(uploadedFiles)
 
   if(removeFile){
@@ -295,6 +296,9 @@ function App() {
         <Route index element={<Home></Home>}></Route>
         <Route path="saves" element={<Saves></Saves>}></Route>
         <Route path="progress" element={<Progress></Progress>}></Route>
+        <Route path="/signup" element={<SignUp></SignUp>}></Route>
+        <Route path="/login" element={<Login logginUser={logginUser}></Login>}></Route>
+        <Route path="/forgot-password" element={<ForgotPassword></ForgotPassword>}></Route>
         <Route path="/settings" element={<Settings theme={darkTheme} selectThemeChange={selectThemeChange}/>}></Route>
         <Route path="/profiles/:username" element={<Profile/>}></Route>
         <Route path="/create-test" element={<CreateTest topics={topics} uploadedFiles={uploadedFiles} handleToggleFile={changeUploadedFiles} changeTopics={changeTopics}/>}></Route>
@@ -304,13 +308,6 @@ function App() {
 
       <Route path="/login" element={<Login logginUser={logginUser}></Login>}></Route>
       <Route path="/signup" element={<SignUp></SignUp>}></Route>
-
-
-      
-
-      
-      
-      
     </Routes>
     </>
   );

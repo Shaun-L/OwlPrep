@@ -16,6 +16,7 @@ function SignUp() {
   const [errMsg, setErrMsg] = useState("")
   const [formError, setFormError] = useState(false)
   // New state for last name
+
   const navigate = useNavigate();
 
   useEffect(()=>{
@@ -42,8 +43,9 @@ function SignUp() {
       // Save first and last name to Firestore under the user's document
       const user = userCredential.user;
       await setDoc(doc(db, "users", user.uid), {
-        firstName: firstName,
-        lastName: lastName,
+        username: username, // Save username to Firestore
+        email: email, // Save email to Firestore
+        password: password, // Save password to Firestore
       });
 
       alert("Registration successful!");
@@ -54,6 +56,7 @@ function SignUp() {
   };
 
   return (
+
     <div className="login-container">
           <img src={LoginImage} alt="" />
     

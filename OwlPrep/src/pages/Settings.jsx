@@ -1,33 +1,66 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "../firebaseUtils"; // For user authentication and pulling data
+import PropTypes from "prop-types";
 
-export default function Settings({theme, selectThemeChange}){
-    const [username, setUsername] = useState("nikeisthebest");
+export default function Settings({theme, selectThemeChange}) {
+    Settings.propTypes = {
+        theme: PropTypes.bool.isRequired,
+        selectThemeChange: PropTypes.func.isRequired,
+    };
+    const [username, setUsername] = useState("");
     const [editUsername, setEditUsername] = useState(false);
 
-    const [email, setEmail] = useState("someemail@email.com");
+    const [email, setEmail] = useState("");
     const [editEmail, setEditEmail] = useState(false);
     
-    const [password, setPassword] = useState("password");
+    const [password, setPassword] = useState("");
     const [editPassword, setEditPassword] = useState(false);
 
     const [selectedTheme, setSelectedTheme] = useState(theme ? "dark" : "light");
 
-    const [showAuthenticationModal, setShowAuthenticationModal] = useState(false)
+    const [showAuthenticationModal, setShowAuthenticationModal] = useState(false);
+
+    // Pulls the user's data from the database
+    useEffect(()=>{
+        const fetchUserData = async () => {
+            const user = auth.currentUser;
+            if (user) {
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    setUsername(userData.username);
+                    setEmail(userData.email);
+                    setPassword(userData.password);
+                }
+            }
+        };
+
+        fetchUserData();
+    }, []);
 
     function changeSelectedTheme(e){
-        console.log(e.target.value)
-        selectThemeChange(e.target.value)
-        setSelectedTheme(e.target.value)
+        // Updating the theme changing function
+        const newTheme = e.target.value;
+        console.log("Theme Changed to: " + newTheme);
+        selectThemeChange(newTheme);
+        setSelectedTheme(newTheme);
     }
 
     function editField(e){
         setEditUsername(false)
         setEditEmail(false)
-        
+        setEditPassword(false) // Resetting password edit field
+        selectedTheme(false)
+
         const editFieldName = e.target.dataset.field;
         console.log(editFieldName)
 
         switch(editFieldName){
+            // Changing light or dark mode
+            case "theme":
+                selectedTheme(true)
+                break;
             case "email":
                 console.log("hello")
                 setEditEmail(()=>true)
@@ -37,6 +70,7 @@ export default function Settings({theme, selectThemeChange}){
                 break;
             case "password":
                 setShowAuthenticationModal(true);
+                setEditPassword(true)
                 document.body.style.overflowY = "hidden";
                 break;
         }
@@ -56,7 +90,7 @@ export default function Settings({theme, selectThemeChange}){
     <div className={`modal ${showAuthenticationModal ? "showModal" : ""}`}>
         <div>
             <h2>Changing Password?</h2>
-            <p>To confirm it's really you, please authenticate with you old password.</p>
+            <p>To confirm it&apos;s really you, please authenticate with you old password.</p>
             <input type="password" placeholder="password"></input>
             <button type="button" onClick={()=>setShowAuthenticationModal(false)}>Cancle</button>
             <button type="button" className="mainBtn">Confirm</button>
@@ -109,7 +143,7 @@ export default function Settings({theme, selectThemeChange}){
                         <h3>Theme</h3>
                         
                         <div>
-                            <select name="theme" value={theme ? "dark" : "light"} onChange={changeSelectedTheme}> 
+                            <select name="theme" value={selectedTheme} onChange={changeSelectedTheme}> 
                                 <option value={"light"}>Light</option>
                                 <option value={"dark"}>Dark</option>
                             </select>
@@ -131,7 +165,7 @@ export default function Settings({theme, selectThemeChange}){
                         
                         <div>
                             <button type="button" className={editPassword ? "hide" : ""} onClick={editField} data-field="password">Edit</button>
-                            <button type="button" onClick={()=>setEditUsername(false)} className={!editPassword ? "hide" : ""}>Cancle</button>
+                            <button type="button" onClick={()=>setEditUsername(false)} className={!editPassword ? "hide" : ""}>Cancel</button>
                             <button type="button" className={!editPassword ? "hide" : ""}>Save</button>
                         </div>
                         

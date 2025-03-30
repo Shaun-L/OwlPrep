@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PropTypes from 'prop-types';
 import { useNavigate, Link } from "react-router-dom";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import LoginImage from "../assets/svg.svg"
@@ -7,6 +8,7 @@ import { IoKeyOutline } from "react-icons/io5";
 
 
 function Login({logginUser}) {
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errMsg, setErrMsg] = useState("")
@@ -66,12 +68,12 @@ function Login({logginUser}) {
           
         </form>
 
-      
-        
-     
-
-    </div>
-  );
+        </div>
+    );
 }
+
+Login.propTypes = {
+    logginUser: PropTypes.func.isRequired,
+};
 
 export default Login;
