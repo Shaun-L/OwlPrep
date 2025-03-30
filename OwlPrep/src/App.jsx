@@ -1,7 +1,13 @@
-import { useState, useRef } from "react";
-import { Routes, Route } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import File_Dropzone from "./components/File_Dropzone";  // Import your File_Dropzone component
+import { MdOutlineLightMode } from "react-icons/md";
+import { MdOutlineNightlight } from "react-icons/md";
+import { FaUser } from "react-icons/fa";
+import { RxHamburgerMenu } from "react-icons/rx";
+import { GiOwl } from "react-icons/gi";
+
 
 import SignUp from "./pages/SignUp";
 import Home from "./pages/Home";
@@ -14,18 +20,26 @@ import Page404 from "./pages/404";
 import CreateTest from "./pages/CreateTest";
 import "./App.css"; 
 import { IoReturnUpBack } from "react-icons/io5";
+import Test from "./pages/Test";
+import { query } from "firebase/firestore";
+import Progress from "./pages/Progess";
+import Saves from "./pages/Saves";
 
 
 function App() {
+  const dropdown = useRef(null)
+  const navigate = useNavigate()
+  const [searchQuery, setSearchQuery] = useState("")
   const [users, setUsers] = useState([]);
   const [name, setName] = useState(""); // State for user name
   const [email, setEmail] = useState(""); // State for user email
   const checkboxRef = useRef(null);
+  const [showMobileNav, setShowMobileNav] = useState(false)
 
   const [loggedIn, setLoggedIn] = useState(true);
   const [showAccountDropdown, setShowAccountDropDown] = useState(false);
   const [darkTheme, setDarkTheme] = useState(false);
-  const [topics,setTopics] = useState([{name: "fddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", keep: true, files: []} ])
+  const [topics,setTopics] = useState([])
   const [uploadedFiles, setUploadedFiles] = useState([])
 
   function changeDropdownView() {
@@ -215,19 +229,82 @@ function App() {
     }
   }
 
+  document.addEventListener("mousedown", (e)=>{
+
+    if(showAccountDropdown && !dropdown.current.contains(e.target)){
+      closeDropdown()
+    }
+  
+   })
+
   return (
     <>
+    <header>
+    
+    <div id="Logo">
+    
+      <RxHamburgerMenu className="mobileNavMenu" onClick={()=>setShowMobileNav(true)}/>
+      
+      <GiOwl color="#90C7C1" strokeWidth={20} width={"20px"} height={"40px"}></GiOwl><Link to="/">OwlPrep</Link></div>
+
+    <div>
+      <form onSubmit={(e)=>{
+        e.preventDefault()
+        navigate(`/?q=${searchQuery}`)
+        
+      }}>
+        <input type="text" placeholder="Search for a test" value={searchQuery} onChange={(e)=>setSearchQuery(e.currentTarget.value)}></input>
+      </form>
+    </div>
+
+    <div id="header-btns">
+      <div id="create-btn">+ Create</div>
+      <div>
+        {loggedIn ? <button className="accountBtn" onClick={changeDropdownView}><FaUser/></button> : <Link id="toLoginBtn" to={"/login"}>Log In</Link> }
+      </div>
+      <div id="account-dropdown" ref={dropdown} className={`${showAccountDropdown ? "" : "hide"}`}>
+        <div id="account-dropdown-header" className="account-dropdown-section">
+          <div id="account-header-btn">
+            <FaUser/>
+          </div>
+          <div>
+            <p id="user-account-email">nikerun@gmail.com</p>
+            <p id="user-account-name">Nikeisthebest</p>
+          </div>
+        </div>
+
+        <div className="account-dropdown-section">
+          <ul>
+            <li onClick={closeDropdown}><Link to="/profiles/freddy">Account</Link></li>
+            <li onClick={closeDropdown}><Link to="/settings">Settings</Link></li>
+            <li><button type="button" onClick={changeTheme}>{darkTheme ? <div><MdOutlineLightMode height={"100%"}/> Light mode</div> : <div><MdOutlineNightlight height={"100%"}/> Dark mode</div>}</button></li>
+          </ul>
+        </div>
+
+        <div className="account-dropdown-section">
+          <button onClick={()=>{logout()
+          closeDropdown()}} id="logout-btn">Log out</button>
+        </div>
+      </div>
+    </div>
+    
+  </header>
     
     <Routes>
-      <Route path="/" element={<Default logout={logout} setTopics={setTopics} topics={topics} setUploadedFiles={setUploadedFiles} loggedIn={loggedIn} closeDropdown={closeDropdown} showAccountDropdown={showAccountDropdown} theme={darkTheme} changeTheme={changeTheme} changeDropdownView={changeDropdownView}/>}>
+      <Route path="/" element={<Default logout={logout} setTopics={setTopics} topics={topics} setUploadedFiles={setUploadedFiles} loggedIn={loggedIn} closeDropdown={closeDropdown} showAccountDropdown={showAccountDropdown} theme={darkTheme} changeTheme={changeTheme} changeDropdownView={changeDropdownView} setShowMobileNav={setShowMobileNav} showMobileNav={showMobileNav}/>}>
         <Route index element={<Home></Home>}></Route>
-        <Route path="/signup" element={<SignUp></SignUp>}></Route>
-        <Route path="/login" element={<Login logginUser={logginUser}></Login>}></Route>
+        <Route path="saves" element={<Saves></Saves>}></Route>
+        <Route path="progress" element={<Progress></Progress>}></Route>
         <Route path="/settings" element={<Settings theme={darkTheme} selectThemeChange={selectThemeChange}/>}></Route>
-        <Route path="/profile/:username" element={<Profile/>}></Route>
+        <Route path="/profiles/:username" element={<Profile/>}></Route>
         <Route path="/create-test" element={<CreateTest topics={topics} uploadedFiles={uploadedFiles} handleToggleFile={changeUploadedFiles} changeTopics={changeTopics}/>}></Route>
+        <Route path="practice-test/:id" element={<Test/>}></Route>
         <Route path="*" element={<Page404/>}></Route>
       </Route>
+
+      <Route path="/login" element={<Login logginUser={logginUser}></Login>}></Route>
+      <Route path="/signup" element={<SignUp></SignUp>}></Route>
+
 
       
 

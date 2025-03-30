@@ -1,13 +1,24 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import LoginImage from "../assets/svg.svg"
+import { LuUserRound } from "react-icons/lu";
+import { IoKeyOutline } from "react-icons/io5";
+
 
 function Login({logginUser}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errMsg, setErrMsg] = useState("")
+  const [formError, setFormError] = useState(false)
   const navigate = useNavigate();
 
   const handleLogin = async () => {
+    if(email.trim() == "" || password.trim() == ""){
+      setErrMsg("Missing Required Field")
+      setFormError(true)
+      return
+    }
     try {
       const auth = getAuth();
       await signInWithEmailAndPassword(auth, email, password);
@@ -22,37 +33,42 @@ function Login({logginUser}) {
 
   return (
     <div className="login-container">
-      {/* Left Section */}
-      <div className="login-left">
-        <div className="login-header">
-          {/* <a href="https://clipart-library.com/clipart/1910405.htm">
-            <img
-              src="https://clipart-library.com/img/1910405.png"
-              alt="OwlPrep Mascot"
-              className="mascot"
-            />
-          </a> */}
-          <h1 className="app-name">OwlPrep</h1>
-        </div>
-        <div className="login-form">
+      <img src={LoginImage} alt="" />
+
+
+
+       <form className="login-form">
+          <h1>Login</h1>
+          <label>
+          <LuUserRound />
           <input
-            type="email"
+            type="text"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
+            placeholder="Username or E-mail"
           />
+          </label>
+
+          <label >
+          <IoKeyOutline />
+
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
           />
-          <button onClick={handleLogin}>Login</button>
-          <p>
-            Need an account? <Link to="/signup">Sign Up</Link>
-          </p>
-        </div>
-      </div>
+          </label>
+          <Link>Forgot password?</Link>
+          {formError && <p className="errorMsg">{errMsg}</p>}
+          <button type="button" onClick={handleLogin} id="loginBtn">Login</button>
+          <Link to="/signup" id="toCreate">Create an account</Link>
+          
+        </form>
+
+      
+        
+     
 
     </div>
   );

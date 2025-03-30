@@ -60,24 +60,26 @@ function File_Dropzone({submitFunc, setTopics, setUploadedFiles}) {
   
           if (response.ok) {
               setUploadStatus(`File uploaded successfully!`);
-              console.log(data.topics)
+              console.log(data)
               const fileToTopics = {}
               const topics = Object.keys(data.topics)
-              for(let i = 0; i < topics.length; i++){
-                const correspondingFiles = data.topics[topics[i]].files
-                console.log(correspondingFiles.length)
-                for(let j = 0; j < correspondingFiles.length; j++){
-                  const ogFileName = correspondingFiles[j].replaceAll("_", " ")
-                  if(fileToTopics.hasOwnProperty(ogFileName)){
-                    fileToTopics[ogFileName].push(topics[i])
-                  }else{
-                    fileToTopics[ogFileName] = [topics[i]]
-                  }
-                }
-              }
 
-              console.log(fileToTopics)
-              setUploadedFiles(files.map(file=>{ return {name: file.name, size:file.size, topics: fileToTopics[file.name], keep: true}}))
+              // for(let i = 0; i < topics.length; i++){
+              //   const correspondingFiles = data.topics[topics[i]].files
+              //   console.log(correspondingFiles.length)
+              //   for(let j = 0; j < correspondingFiles.length; j++){
+              //     const ogFileName = correspondingFiles[j].replaceAll("_", " ")
+              //     if(fileToTopics.hasOwnProperty(ogFileName)){
+              //       fileToTopics[ogFileName].push(topics[i])
+              //     }else{
+              //       fileToTopics[ogFileName] = [topics[i]]
+              //     }
+              //   }
+              // }
+
+              // console.log(fileToTopics)
+              setUploadedFiles(files.map(file=>
+                {return {name: file.name, size:file.size, topics: data["files"][file.name].topics, keep: true}}))
               console.log(Object.keys(data.topics))
               setTopics(Object.keys(data.topics).map((topic)=>{ 
                 return {name: topic, keep: true, files: data.topics[topic].files} }))

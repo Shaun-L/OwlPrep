@@ -66,6 +66,9 @@ export default function CreateTest({topics, uploadedFiles, changeUploadedFiles, 
         tfSelected && questionTypeList.push("True or False")
         saSelected && questionTypeList.push("Short Answer")
 
+        const filteredTopics = topics.filter((topic)=>topic.keep).map((keepTopic)=>keepTopic.name)
+        console.log(filteredTopics)
+
         const newDoc = await addDoc(collection(db, 'tests'),{
             creator: "Freddy",
             name: testName,
@@ -73,6 +76,7 @@ export default function CreateTest({topics, uploadedFiles, changeUploadedFiles, 
             difficulty: diff,
             questionTypes: questionTypeList,
             questions: [],
+            topics: filteredTopics
         }).then(()=>{
         
         }).catch((err)=>alert(err))

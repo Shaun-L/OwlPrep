@@ -41,8 +41,14 @@ export default function Settings({theme, selectThemeChange}){
                 break;
         }
         
-        console.log(e.target.parentNode.parentNode.firstChild)
-        e.target.parentNode.parentNode.firstChild.focus()
+        console.log()
+        if(e.target.parentNode.parentNode.firstChild.type !== "password"){
+            e.target.parentNode.parentNode.firstChild.disabled = false;
+            e.target.parentNode.parentNode.firstChild.focus()
+        }
+
+       
+       
 
     }
 
@@ -52,8 +58,8 @@ export default function Settings({theme, selectThemeChange}){
             <h2>Changing Password?</h2>
             <p>To confirm it's really you, please authenticate with you old password.</p>
             <input type="password" placeholder="password"></input>
-            <button type="button">Cancle</button>
-            <button type="button">Confirm</button>
+            <button type="button" onClick={()=>setShowAuthenticationModal(false)}>Cancle</button>
+            <button type="button" className="mainBtn">Confirm</button>
         </div>
       
     </div>
@@ -67,7 +73,7 @@ export default function Settings({theme, selectThemeChange}){
                 <div className="settings-sub-section-container">
                     <h3>Username</h3>
                     <div className="form-field-container">
-                        <input value={username} onChange={(e)=>{setUsername(e.target.value)}} readOnly={!editUsername}></input>
+                        <input value={username} onBlur={()=>setEditUsername(false)} onChange={(e)=>{setUsername(e.target.value)}} readOnly={!editUsername} disabled={!editUsername}></input>
                         
                         <div>
                             <button type="button" className={editUsername ? "hide" : ""} onClick={editField} data-field="username">Edit</button>
@@ -81,11 +87,11 @@ export default function Settings({theme, selectThemeChange}){
                 <div className="settings-sub-section-container">
                     <h3>Email</h3>
                     <div className="form-field-container">
-                        <input value={email} onChange={(e)=>{setEmail(e.target.value)}} readOnly={!editEmail}></input>
+                        <input value={email} onBlur={()=>setEditEmail(false)} onChange={(e)=>{setEmail(e.target.value)}} readOnly={!editEmail} disabled={!editEmail}></input>
                         
                         <div>
                             <button type="button" className={editEmail ? "hide" : ""} onClick={editField} data-field="email">Edit</button>
-                            <button type="button" onClick={()=>setEditUsername(false)} className={!editEmail ? "hide" : ""}>Cancle</button>
+                            <button type="button" onClick={()=>setEditEmail(false)} className={!editEmail ? "hide" : ""}>Cancle</button>
                             <button type="button" className={!editEmail ? "hide" : ""}>Save</button>
                         </div>
                         
@@ -121,7 +127,7 @@ export default function Settings({theme, selectThemeChange}){
             <div className="settings-sub-section-container">
                     <h3>Password</h3>
                     <div className="form-field-container">
-                        <input type="password" value={password} onChange={(e)=>{setEmail(e.target.value)}} readOnly={!editEmail}></input>
+                        <input type="password" value={password} onChange={(e)=>{setEmail(e.target.value)}} readOnly={!editPassword} disabled={!editPassword}></input>
                         
                         <div>
                             <button type="button" className={editPassword ? "hide" : ""} onClick={editField} data-field="password">Edit</button>

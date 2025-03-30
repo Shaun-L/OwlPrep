@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
 import os
@@ -12,6 +12,8 @@ CORS(app)
 
 UPLOAD_FOLDER = "./uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+
 
 @app.route("/upload", methods=["POST"])
 def upload_file():
@@ -56,8 +58,11 @@ def upload_file():
 
     # Fetch the file document with its topics and timestamp
     file_doc = file_doc_ref.get()
+    print("Hello")
+   
     if file_doc.exists:
-        file_data = file_doc.to_dict()
+        file_dic = file_doc.to_dict()
+        file_data = {f'{file_dic["filename"]}':{"topics": [ topic["topic"] for topic in file_dic["topics"]]} }
     else:
         file_data = {}
 
@@ -65,8 +70,87 @@ def upload_file():
     return jsonify({
         "message": "File processed successfully",
         "topics": topic_data,  # Return the topics from PDF processing
-        "file_data": file_data  # Return the file document with topics and timestamp
+        "files": file_data  # Return the file document with topics and timestamp
     })
+
+
+
+@app.route("/tests", methods=["GET"])
+def get_tests():
+    test_id = request.args.get("id", None)
+    search_query = request.args.get("q", None)
+    creator_query = request.args.get("creator", None)
+    print(search_query)
+    test_doc_ref = db.collection("tests")
+    if test_id:
+        test = test_doc_ref.document(test_id).get()
+        return jsonify(test.to_dict()), 200
+    
+    if search_query:
+        tests = test_doc_ref.get()
+        
+        matching_tests = []
+
+        for test in tests:
+            test_id = test.id
+            test_dict = test.to_dict()
+            if search_query.lower() in test_dict.get("name", "").lower():
+                test_dict["id"] = test_id
+                matching_tests.append(test_dict)
+            else:
+                for topic in test_dict.get("topics"):
+                    if search_query.lower() in topic.lower():
+                        test_dict["id"] = test_id
+                        matching_tests.append(test_dict)
+                        break 
+
+        return jsonify({"tests": matching_tests}), 200
+    
+    if creator_query:
+        tests = test_doc_ref.get()
+        matching_tests = []
+        print(creator_query)
+        for test in tests:
+            test_id = test.id
+            test_dict = test.to_dict()
+            print(test_dict.get("creator", ""))
+            if creator_query == test_dict.get("creator", ""):
+                test_dict["id"] = test_id
+                matching_tests.append(test_dict)
+        return jsonify({"tests": matching_tests}), 200
+    
+    tests = test_doc_ref.get()
+    tests = tests[:24]
+    test_to_return = []
+    for test in tests:
+        test_id = test.id
+        test_dict = test.to_dict()
+        test_dict["id"] = test_id
+        test_to_return.append(test_dict)
+
+
+    return jsonify({"tests": test_to_return}), 200
+
+@app.route('/images', methods=['POST'])
+def upload_image():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part in the request'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+    if file:
+        filepath = os.path.join("./static/images", file.filename)
+        file.save(filepath)
+        return jsonify({'message': f'File successfully saved at {filepath}'}), 200
+    return jsonify({'error': 'No file selected'}), 400
+
+    
+
+@app.route('/images/<filename>', methods=['GET'])
+def serve_image(filename):
+    # Assuming your images are stored in a directory named 'static/images'
+    image_path = os.path.join('static\\images', filename)
+    return send_file(image_path, mimetype='image/jpeg')
 
 if __name__ == "__main__":
     app.run(debug=True)
