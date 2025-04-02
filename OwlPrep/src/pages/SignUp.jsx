@@ -21,7 +21,6 @@ function SignUp() {
       await setDoc(doc(db, "users", user.uid), {
         userName: userName, // Save username to Firestore
         email: email, // Save email to Firestore
-        password: password, // Save password to Firestore
       });
 
       alert("Registration successful!");
