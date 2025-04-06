@@ -33,7 +33,6 @@ function Profile() {
             <div>
                 <p>User Name: {userInfo.userName}</p>
                 <p>Email: {userInfo.email}</p>
-                <p>Password: {userInfo.password}</p>
                 <button onClick={handleLogout}>Logout</button>
             </div>
         ) : (
