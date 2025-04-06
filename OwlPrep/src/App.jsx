@@ -13,6 +13,7 @@ import Page404 from "./pages/404";
 
 import CreateTest from "./pages/CreateTest";
 import CreateCheatsheet from "./pages/CreateCheatSheet";
+import ProgressTracker from "./pages/ProgressTracker";
 import "./App.css"; 
 import { IoReturnUpBack } from "react-icons/io5";
 
@@ -228,6 +229,7 @@ function App() {
         <Route path="/profile/:username" element={<Profile/>}></Route>
         <Route path="/create-test" element={<CreateTest topics={topics} uploadedFiles={uploadedFiles} handleToggleFile={changeUploadedFiles} changeTopics={changeTopics}/>}></Route>
         <Route path="/create-cheat-sheet" element={<CreateCheatsheet topics={topics} uploadedFiles={uploadedFiles} handleToggleFile={changeUploadedFiles} changeTopics={changeTopics}/>}></Route>
+        <Route path="/progress-tracker" element={<ProgressTracker/>}></Route>
         <Route path="*" element={<Page404/>}></Route>
       </Route>
 

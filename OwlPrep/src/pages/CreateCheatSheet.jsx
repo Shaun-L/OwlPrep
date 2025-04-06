@@ -108,7 +108,7 @@ export default function CreateCheatsheet({topics, uploadedFiles, changeUploadedF
         
         <form id="TestForm">
             <label className="form-heading testNameInput">
-                        <input type="text"  value={testName} onChange={(e)=>setTestName(e.target.value)} placeholder="Test Name"></input>
+                        <input type="text"  value={testName} onChange={(e)=>setTestName(e.target.value)} placeholder="Cheat sheet Name"></input>
             </label>
 
             <div>
@@ -173,7 +173,7 @@ export default function CreateCheatsheet({topics, uploadedFiles, changeUploadedF
         <div className="fileUploadedArea">
             <div>
                 <h2>Files Uploaded</h2>
-                <p>Remove any files that you dont want to be part of test</p>
+                <p>Remove any files that you dont want to be part of cheat sheet</p>
             </div>
            
             <div className="filesUploadedContainer">

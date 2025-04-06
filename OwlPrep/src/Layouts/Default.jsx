@@ -102,7 +102,7 @@ export default function Default({loggedIn, topics, setTopics, logout,closeDropdo
                 <Link to="/"><FaHome/>Home</Link>
                 
                 <Link to="/"><CiBookmark/> Saves</Link>
-                <Link to="/"><RiProgress1Line/> Progress</Link>
+                <Link to="/progress-tracker"><RiProgress1Line/> Progress</Link>
             </div>
             <div className="sideNavSubContainer">
                 <h3>Start Here</h3>
