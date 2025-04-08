@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useContext } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import File_Dropzone from "./components/File_Dropzone";  // Import your File_Dropzone component
@@ -25,23 +25,53 @@ import Test from "./pages/Test";
 import { query } from "firebase/firestore";
 import Progress from "./pages/Progess";
 import Saves from "./pages/Saves";
-
+import { TokenContext } from "./hooks/TokenContext";
 
 function App() {
   const dropdown = useRef(null)
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState("")
-  const [users, setUsers] = useState([]);
-  const [name, setName] = useState(""); // State for user name
-  const [email, setEmail] = useState(""); // State for user email
+  const [username, setUsername] = useState([]);
+  const [profileImg, setProfileImg] = useState(""); // State for user name
   const checkboxRef = useRef(null);
   const [showMobileNav, setShowMobileNav] = useState(false)
-
+  const [email, setEmail] = useState("")
   const [loggedIn, setLoggedIn] = useState(true);
   const [showAccountDropdown, setShowAccountDropDown] = useState(false);
   const [darkTheme, setDarkTheme] = useState(false);
   const [topics,setTopics] = useState([])
   const [uploadedFiles, setUploadedFiles] = useState([])
+
+  const {token, setToken} = useContext(TokenContext)
+
+  useEffect(()=>{
+    const getLoggedInUser = async()=>{
+      const response = await fetch("http://127.0.0.1:5000/users", {
+        method: "POST", // Use the appropriate HTTP method
+        headers: {
+            "Authorization": `Bearer ${token}`, // Attach the Bearer token
+        },
+        body: JSON.stringify({
+            key1: "value1", // Example data to send in the request body
+            key2: "value2",
+        }),
+    });
+
+    // Parse and handle the response
+    if (response.ok) {
+        const data = await response.json();
+        setProfileImg(data.img_url);
+        setUsername(data.username)
+        setEmail(data.email)
+        console.log("Response Data:", data);
+    } else {
+        console.error("Error Response:", response.status, response.statusText);
+    }
+    }
+
+    getLoggedInUser()
+  }, [token])
+
 
   function changeDropdownView() {
     setShowAccountDropDown(!showAccountDropdown);
@@ -261,22 +291,22 @@ function App() {
     <div id="header-btns">
       <div id="create-btn">+ Create</div>
       <div>
-        {loggedIn ? <button className="accountBtn" onClick={changeDropdownView}><FaUser/></button> : <Link id="toLoginBtn" to={"/login"}>Log In</Link> }
+        {token ? <button className="accountBtn" onClick={changeDropdownView}><img src={profileImg} className="profileBtnOImg"/></button> : <Link id="toLoginBtn" to={"/login"}>Log In</Link> }
       </div>
       <div id="account-dropdown" ref={dropdown} className={`${showAccountDropdown ? "" : "hide"}`}>
         <div id="account-dropdown-header" className="account-dropdown-section">
           <div id="account-header-btn">
-            <FaUser/>
+            <img src={profileImg} className="profileBtnOImg"/>
           </div>
           <div>
-            <p id="user-account-email">nikerun@gmail.com</p>
-            <p id="user-account-name">Nikeisthebest</p>
+            <p id="user-account-email">{email}</p>
+            <p id="user-account-name">{username}</p>
           </div>
         </div>
 
         <div className="account-dropdown-section">
           <ul>
-            <li onClick={closeDropdown}><Link to="/profiles/freddy">Account</Link></li>
+            <li onClick={closeDropdown}><Link to={`/profiles/${username}`}>Account</Link></li>
             <li onClick={closeDropdown}><Link to="/settings">Settings</Link></li>
             <li><button type="button" onClick={changeTheme}>{darkTheme ? <div><MdOutlineLightMode height={"100%"}/> Light mode</div> : <div><MdOutlineNightlight height={"100%"}/> Dark mode</div>}</button></li>
           </ul>
@@ -296,8 +326,6 @@ function App() {
         <Route index element={<Home></Home>}></Route>
         <Route path="saves" element={<Saves></Saves>}></Route>
         <Route path="progress" element={<Progress></Progress>}></Route>
-        <Route path="/signup" element={<SignUp></SignUp>}></Route>
-        <Route path="/login" element={<Login logginUser={logginUser}></Login>}></Route>
         <Route path="/forgot-password" element={<ForgotPassword></ForgotPassword>}></Route>
         <Route path="/settings" element={<Settings theme={darkTheme} selectThemeChange={selectThemeChange}/>}></Route>
         <Route path="/profiles/:username" element={<Profile/>}></Route>

@@ -95,9 +95,7 @@ header input::placeholder{
 .hide{display: none;}
 
 .accountBtn{
-  padding: 8px 10px;
-  border-radius: 50%;
-  background-color: rgb(86, 95, 100);
+
   display: flex;
   justify-content: center;
   align-items: center;
@@ -420,9 +418,13 @@ select{
 }
 
 #account-header-btn{
-  padding: 8px 10px;
   border-radius: 50%;
-  background-color: rgb(86, 95, 100);
+}
+
+.profileBtnOImg{
+  width: 35px;
+  height: 31px;
+  border-radius: 50%;
 }
 
 #dropdown-focus{

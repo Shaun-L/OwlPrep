@@ -5,7 +5,7 @@ import os
 from processing import process_pdf
 from firebase_config import db
 import firebase_admin
-from firebase_admin import firestore
+from firebase_admin import firestore, auth
 
 app = Flask(__name__)
 CORS(app)
@@ -13,6 +13,17 @@ CORS(app)
 UPLOAD_FOLDER = "./uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+def get_current_user(header):
+    print(request.headers, "Bye")
+    print(request.headers)
+    token = request.headers["Authorization"].split("Bearer ")[1]
+    print(token, "Token")
+    try:
+        result = auth.verify_id_token(token)
+        print(result)
+        return result["uid"]
+    except:
+        return None
 
 
 @app.route("/upload", methods=["POST"])
@@ -73,8 +84,30 @@ def upload_file():
         "files": file_data  # Return the file document with topics and timestamp
     })
 
+@app.route("/users", methods=["POST"])
+def get_users():
+    
+    uid = get_current_user(header=request.headers)
 
+    print(uid, "User")
+    if(uid):
+        try:
+        # Get user ID (UID) from the request
 
+            user_ref = db.collection("users").document(uid)
+            user = user_ref.get()
+            user_dict = user.to_dict()
+            
+            
+        # Return user information as JSON
+            return jsonify(user_dict), 200
+        except firebase_admin.exceptions.FirebaseError as e:
+            return jsonify({"error": f"Firebase error: {str(e)}"}), 500
+        except Exception as e:
+            return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
+    
+    return jsonify({"error": "Who"})
+    
 @app.route("/tests", methods=["GET"])
 def get_tests():
     test_id = request.args.get("id", None)

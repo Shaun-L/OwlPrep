@@ -1,6 +1,6 @@
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom"
 
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { FaHome } from "react-icons/fa";
 import { CiBookmark } from "react-icons/ci";
 import { RiProgress1Line } from "react-icons/ri";
@@ -16,7 +16,6 @@ export default function Default({loggedIn, topics, setTopics, logout,closeDropdo
   
   
   const [showTopics, setShowTopics] = useState(false)
-
   
   const location = useLocation()
   

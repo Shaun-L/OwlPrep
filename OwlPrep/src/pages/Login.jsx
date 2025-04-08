@@ -5,7 +5,8 @@ import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import LoginImage from "../assets/svg.svg"
 import { LuUserRound } from "react-icons/lu";
 import { IoKeyOutline } from "react-icons/io5";
-
+import { TokenContext } from "../hooks/TokenContext";
+import { useContext } from "react";
 
 function Login({logginUser}) {
 
@@ -14,6 +15,7 @@ function Login({logginUser}) {
   const [errMsg, setErrMsg] = useState("")
   const [formError, setFormError] = useState(false)
   const navigate = useNavigate();
+  const { token, setToken } = useContext(TokenContext);
 
   const handleLogin = async () => {
     if(email.trim() == "" || password.trim() == ""){
@@ -23,8 +25,13 @@ function Login({logginUser}) {
     }
     try {
       const auth = getAuth();
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const idToken = await userCredential.user.getIdToken();
+
+        // Store the token securely
+      setToken(idToken)
       alert("Login successful!");
+      console.log(idToken)
       logginUser()
       navigate("/");
       

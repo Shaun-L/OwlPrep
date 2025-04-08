@@ -43,9 +43,10 @@ function SignUp() {
       // Save first and last name to Firestore under the user's document
       const user = userCredential.user;
       await setDoc(doc(db, "users", user.uid), {
+        email: email,
         username: username, // Save username to Firestore
-        email: email, // Save email to Firestore
-        password: password, // Save password to Firestore
+        dark_theme: false,
+        img_url: "http://127.0.0.1:5000/images/default-profile.jpg",
       });
 
       alert("Registration successful!");
