@@ -2,11 +2,13 @@ import {Link, NavLink, useSearchParams} from "react-router-dom"
 import File_Dropzone from "../components/File_Dropzone"
 import { FaFilter } from "react-icons/fa";
 import StudyItemContainer from "../components/StudyItemContainer";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { getDocs, collection } from "firebase/firestore";
 import { db } from "../firebaseUtils";
 import { FaCaretLeft } from "react-icons/fa";
 import { FaCaretRight } from "react-icons/fa";
+import { TokenContext } from "../hooks/TokenContext";
+import { TailSpin } from 'react-loader-spinner'
 
 export default function Home(){
     const [items, setItems] = useState([])
@@ -18,12 +20,14 @@ export default function Home(){
     const [smFilterSelected, setSMFilterSelected] = useState(true)
     const [difficultyFilter, setDifficultyFilter] = useState(4)
     const [numberOfPages, setNumberOfPages] = useState(1)
+    const [loading, setLoading] = useState(false)
     const [currentPage, setCurrentPage] = useState(1)
-
+    const { token, setToken } = useContext(TokenContext)
 
     useEffect(()=>{
 
         const fetchData = async ()=> {
+            setLoading(true)
             if(searchParams.get("q") && searchParams.get("q") !== ""){
                 try {
                     const res = await fetch(`http://127.0.0.1:5000/tests?q=${searchParams.get("q")}`, {method: "GET"});
@@ -36,6 +40,7 @@ export default function Home(){
                     console.log(data.tests.length % 12)
                     newNumberOfPages += (data.tests.length % 12 != 0)? 1 : 0
                     setNumberOfPages(newNumberOfPages)
+                    setLoading(false)
                   } catch (error) {
                     console.error("Error fetching data: ", error);
                   }
@@ -47,6 +52,7 @@ export default function Home(){
                     let newNumberOfPages = Math.floor(data.tests.length / 12)
                     newNumberOfPages += (data.tests.length % 12 != 0)? 1 : 0
                     setNumberOfPages(newNumberOfPages)
+                    setLoading(false)
                   } catch (error) {
                     console.error("Error fetching data: ", error);
                   }
@@ -97,6 +103,17 @@ export default function Home(){
         }
     }
 
+    const itemMapped = items.slice(currentPage*12-12, currentPage*12).filter(item=>{
+        console.log()
+        if((!mcFilterSelected && item.test.questionTypes.includes("Multiple Choice")) || (!tfFilterSelected && item.test.questionTypes.includes("True or False")) ||
+           (!saFilterSelected && item.test.questionTypes.includes("Short Answer"))){
+            return false
+        }
+
+        return true
+
+    }).filter(item=> difficultyFilter == 4 || item.test.difficulty == difficultyFilter ).map((item)=><StudyItemContainer title={item.test.name} type={item.test.type} creator={item.creator.username} key={item.test.id} id={item.test.id}/>)
+
     return(<>
         <div id="home-header">
             <div>
@@ -113,10 +130,10 @@ export default function Home(){
                     <p>
                         Question Types:
                     </p>
-                <label><input onChange={()=>setMCFilterSelected(!mcFilterSelected)} value="all" type="checkbox" name="filter" checked={mcFilterSelected}></input>Multiple Choice</label>
-                <label><input onChange={()=>setTFFilterSelected(!tfFilterSelected)} value="test" type="checkbox" name="filter" checked={tfFilterSelected}></input>True or False</label>
-                <label><input onChange={()=>setSAFilterSelected(!saFilterSelected)} value="cheetsheet" type="checkbox" name="filter" checked={saFilterSelected}></input>Short Answer</label>
-                <label><input onChange={()=>setSMFilterSelected(!smFilterSelected)} value="cheetsheet" type="checkbox" name="filter" checked={smFilterSelected}></input>Select Many</label>
+                <label className="checkbox-label custom-checkbox"><input onChange={()=>setMCFilterSelected(!mcFilterSelected)} value="all" type="checkbox" name="filter" checked={mcFilterSelected}></input><span className="custom-check"></span>Multiple Choice</label>
+                <label className="checkbox-label custom-checkbox"><input onChange={()=>setTFFilterSelected(!tfFilterSelected)} value="test" type="checkbox" name="filter" checked={tfFilterSelected}></input><span className="custom-check"></span>True or False</label>
+                <label className="checkbox-label custom-checkbox"><input onChange={()=>setSAFilterSelected(!saFilterSelected)} value="cheetsheet" type="checkbox" name="filter" checked={saFilterSelected}></input><span className="custom-check"></span>Short Answer</label>
+                <label className="checkbox-label custom-checkbox"><input onChange={()=>setSMFilterSelected(!smFilterSelected)} value="cheetsheet" type="checkbox" name="filter" checked={smFilterSelected}></input><span className="custom-check"></span>Select Many</label>
 
                 <p>Difficulty</p>
                 <select name="difficultyFilter" value={difficultyFilter} onChange={(e)=>setDifficultyFilter(e.currentTarget.value)}>
@@ -133,19 +150,16 @@ export default function Home(){
 
         <div id="itemsContainer">
             {
-                items.slice(currentPage*12-12, currentPage*12).filter(item=>{
-                    console.log()
-                    if((!mcFilterSelected && item.questionTypes.includes("Multiple Choice")) || (!tfFilterSelected && item.questionTypes.includes("True or False")) ||
-                       (!saFilterSelected && item.questionTypes.includes("Short Answer"))){
-                        return false
-                    }
-
-                    return true
-
-                }).filter(item=> difficultyFilter == 4 || item.difficulty == difficultyFilter ).map((item)=><StudyItemContainer title={item.name} type={item.type} creator={item.creator} key={item.id} id={item.id}/>)
+                loading ? (
+                                  <div className="homeLoadingContainer">
+                                      <TailSpin   visible={true} height="40" width="40" color={getComputedStyle(root).getPropertyValue('--secondary-text-color').trim()} ariaLabel="tail-spin-loading" radius="1" wrapperStyle={{}} wrapperClass="loader" />
+                                      
+                                  </div>
+                            ) : itemMapped.length == 0 ? <p className="homeLoadingContainer">No items available</p> : itemMapped
             }
         </div>
-
+        {
+            !loading && (itemMapped.length !== 0 && 
         <div className="flex itemNavigationContainer">
                 <button className="itemPreviousBtn button" type="button" onClick={()=>{
                     if(currentPage > 1){setCurrentPage(currentPage-1)}}}><FaCaretLeft/></button>
@@ -154,6 +168,7 @@ export default function Home(){
                 }
                 <button className="itemPreviousBtn button" type="button" onClick={()=>{
                     if(currentPage < numberOfPages){setCurrentPage(currentPage+1)}}}><FaCaretRight/></button>
-            </div>
+            </div>)
+        }
         </>)
 }

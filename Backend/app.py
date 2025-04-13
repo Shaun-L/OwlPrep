@@ -84,10 +84,16 @@ def upload_file():
         "files": file_data  # Return the file document with topics and timestamp
     })
 
-@app.route("/users", methods=["POST"])
+
+
+@app.route("/users", methods=["GET"])
 def get_users():
-    
-    uid = get_current_user(header=request.headers)
+
+    uid = None
+
+    if("Authorization" in request.headers):
+        uid = get_current_user(header=request.headers)
+    username = request.args.get("username", None)
 
     print(uid, "User")
     if(uid):
@@ -105,8 +111,29 @@ def get_users():
             return jsonify({"error": f"Firebase error: {str(e)}"}), 500
         except Exception as e:
             return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
-    
+        
+
+    if(username):
+        user_ref = db.collection("users")
+        users = user_ref.get()
+
+        for user in users:
+            user_dict = user.to_dict()
+            print()
+            print()
+            print()
+            print(user_dict)
+            print()
+            print()
+            print()
+            if(user_dict["username"] == username):
+                del user_dict["email"]
+                del user_dict["dark_theme"]
+                return jsonify(user_dict), 200
+        
+
     return jsonify({"error": "Who"})
+
     
 @app.route("/tests", methods=["GET"])
 def get_tests():
@@ -117,7 +144,15 @@ def get_tests():
     test_doc_ref = db.collection("tests")
     if test_id:
         test = test_doc_ref.document(test_id).get()
-        return jsonify(test.to_dict()), 200
+        test_dict = test.to_dict()
+        uid = test_dict["creator"]
+        user_ref = db.collection("users").document(uid)
+        user = user_ref.get()
+        user_dict = user.to_dict()
+        del test_dict["creator"]
+        del user_dict['email']
+        del user_dict["dark_theme"]
+        return jsonify({"test": test_dict, "creator": user_dict}), 200
     
     if search_query:
         tests = test_doc_ref.get()
@@ -129,12 +164,26 @@ def get_tests():
             test_dict = test.to_dict()
             if search_query.lower() in test_dict.get("name", "").lower():
                 test_dict["id"] = test_id
-                matching_tests.append(test_dict)
+                uid = test_dict["creator"]
+                user_ref = db.collection("users").document(uid)
+                user = user_ref.get()
+                user_dict = user.to_dict()
+                del test_dict["creator"]
+                del user_dict['email']
+                del user_dict["dark_theme"]
+                matching_tests.append({"test": test_dict, "creator": user_dict})
             else:
                 for topic in test_dict.get("topics"):
                     if search_query.lower() in topic.lower():
                         test_dict["id"] = test_id
-                        matching_tests.append(test_dict)
+                        uid = test_dict["creator"]
+                        user_ref = db.collection("users").document(uid)
+                        user = user_ref.get()
+                        user_dict = user.to_dict()
+                        del test_dict["creator"]
+                        del user_dict['email']
+                        del user_dict["dark_theme"]
+                        matching_tests.append({"test": test_dict, "creator": user_dict})
                         break 
 
         return jsonify({"tests": matching_tests}), 200
@@ -142,6 +191,7 @@ def get_tests():
     if creator_query:
         tests = test_doc_ref.get()
         matching_tests = []
+        
         print(creator_query)
         for test in tests:
             test_id = test.id
@@ -149,7 +199,14 @@ def get_tests():
             print(test_dict.get("creator", ""))
             if creator_query == test_dict.get("creator", ""):
                 test_dict["id"] = test_id
-                matching_tests.append(test_dict)
+                uid = test_dict["creator"]
+                user_ref = db.collection("users").document(uid)
+                user = user_ref.get()
+                user_dict = user.to_dict()
+                del test_dict["creator"]
+                del user_dict['email']
+                del user_dict["dark_theme"]
+                matching_tests.append({"test": test_dict, "creator": user_dict})
         return jsonify({"tests": matching_tests}), 200
     
     tests = test_doc_ref.get()
@@ -159,7 +216,15 @@ def get_tests():
         test_id = test.id
         test_dict = test.to_dict()
         test_dict["id"] = test_id
-        test_to_return.append(test_dict)
+        
+        uid = test_dict["creator"]
+        user_ref = db.collection("users").document(uid)
+        user = user_ref.get()
+        user_dict = user.to_dict()
+        del test_dict["creator"]
+        del user_dict['email']
+        del user_dict["dark_theme"]
+        test_to_return.append({"test": test_dict, "creator": user_dict})
 
 
     return jsonify({"tests": test_to_return}), 200
@@ -171,9 +236,31 @@ def upload_image():
     file = request.files['file']
     if file.filename == '':
         return jsonify({'error': 'No file selected'}), 400
+    
+    uid = get_current_user(header=request.headers)
+    user_dict = None
+    
+    if(uid):
+        try:
+        # Get user ID (UID) from the request
+            user_ref = db.collection("users").document(uid)
+            user_ref.update({"img_url": f"http://127.0.0.1:5000/images/{file.filename}"})
+            user = user_ref.get()
+            print()
+            print()
+            print(user)
+            user_dict = user.to_dict()
+            print()
+            print()
+            print(user_dict)
+        except Exception as e:
+            return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
+
     if file:
         filepath = os.path.join("./static/images", file.filename)
         file.save(filepath)
+        if(user_dict):
+            return jsonify({'message': f'File successfully saved at {filepath}', "user": user_dict}), 200
         return jsonify({'message': f'File successfully saved at {filepath}'}), 200
     return jsonify({'error': 'No file selected'}), 400
 

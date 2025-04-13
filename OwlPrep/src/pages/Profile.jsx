@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import { FaUser } from "react-icons/fa";
 import StudyItemContainer from "../components/StudyItemContainer";
@@ -9,17 +9,22 @@ import AvatarEditor from 'react-avatar-editor'
 import Dropzone from 'react-dropzone'
 import DropzoneComponent from "../components/Dropzone";
 import axios from 'axios';
+import { TokenContext } from "../hooks/TokenContext";
+import { getAuth } from "firebase/auth";
 
 export default function Profile(){
+    const [loggedInUsername, setLoggedInUsername] = useState("")
     const {username} = useParams()
     const [tests, setTests] = useState([])
     const [currentPage, setCurrentPage] = useState(1)
     const [numberOfPages, setNumberOfPages] = useState(1)
     const [showModal, setShowModal] = useState(false)
-    const [image, setImage] = useState("http://127.0.0.1:5000/images/default-profile.jpg")
+    const [profileImage, setProfileImage] = useState("http://127.0.0.1:5000/images/default-profile.jpg")
     const [previewImage, setPreviewImage] = useState("")
     const [files, setFiles] = useState([])
     const avatarEditor = useRef(null)
+    const {token, setToken} = useContext(TokenContext)
+     
  
     const onFileChange = (e)=>{
         const file = e.target.files[0]
@@ -51,15 +56,20 @@ export default function Profile(){
 
       // Upload the image using Axios
             axios.post('http://127.0.0.1:5000/images', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }, method: "POST",
+                headers: { 'Content-Type': 'multipart/form-data', "Authorization": `Bearer ${token}`}, method: "POST",
             })
             .then(response => {
+                console.log(response.data)
                 alert(response.data.message); // Show success message from Flask
+                setProfileImage(response.data.img_url)
             })
             .catch(error => {
                 console.error('Error uploading the image:', error);
                 alert('Failed to upload the image!');
           })
+
+
+
       
           
     })}
@@ -70,16 +80,33 @@ export default function Profile(){
         const getData = async ()=>{
             const res = await fetch("http://127.0.0.1:5000/tests?creator=Freddy")
             const data = await res.json()
+            const userRes = await fetch(`http://127.0.0.1:5000/users?username=${username}`, {
+                method: "GET", // Use the appropriate HTTP method
+            })
+            const loggedInUserRes =  await fetch('http://127.0.0.1:5000/users', {
+                headers: { 'Content-Type': 'multipart/form-data', "Authorization": `Bearer ${token}`}, method: "GET",
+            })
+            const loggedInUser = await loggedInUserRes.json()
+            console.log(loggedInUser)
+
+            const userData = await userRes.json()
+            
+            console.log(userData)
             console.log(data)
             console.log(Math.floor(data.tests.length / 9), data.tests.length % 9)
             let newNumberOfPages = Math.floor(data.tests.length / 9)
             newNumberOfPages += (data.tests.length % 9 != 0)? 1 : 0
             console.log(newNumberOfPages)
+            setLoggedInUsername(loggedInUser.username)
             setNumberOfPages(newNumberOfPages)
             setTests(data.tests)
+            setProfileImage(userData.img_url)
         }
+
         getData()
-    }, [username])
+    }, [])
+
+    const itemsMapped = tests.slice(currentPage*9-9, currentPage*9).map((item)=><StudyItemContainer title={item.name} type={item.type} creator={item.creator} key={item.id} id={item.id}/>)
 
     return (<>
     <div className={"modal " + (showModal && "showModal")}>
@@ -94,7 +121,7 @@ export default function Profile(){
     <div className="profileHeaderContainer">
         <div className="changeImageContainer" onClick={()=>setShowModal(true)}>
             <RiImageEditLine/>
-            <img src="http://127.0.0.1:5000/images/default-profile.jpg"></img>
+            <img src={`${profileImage}`} loading="lazy"></img>
             </div>
         <h1>{username}</h1>
     </div>
@@ -103,19 +130,21 @@ export default function Profile(){
 
     <div id="itemsContainer">
                 {
-                    tests.slice(currentPage*9-9, currentPage*9).map((item)=><StudyItemContainer title={item.name} type={item.type} creator={item.creator} key={item.id} id={item.id}/>)
+                    itemsMapped.length == 0 ? <p className="homeLoadingContainer">No items available</p> : itemsMapped
                 }
     </div>
 
+    {
+        itemsMapped.length !== 0 && 
     <div className="flex itemNavigationContainer">
-        <button className="itemPreviousBtn button" type="button" onClick={()=>{
-            if(currentPage > 1){setCurrentPage(currentPage-1)}}}><FaCaretLeft/></button>
+        <button className="itemPreviousBtn button" type="button" onClick={loggedInUser == username && (()=>{
+            if(currentPage > 1){setCurrentPage(currentPage-1)}} )}><FaCaretLeft/></button>
         {
             [...Array(numberOfPages).keys()].map(i => <button onClick={()=>setCurrentPage(i+1)} className={"pageBtn " + (currentPage == i+1 && "activePageBtn")}>{i + 1}</button>)
         }
         <button className="itemPreviousBtn button" type="button" onClick={()=>{
             if(currentPage < numberOfPages){setCurrentPage(currentPage+1)}}}><FaCaretRight/></button>
-    </div>
+    </div>}
     
     </>)
 }

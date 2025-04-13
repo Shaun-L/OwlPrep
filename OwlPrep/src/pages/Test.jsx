@@ -18,9 +18,9 @@ export default function Test({}){
         fetch(`http://127.0.0.1:5000/tests?id=${id}`, {
             method: "GET",            
         }).then(res=>res.json()).then(data => {console.log(data)
-            setTestName(data.name)
-            setTestCreator(data.creator)
-            setTestTopics(data.topics)
+            setTestName(data.test.name)
+            setTestCreator(data.creator.username)
+            setTestTopics(data.test.topics)
         })
     }, [])
 

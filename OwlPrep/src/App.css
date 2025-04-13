@@ -115,7 +115,7 @@ header input::placeholder{
 
 #filter-dropdown{
   position: absolute;
-  background-color: var(--secondary-border-color);
+  background-color: var(--search-background);
   right: 15px;
   margin-top: .4rem;
   border-radius: 5px;
@@ -123,9 +123,27 @@ header input::placeholder{
   padding: 8px 12px;
 }
 
+#filter-dropdown p{
+  margin: .3rem 0;
+  color: var(--primary-text-color)
+}
+
 #filter-dropdown label{
   display: block;
   color: var(--secondary-text-color)
+}
+
+.homeLoadingContainer{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  grid-column: 1 /4;
+  height: 250px;
+}
+
+p.homeLoadingContainer{
+  font-size: 1.2rem;
+  color: var(--primary-text-color)
 }
 
 #account-dropdown{
@@ -626,6 +644,7 @@ div.file-dropzone ~ p{
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+  max-width: 1000px;
 }
 
 #home-header button{

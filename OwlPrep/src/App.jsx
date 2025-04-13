@@ -8,7 +8,6 @@ import { FaUser } from "react-icons/fa";
 import { RxHamburgerMenu } from "react-icons/rx";
 import { GiOwl } from "react-icons/gi";
 
-
 import SignUp from "./pages/SignUp";
 import Home from "./pages/Home";
 import Default from "./Layouts/Default";
@@ -26,6 +25,7 @@ import { query } from "firebase/firestore";
 import Progress from "./pages/Progess";
 import Saves from "./pages/Saves";
 import { TokenContext } from "./hooks/TokenContext";
+import { getAuth, onAuthStateChanged } from "firebase/auth"
 
 function App() {
   const dropdown = useRef(null)
@@ -47,14 +47,10 @@ function App() {
   useEffect(()=>{
     const getLoggedInUser = async()=>{
       const response = await fetch("http://127.0.0.1:5000/users", {
-        method: "POST", // Use the appropriate HTTP method
+        method: "GET", // Use the appropriate HTTP method
         headers: {
             "Authorization": `Bearer ${token}`, // Attach the Bearer token
         },
-        body: JSON.stringify({
-            key1: "value1", // Example data to send in the request body
-            key2: "value2",
-        }),
     });
 
     // Parse and handle the response
@@ -78,7 +74,15 @@ function App() {
   }
 
   function logout() {
-    setLoggedIn(false);
+    const auth = getAuth();
+    auth.signOut()
+        .then(() => {
+
+            setToken(null); // Clear the token if stored locally
+        })
+        .catch((error) => {
+            console.error("Error logging out user:", error);
+        });
   }
 
   function logginUser() {
