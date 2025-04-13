@@ -7,8 +7,7 @@ import { setDoc, doc } from "firebase/firestore";
 function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [firstName, setFirstName] = useState(""); // New state for first name
-  const [lastName, setLastName] = useState("");   // New state for last name
+  const [userName, setUserName] = useState(""); // New state for username
   const navigate = useNavigate();
 
   const handleRegister = async () => {
@@ -20,8 +19,8 @@ function SignUp() {
       // Save first and last name to Firestore under the user's document
       const user = userCredential.user;
       await setDoc(doc(db, "users", user.uid), {
-        firstName: firstName,
-        lastName: lastName,
+        userName: userName, // Save username to Firestore
+        email: email, // Save email to Firestore
       });
 
       alert("Registration successful!");
@@ -36,17 +35,12 @@ function SignUp() {
       <div className="register-left">
         <div className="register-form">
           <h1>Create an Account</h1>
+          {/* Replace first name & last name with username */}
           <input
             type="text"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            placeholder="First Name"
-          />
-          <input
-            type="text"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            placeholder="Last Name"
+            value={userName}
+            onChange={(e) => setUserName(e.target.value)}
+            placeholder="User Name"
           />
           <input
             type="email"

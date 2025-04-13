@@ -1,6 +1,5 @@
 import { useState, useRef } from "react";
-import { Routes, Route } from "react-router-dom";
-import { Link } from "react-router-dom";
+import { Routes, Route, Link } from "react-router-dom";
 import File_Dropzone from "./components/File_Dropzone";  // Import your File_Dropzone component
 
 import SignUp from "./pages/SignUp";
@@ -8,6 +7,7 @@ import Home from "./pages/Home";
 import Default from "./Layouts/Default";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword"; // Adding the ForgotPassword component
 import Profile from "./pages/Profile";
 import Page404 from "./pages/404";
 
@@ -17,41 +17,36 @@ import { IoReturnUpBack } from "react-icons/io5";
 
 
 function App() {
-  const [users, setUsers] = useState([]);
-  const [name, setName] = useState(""); // State for user name
-  const [email, setEmail] = useState(""); // State for user email
-  const checkboxRef = useRef(null);
+    const [loggedIn, setLoggedIn] = useState(true);
+    const [showAccountDropdown, setShowAccountDropDown] = useState(false);
+    const [darkTheme, setDarkTheme] = useState(false);
+    const [topics,setTopics] = useState([{name: "fddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", keep: true, files: []} ])
+    const [uploadedFiles, setUploadedFiles] = useState([])
 
-  const [loggedIn, setLoggedIn] = useState(true);
-  const [showAccountDropdown, setShowAccountDropDown] = useState(false);
-  const [darkTheme, setDarkTheme] = useState(false);
-  const [topics,setTopics] = useState([{name: "fddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", keep: true, files: []} ])
-  const [uploadedFiles, setUploadedFiles] = useState([])
-
-  function changeDropdownView() {
-    setShowAccountDropDown(!showAccountDropdown);
-  }
-
-  function logout() {
-    setLoggedIn(false);
-  }
-
-  function logginUser() {
-    setLoggedIn(true);
-  }
-
-  function closeDropdown() {
-    setShowAccountDropDown(false);
-  }
-
-  function changeTheme() {
-    if (darkTheme) {
-      document.body.removeAttribute("data-theme");
-    } else {
-      document.body.setAttribute("data-theme", "dark");
+    function changeDropdownView() {
+        setShowAccountDropDown(!showAccountDropdown);
     }
-    setDarkTheme(!darkTheme);
-  }
+
+    function logout() {
+        setLoggedIn(false);
+    }
+
+    function logginUser() {
+        setLoggedIn(true);
+    }
+
+    function closeDropdown() {
+        setShowAccountDropDown(false);
+    }
+
+    function changeTheme() {
+        if (darkTheme) {
+        document.body.removeAttribute("data-theme");
+        } else {
+        document.body.setAttribute("data-theme", "dark");
+        }
+        setDarkTheme(!darkTheme);
+    }
 
   function changeUploadedFiles(fileName){
     let removeFile = false
@@ -68,15 +63,14 @@ function App() {
     }
     
     setUploadedFiles(old=>old.map((file)=>{
-    
-      if(file.name != fileName){
-          return file
-      }else{
-        console.log(file.keep)
-        removeFile = file.keep
-        return {...file, keep:!file.keep}
-      }
-  }))
+        if(file.name != fileName){
+            return file
+        }else{
+            console.log(file.keep)
+            removeFile = file.keep
+            return {...file, keep:!file.keep}
+        }
+    }))
   console.log(uploadedFiles)
 
   if(removeFile){
@@ -217,23 +211,17 @@ function App() {
 
   return (
     <>
-    
     <Routes>
       <Route path="/" element={<Default logout={logout} setTopics={setTopics} topics={topics} setUploadedFiles={setUploadedFiles} loggedIn={loggedIn} closeDropdown={closeDropdown} showAccountDropdown={showAccountDropdown} theme={darkTheme} changeTheme={changeTheme} changeDropdownView={changeDropdownView}/>}>
         <Route index element={<Home></Home>}></Route>
         <Route path="/signup" element={<SignUp></SignUp>}></Route>
         <Route path="/login" element={<Login logginUser={logginUser}></Login>}></Route>
+        <Route path="/forgot-password" element={<ForgotPassword></ForgotPassword>}></Route>
         <Route path="/settings" element={<Settings theme={darkTheme} selectThemeChange={selectThemeChange}/>}></Route>
         <Route path="/profile/:username" element={<Profile/>}></Route>
         <Route path="/create-test" element={<CreateTest topics={topics} uploadedFiles={uploadedFiles} handleToggleFile={changeUploadedFiles} changeTopics={changeTopics}/>}></Route>
         <Route path="*" element={<Page404/>}></Route>
       </Route>
-
-      
-
-      
-      
-      
     </Routes>
     </>
   );
