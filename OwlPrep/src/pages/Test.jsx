@@ -13,6 +13,7 @@ export default function Test({}){
     const [testDateCreated, setTestDateCreated] = useState("2/32/32")
     const [testCreator, setTestCreator] = useState("")
     const [testTopics, setTestTopics] = useState([])
+    const [profileImage, setProfileImage] = useState("")
     
     useEffect(()=>{
         fetch(`http://127.0.0.1:5000/tests?id=${id}`, {
@@ -21,6 +22,7 @@ export default function Test({}){
             setTestName(data.test.name)
             setTestCreator(data.creator.username)
             setTestTopics(data.test.topics)
+            setProfileImage(data.creator.img_url)
         })
     }, [])
 
@@ -31,7 +33,7 @@ export default function Test({}){
     </div>
     
     <div className="flex testPageHeader">
-        <div className="flex testCreatorContainer"><img src="http://127.0.0.1:5000/images/default-profile.jpg"></img> <Link to={`/profiles/${testCreator}`}>{testCreator}</Link></div>
+        <div className="flex testCreatorContainer"><img src={profileImage}></img> <Link to={`/profiles/${testCreator}`}>{testCreator}</Link></div>
         <div className="testDateContainer flex">
             <MdOutlineAccessTime/>
             <p >Created {testDateCreated}</p>

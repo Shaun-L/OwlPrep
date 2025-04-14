@@ -12,7 +12,7 @@ import axios from 'axios';
 import { TokenContext } from "../hooks/TokenContext";
 import { getAuth } from "firebase/auth";
 
-export default function Profile(){
+export default function Profile({changeProfileImg, userLoggedInEmail}){
     const [loggedInUsername, setLoggedInUsername] = useState("")
     const {username} = useParams()
     const [tests, setTests] = useState([])
@@ -24,7 +24,8 @@ export default function Profile(){
     const [files, setFiles] = useState([])
     const avatarEditor = useRef(null)
     const {token, setToken} = useContext(TokenContext)
-     
+    const [errorMsg, setErrorMsg] = useState("")
+    const [editableProfileImage, setEditableProfileImage] = useState(false)
  
     const onFileChange = (e)=>{
         const file = e.target.files[0]
@@ -38,13 +39,28 @@ export default function Profile(){
             setFiles(Array.from(e.target.files))
         }
     }
+    const uploadImage = async(formData)=>{
+        const resp = await axios.post('http://127.0.0.1:5000/images', formData, {
+            headers: { 'Content-Type': 'multipart/form-data', "Authorization": `Bearer ${token}`}, method: "POST",
+        })
+        console.log(resp)
+        console.log(resp.data.user.img_url)
+
+            
+        setProfileImage(resp.data.user.img_url)
+        changeProfileImg(resp.data.user.img_url)
+        setShowModal(false)
+    }
 
     const handleImageUpload = async ()=>{
         console.log(files)
         if (!previewImage) {
-            alert('Please select a file first!');
+            setErrorMsg('Please select a file first');
             return;
           }
+
+          
+            
 
 
           avatarEditor.current.getImageScaledToCanvas().toBlob(blob=>{
@@ -55,24 +71,14 @@ export default function Profile(){
             formData.append('file', croppedImage); // Key name 'file' matches Flask's route handler
 
       // Upload the image using Axios
-            axios.post('http://127.0.0.1:5000/images', formData, {
-                headers: { 'Content-Type': 'multipart/form-data', "Authorization": `Bearer ${token}`}, method: "POST",
-            })
-            .then(response => {
-                console.log(response.data)
-                alert(response.data.message); // Show success message from Flask
-                setProfileImage(response.data.img_url)
-            })
-            .catch(error => {
-                console.error('Error uploading the image:', error);
-                alert('Failed to upload the image!');
+            uploadImage(formData)
           })
 
 
 
       
           
-    })}
+    }
 
     
 
@@ -88,7 +94,7 @@ export default function Profile(){
             })
             const loggedInUser = await loggedInUserRes.json()
             console.log(loggedInUser)
-
+            setLoggedInUsername(loggedInUser.username)
             const userData = await userRes.json()
             
             console.log(userData)
@@ -97,12 +103,13 @@ export default function Profile(){
             let newNumberOfPages = Math.floor(data.tests.length / 9)
             newNumberOfPages += (data.tests.length % 9 != 0)? 1 : 0
             console.log(newNumberOfPages)
-            setLoggedInUsername(loggedInUser.username)
+            
             setNumberOfPages(newNumberOfPages)
             setTests(data.tests)
             setProfileImage(userData.img_url)
+            setEditableProfileImage(loggedInUser.username == username)
         }
-
+    
         getData()
     }, [])
 
@@ -110,20 +117,34 @@ export default function Profile(){
 
     return (<>
     <div className={"modal " + (showModal && "showModal")}>
-        <div>
-            <p>Upload File</p>
+        <div className="profileImgUploadContainer">
+            <h2>Upload File</h2>
+            <p>Select a file to upload from your computer or device</p>
             {previewImage == "" ? <DropzoneComponent onFileChange={onFileChange} files={files} setFiles={setFiles} /> : <AvatarEditor ref={avatarEditor} image={previewImage} width={150} height={150} border={10} scale={1} borderRadius={5}/>}
+            {errorMsg!== "" ? <p className="errorMsg" style={{marginTop: "10px", marginBottom: "0px"}}>{errorMsg}</p> : ""}
+            
+            <div>
+            <button type="button" onClick={()=>{
+                setShowModal(false)
+                setPreviewImage("")
+                setErrorMsg("")}}>Cancle</button>
             <button type="button" onClick={handleImageUpload}>Save Image</button>
+            </div>
+            
         </div>
         
         
     </div>
     <div className="profileHeaderContainer">
         <div className="changeImageContainer" onClick={()=>setShowModal(true)}>
-            <RiImageEditLine/>
             <img src={`${profileImage}`} loading="lazy"></img>
             </div>
-        <h1>{username}</h1>
+        <div className="profileImgSideContainer">
+            <h1>{username}</h1>
+            {editableProfileImage && <button className="editAvatarBtn" type="button" onClick={()=>setShowModal(true)}>Edit Avatar</button>}
+        </div>
+        
+
     </div>
 
     <button className="profileItemBtn">Practice tests</button>

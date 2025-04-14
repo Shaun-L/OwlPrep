@@ -1414,10 +1414,15 @@ p.testTopicContainer{
 
 .pageBtn{
   padding: 0;
+  color: var(--primary-text-color)
 }
 
 .changeImageContainer{
   position: relative;
+}
+
+.changeImageContainer img{
+  border-radius: 50%;
 }
 
 .changeImageContainer svg{
@@ -1427,4 +1432,33 @@ p.testTopicContainer{
   height: 20px;
   width: 20px;
   color: white;
+}
+
+.editAvatarBtn{
+  background-color: var(--primary-color);
+  color: white;
+  font-weight: 500;
+  border-radius: 2px;
+  padding: 5px 8px;
+
+}
+
+.profileImgSideContainer{
+  display: flex;
+  flex-direction: column;
+  
+}
+
+.profile-upload.file-dropzone{
+  height: 60px;
+  overflow: hidden;
+
+}
+
+div.modal > div.profileImgUploadContainer > h2{
+  margin-bottom: .2rem;
+}
+
+div.modal > div.profileImgUploadContainer > p{
+  margin-bottom: .5rem;
 }

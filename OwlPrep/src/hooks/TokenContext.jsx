@@ -3,6 +3,7 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 // Create a Context
 export const TokenContext = createContext();
+const TOKEN_EXPIRATION_BUFFER = 5000;
 
 // Create a Provider component
 export const TokenProvider = ({ children }) => {

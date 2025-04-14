@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "../firebaseUtils"; // For user authentication and pulling data
 import PropTypes from "prop-types";
+import { TokenContext, } from "../hooks/TokenContext";
 
 export default function Settings({theme, selectThemeChange}) {
     Settings.propTypes = {
@@ -14,29 +15,38 @@ export default function Settings({theme, selectThemeChange}) {
     const [email, setEmail] = useState("");
     const [editEmail, setEditEmail] = useState(false);
     
-    const [password, setPassword] = useState("");
+    const [password, setPassword] = useState("edsdfsdf");
     const [editPassword, setEditPassword] = useState(false);
 
     const [selectedTheme, setSelectedTheme] = useState(theme ? "dark" : "light");
 
     const [showAuthenticationModal, setShowAuthenticationModal] = useState(false);
+    const {token, setToken} = useContext(TokenContext)
 
     // Pulls the user's data from the database
     useEffect(()=>{
-        const fetchUserData = async () => {
-            const user = auth.currentUser;
-            if (user) {
-                const userDoc = await getDoc(doc(db, "users", user.uid));
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    setUsername(userData.username);
-                    setEmail(userData.email);
-                    setPassword(userData.password);
-                }
-            }
-        };
+        const getLoggedInUser = async()=>{
+            const response = await fetch("http://127.0.0.1:5000/users", {
+              method: "GET", // Use the appropriate HTTP method
+              headers: {
+                  "Authorization": `Bearer ${token}`, // Attach the Bearer token
+              }
+            })
 
-        fetchUserData();
+            if (response.ok) {
+                const data = await response.json();
+                setUsername(data.username)
+                setEmail(data.email)
+                console.log("Response Data:", data);
+            } else {
+                console.error("Error Response:", response.status, response.statusText);
+            }
+        }
+
+        getLoggedInUser()
+
+
+       
     }, []);
 
     function changeSelectedTheme(e){
@@ -51,16 +61,13 @@ export default function Settings({theme, selectThemeChange}) {
         setEditUsername(false)
         setEditEmail(false)
         setEditPassword(false) // Resetting password edit field
-        selectedTheme(false)
+        
 
         const editFieldName = e.target.dataset.field;
         console.log(editFieldName)
 
         switch(editFieldName){
             // Changing light or dark mode
-            case "theme":
-                selectedTheme(true)
-                break;
             case "email":
                 console.log("hello")
                 setEditEmail(()=>true)
@@ -70,7 +77,6 @@ export default function Settings({theme, selectThemeChange}) {
                 break;
             case "password":
                 setShowAuthenticationModal(true);
-                setEditPassword(true)
                 document.body.style.overflowY = "hidden";
                 break;
         }

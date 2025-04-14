@@ -60,7 +60,12 @@ export default function Home(){
         }
 
         fetchData()
-        
+        setMCFilterSelected(true)
+        setSAFilterSelected(true)
+        setTFFilterSelected(true)
+        setSMFilterSelected(true)
+        setShowFilterDropdown(false)
+        setDifficultyFilter(4)
     }, [searchParams])
 
     // useEffect(() => {
@@ -112,7 +117,7 @@ export default function Home(){
 
         return true
 
-    }).filter(item=> difficultyFilter == 4 || item.test.difficulty == difficultyFilter ).map((item)=><StudyItemContainer title={item.test.name} type={item.test.type} creator={item.creator.username} key={item.test.id} id={item.test.id}/>)
+    }).filter(item=> difficultyFilter == 4 || item.test.difficulty == difficultyFilter ).map((item)=><StudyItemContainer title={item.test.name} type={item.test.type} creator={item.creator.username} profileImg={item.creator.img_url} key={item.test.id} id={item.test.id}/>)
 
     return(<>
         <div id="home-header">

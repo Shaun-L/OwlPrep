@@ -2,17 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 
 const baseStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  padding: '20px',
-  borderWidth: 2,
-  borderRadius: 2,
-  borderColor: '#eeeeee',
-  borderStyle: 'dashed',
-  backgroundColor: '#fafafa',
-  color: '#bdbdbd',
-  transition: 'border .3s ease-in-out'
+ 
 };
 
 const activeStyle = {
@@ -44,7 +34,8 @@ function DropzoneComponent(props) {
     isDragReject
   } = useDropzone({
     onDrop,
-    accept: 'image/jpeg, image/png'
+    accept: 'image/jpeg, image/png',
+    multiple: false
   });
 
   const style = useMemo(() => ({
@@ -64,7 +55,7 @@ function DropzoneComponent(props) {
 
   return (
     <section>
-      <div {...getRootProps({style})}>
+      <div className='file-dropzone profile-upload' {...getRootProps({style})}>
         <input {...getInputProps()} onChange={props.onFileChange}/>
         <div>Drag and drop your images here.</div>
       </div>

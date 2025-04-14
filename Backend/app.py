@@ -121,7 +121,7 @@ def get_users():
             user_dict = user.to_dict()
             print()
             print()
-            print()
+            print("In User")
             print(user_dict)
             print()
             print()
@@ -134,7 +134,37 @@ def get_users():
 
     return jsonify({"error": "Who"})
 
+@app.route("/tests", methods=["POST"])
+def create_tests():
+    if("Authorization" not in request.headers):
+        return jsonify({'error': 'Not authorized'}), 401
     
+    uid = get_current_user(header=request.headers)
+    
+    # Add questions from test generator
+    if(uid):
+        data = {
+            "creator": uid,
+            "name": request.json.get("name"),
+            "difficulty": request.json.get("difficulty"),
+            "questionTypes": request.json.get("questionTypes"),
+            "questions": request.json.get("questions"),
+            "topics": request.json.get("topics"),
+            "type": request.json.get("type")
+        }
+
+        print(data)
+        doc_ref = db.collection("tests").document()  # Auto-generated ID
+        doc_ref.set(data)
+    else:
+        return jsonify({"Error": "error getting authentication"}), 200
+    
+    # Add document to Firestore
+
+    return jsonify({"Success": "created test"}), 200
+    
+
+
 @app.route("/tests", methods=["GET"])
 def get_tests():
     test_id = request.args.get("id", None)

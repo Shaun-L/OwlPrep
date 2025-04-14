@@ -332,7 +332,7 @@ function App() {
         <Route path="progress" element={<Progress></Progress>}></Route>
         <Route path="/forgot-password" element={<ForgotPassword></ForgotPassword>}></Route>
         <Route path="/settings" element={<Settings theme={darkTheme} selectThemeChange={selectThemeChange}/>}></Route>
-        <Route path="/profiles/:username" element={<Profile/>}></Route>
+        <Route path="/profiles/:username" element={<Profile changeProfileImg={(url)=>setProfileImg(url)} userLoggedInEmail={email}/>}></Route>
         <Route path="/create-test" element={<CreateTest topics={topics} uploadedFiles={uploadedFiles} handleToggleFile={changeUploadedFiles} changeTopics={changeTopics}/>}></Route>
         <Route path="practice-test/:id" element={<Test/>}></Route>
         <Route path="*" element={<Page404/>}></Route>

@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import File_Dropzone from "../components/File_Dropzone";
 import { db } from "../firebaseUtils";
 import { collection, addDoc } from "firebase/firestore";
@@ -10,6 +10,7 @@ import sampleQuestionModal from "../components/SampleQuestionModal";
 import SampleQuestionModal from "../components/SampleQuestionModal";
 import SampleQuestionItem from "../components/SampleQuestionItem";
 import FileUploadedComponent from "../components/FileUploadedComponent";
+import { TokenContext } from "../hooks/TokenContext";
 
 export default function CreateTest({topics, uploadedFiles, changeUploadedFiles, changeTopics, handleToggleFile}){
     const [testName, setTestName] = useState("");
@@ -23,6 +24,7 @@ export default function CreateTest({topics, uploadedFiles, changeUploadedFiles, 
     const [formError, setFormError] = useState(false)
     const [errorMsg, setErrorMsg] = useState("")
     const [smSelected, setSMSelected] = useState(true)
+    const {token, setToken} = useContext(TokenContext)
     const navigate = useNavigate()
 
     useEffect(()=>{
@@ -38,9 +40,11 @@ export default function CreateTest({topics, uploadedFiles, changeUploadedFiles, 
         }else if(uploadedFiles.length == 0){
             setErrorMsg("Need to upload Files");
             setFormError(true)
+            return
         }else if(testName == ""){
             setErrorMsg("Test requires a name");
             setFormError(true)
+            return
         }else{
             let noSelectedTopics = true;
             console.log("Nice")
@@ -57,6 +61,7 @@ export default function CreateTest({topics, uploadedFiles, changeUploadedFiles, 
             if(noSelectedTopics){
                 setErrorMsg("Select a topic from the topic bank")
                 setFormError(true);
+                return
             }
         }
 
@@ -69,17 +74,39 @@ export default function CreateTest({topics, uploadedFiles, changeUploadedFiles, 
         const filteredTopics = topics.filter((topic)=>topic.keep).map((keepTopic)=>keepTopic.name)
         console.log(filteredTopics)
 
-        const newDoc = await addDoc(collection(db, 'tests'),{
-            creator: "Freddy",
+        const dataBody = {
             name: testName,
             type: "Practice Test",
             difficulty: diff,
             questionTypes: questionTypeList,
             questions: [],
             topics: filteredTopics
-        }).then(()=>{
+        }
+
+        const res = await fetch(" http://127.0.0.1:5000/tests", {
+            method: "POST",
+            headers: {
+                'content-type': 'application/json',
+                "Authorization": `Bearer ${token}`, // Attach the Bearer token
+            },
+            body: JSON.stringify(dataBody)
+        })
+
+        const data = await res.json()
+
+        console.log(data)
+
+        // const newDoc = await addDoc(collection(db, 'tests'),{
+        //     creator: "Freddy",
+        //     name: testName,
+        //     type: "Practice Test",
+        //     difficulty: diff,
+        //     questionTypes: questionTypeList,
+        //     questions: [],
+        //     topics: filteredTopics
+        // }).then(()=>{
         
-        }).catch((err)=>alert(err))
+        // }).catch((err)=>alert(err))
     }
 
     function deleteSampleQuestion(question){
