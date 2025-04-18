@@ -78,6 +78,6 @@ export default function Test({}){
         
     </div>
 
-    <Link to="#" id="takeTestBtn" className="mainBtn">Take this test</Link>
+    <Link to={`/tests/${id}/1`} id="takeTestBtn" className="mainBtn">Take this test</Link>
     </main>
 }

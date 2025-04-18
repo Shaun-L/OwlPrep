@@ -26,6 +26,7 @@ import Progress from "./pages/Progess";
 import Saves from "./pages/Saves";
 import { TokenContext } from "./hooks/TokenContext";
 import { getAuth, onAuthStateChanged } from "firebase/auth"
+import Question from "./pages/Question";
 
 function App() {
   const dropdown = useRef(null)
@@ -334,7 +335,9 @@ function App() {
         <Route path="/settings" element={<Settings theme={darkTheme} selectThemeChange={selectThemeChange}/>}></Route>
         <Route path="/profiles/:username" element={<Profile changeProfileImg={(url)=>setProfileImg(url)} userLoggedInEmail={email}/>}></Route>
         <Route path="/create-test" element={<CreateTest topics={topics} uploadedFiles={uploadedFiles} handleToggleFile={changeUploadedFiles} changeTopics={changeTopics}/>}></Route>
-        <Route path="practice-test/:id" element={<Test/>}></Route>
+        <Route path="tests/:id" element={<Test/>}></Route>
+        <Route path="/tests/:test_id/:question_id" element={<Question/>}></Route>
+        
         <Route path="*" element={<Page404/>}></Route>
       </Route>
 

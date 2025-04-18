@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function StudyItemContainer({title, type, creator, id, profileImg}){
     const navigate = useNavigate();
-    return (<div className="studyItemContainer" onClick={()=>navigate(`/practice-test/${id}`)}>
+    return (<div className="studyItemContainer" onClick={()=>navigate(`/tests/${id}`)}>
         <div className="studyItemHeader">
         <h2>{title}</h2>
         <p>{type}</p>

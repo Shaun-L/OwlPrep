@@ -70,6 +70,7 @@ export default function CreateTest({topics, uploadedFiles, changeUploadedFiles, 
         mcSelected && questionTypeList.push("Multiple Choice")
         tfSelected && questionTypeList.push("True or False")
         saSelected && questionTypeList.push("Short Answer")
+        smSelected && questionTypeList.push("Select Many")
 
         const filteredTopics = topics.filter((topic)=>topic.keep).map((keepTopic)=>keepTopic.name)
         console.log(filteredTopics)
