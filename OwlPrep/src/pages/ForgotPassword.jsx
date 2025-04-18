@@ -6,7 +6,11 @@ const auth = getAuth();
 
 
 /**
+
  * Sends a password reset email to the given email address. Links to the 'Change Password' page, where the user can enter a new password.
+ * Sends a password reset email to the given email address. 
+ * Links to the 'Change Password' page, where the user can enter a new password.
+
  * @param {string} email The email address to which to send a password reset email.
  */
 

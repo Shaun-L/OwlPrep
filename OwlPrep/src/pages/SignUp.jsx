@@ -17,6 +17,7 @@ function SignUp() {
   const [formError, setFormError] = useState(false)
   // New state for last name
 
+
   const navigate = useNavigate();
 
   useEffect(()=>{
@@ -47,6 +48,7 @@ function SignUp() {
         username: username, // Save username to Firestore
         dark_theme: false,
         img_url: "http://127.0.0.1:5000/images/default-profile.jpg",
+
       });
 
       alert("Registration successful!");

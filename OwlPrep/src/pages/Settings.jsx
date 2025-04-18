@@ -1,8 +1,10 @@
+
 import { useState, useEffect, useContext } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "../firebaseUtils"; // For user authentication and pulling data
 import PropTypes from "prop-types";
 import { TokenContext, } from "../hooks/TokenContext";
+
 
 export default function Settings({theme, selectThemeChange}) {
     Settings.propTypes = {
@@ -16,7 +18,12 @@ export default function Settings({theme, selectThemeChange}) {
     const [editEmail, setEditEmail] = useState(false);
     
     const [password, setPassword] = useState("edsdfsdf");
+
     const [editPassword, setEditPassword] = useState(false);
+    // Password changing states
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [authError, setAuthError] = useState();
 
     const [selectedTheme, setSelectedTheme] = useState(theme ? "dark" : "light");
 
@@ -47,6 +54,7 @@ export default function Settings({theme, selectThemeChange}) {
 
 
        
+
     }, []);
 
     function changeSelectedTheme(e){
@@ -57,11 +65,44 @@ export default function Settings({theme, selectThemeChange}) {
         setSelectedTheme(newTheme);
     }
 
+    const handleCancelPasswordChange = () => {
+        // If the password is not changed
+        setShowAuthenticationModal(false);
+        setCurrentPassword("");
+        setNewPassword("");
+        setAuthError("");
+        document.body.style.overflowY = "auto";
+    };
+
+    const handlePasswordChange = async () => {
+        // If the password is changed
+        try {
+            const user = auth.currentUser;
+            if (!user) {
+                setAuthError("User not authenticated.");
+                return;
+            }
+
+            // Store credintials for reauthentication
+            const credential = EmailAuthProvider.credential(user.email, currentPassword);
+            
+            // Reauthenticating the user
+            await reauthenticateWithCredential(user, credential);
+            // Updating the password
+            await updatePassword(user, newPassword);
+            console.log("Password updated successfully.");
+        } catch (error) {
+            console.error("Error updating password:", error);
+            setAuthError(error.message || "An error occurred while updating the password.");
+        }
+
+    };
+
     function editField(e){
         setEditUsername(false)
         setEditEmail(false)
         setEditPassword(false) // Resetting password edit field
-        
+
 
         const editFieldName = e.target.dataset.field;
         console.log(editFieldName)
@@ -77,6 +118,7 @@ export default function Settings({theme, selectThemeChange}) {
                 break;
             case "password":
                 setShowAuthenticationModal(true);
+                setEditPassword(true)
                 document.body.style.overflowY = "hidden";
                 break;
         }
@@ -90,9 +132,10 @@ export default function Settings({theme, selectThemeChange}) {
        
        
 
-    }
+    };
 
-    return(<>
+    return(
+    <>
     <div className={`modal ${showAuthenticationModal ? "showModal" : ""}`}>
         <div>
             <h2>Changing Password?</h2>
@@ -100,6 +143,8 @@ export default function Settings({theme, selectThemeChange}) {
             <input type="password" placeholder="password"></input>
             <button type="button" onClick={()=>setShowAuthenticationModal(false)}>Cancle</button>
             <button type="button" className="mainBtn">Confirm</button>
+=======
+        
         </div>
       
     </div>
@@ -141,7 +186,7 @@ export default function Settings({theme, selectThemeChange}) {
             </div>
         </div>
 
-        <h2 className="settings-title">Appereance</h2>
+        <h2 className="settings-title">Appearance</h2>
         <div className="settings-container">
             <div>
                 <div className="settings-sub-section-container">
@@ -168,6 +213,7 @@ export default function Settings({theme, selectThemeChange}) {
                     <h3>Password</h3>
                     <div className="form-field-container">
                         <input type="password" value={password} onChange={(e)=>{setEmail(e.target.value)}} readOnly={!editPassword} disabled={!editPassword}></input>
+
                         
                         <div>
                             <button type="button" className={editPassword ? "hide" : ""} onClick={editField} data-field="password">Edit</button>

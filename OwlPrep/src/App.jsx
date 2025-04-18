@@ -1,6 +1,8 @@
+
 import { useState, useRef, useEffect, useContext } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
+
 import File_Dropzone from "./components/File_Dropzone";  // Import your File_Dropzone component
 import { MdOutlineLightMode } from "react-icons/md";
 import { MdOutlineNightlight } from "react-icons/md";
@@ -102,6 +104,7 @@ function App() {
     setDarkTheme(!darkTheme);
 
 }
+
 
   function changeUploadedFiles(fileName){
     let removeFile = false
@@ -274,6 +277,7 @@ function App() {
 
   return (
     <>
+
     <header>
     
     <div id="Logo">
@@ -325,11 +329,14 @@ function App() {
     
   </header>
     
+
     <Routes>
       <Route path="/" element={<Default logout={logout} setTopics={setTopics} topics={topics} setUploadedFiles={setUploadedFiles} loggedIn={loggedIn} closeDropdown={closeDropdown} showAccountDropdown={showAccountDropdown} theme={darkTheme} changeTheme={changeTheme} changeDropdownView={changeDropdownView} setShowMobileNav={setShowMobileNav} showMobileNav={showMobileNav}/>}>
         <Route index element={<Home></Home>}></Route>
+
         <Route path="saves" element={<Saves></Saves>}></Route>
         <Route path="progress" element={<Progress></Progress>}></Route>
+
         <Route path="/forgot-password" element={<ForgotPassword></ForgotPassword>}></Route>
         <Route path="/settings" element={<Settings theme={darkTheme} selectThemeChange={selectThemeChange}/>}></Route>
         <Route path="/profiles/:username" element={<Profile changeProfileImg={(url)=>setProfileImg(url)} userLoggedInEmail={email}/>}></Route>
@@ -340,6 +347,7 @@ function App() {
 
       <Route path="/login" element={<Login logginUser={logginUser}></Login>}></Route>
       <Route path="/signup" element={<SignUp></SignUp>}></Route>
+
     </Routes>
     </>
   );
