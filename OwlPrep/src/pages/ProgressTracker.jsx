@@ -1,75 +1,85 @@
 import React, { useState } from "react";
-import Chart from 'chart.js/auto';
-import { CategoryScale } from "chart.js/auto";
-import BarChart from "../components/BarChart";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Card, CardHeader, CardContent } from '@mui/material';
 
-Chart.register(CategoryScale);
-
-const data = [
-    { year: 2016, userGain: 800 },
-    { year: 2017, userGain: 456 },
-    { year: 2018, userGain: 123 },
-    { year: 2019, userGain: 967 },
-    { year: 2020, userGain: 345 }
+const performance = [
+    { topic: "Networking", performance: 90 },
+    { topic: "Game theory", performance: 85 },
+    { topic: "Cybersecurity", performance: 95 },
+    { topic: "Machine Learning", performance: 80 },
 ];
 
 export default function ProgressTracker() {
-    const [chartData] = useState({
-        labels: data.map((d) => d.year),
-        datasets: [
-          {
-            label: "Users Gained",
-            data: data.map((d) => d.userGain),
-            backgroundColor: [
-              "rgba(75,192,192,1)",
-              "#ecf0f1",
-              "#50AF95",
-              "#f3ba2f",
-              "#2a71d0"
-            ],
-            borderColor: "black",
-            borderWidth: 2
-          }
-        ]
-    });
+    
     
     return (
         
-        <div id = "progress-tracker">
+        <div id = "progress-tracker" >
             
-                <h1>Progress Tracker</h1>
-                <p>Track your progress here</p>
-
-                <div className="testScoreGraph">
-                    <h3>Scores in tests</h3>
-                    //<BarChart ChartData={{chartData}}/>
+            <h1>Progress Tracker</h1>
+            <p>Track your progress here</p>
+            <div className="pt-container">
+                <div className="pt-container-middle">
+                    <div className="pt-testScoreGraph">
+                        <h3>Scores in tests</h3>
+                        <Card>
+                            <CardHeader title="Scores in tests" />
+                            <CardContent>
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <BarChart data={performance} width={500} height={300}>
+                                        <XAxis dataKey="topic" />
+                                        <YAxis />
+                                        <Tooltip />
+                                        <Legend />
+                                        <Bar dataKey="performance" fill="#8884d8" />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+                    </div>
+                    <div className="pt-quizScoreGraph">
+                        <h3>Scores in quizzes</h3>
+                        <Card>
+                            <CardHeader title="Scores in quizzes" />
+                            <CardContent>
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <BarChart data={performance} width={"25%"} height={300}>
+                                        <XAxis dataKey="topic" />
+                                        <YAxis />
+                                        <Tooltip />
+                                        <Legend />
+                                        <Bar dataKey="performance" fill="#82ca9d" />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+                    </div>
+                    <div className="pt-bestPerformance">
+                        <h3>Best Performance in Topics</h3>
+                        <p className="pt-button-btopic">Topic 1</p>
+                        <p className="pt-button-btopic">Topic 2</p>
+                        <p className="pt-button-btopic">Topic 3</p>
+                        
+                    </div>
+                    <div className="pt-worstPerformance">
+                        <h3>Worst Performance in Topics</h3>
+                        <p className="pt-button-wtopic">Topic 1</p>
+                        <p className="pt-button-wtopic">Topic 2</p>
+                        <p className="pt-button-wtopic">Topic 3</p>
+                        
+                    </div>  
                 </div>
-                <div className="quizScoreGraph">
-                    <h3>Scores in quizzes</h3>
-                    <canvas id="quizScoreGraph" width="400" height="400"></canvas>
+                <div className="pt-container-right">
+                    <div className="pt-testHistory">
+                        <h3>Test & Quiz History</h3>
+                        <button className="pt-button">Test 1</button>
+                        <button className="pt-button">Test 2</button>
+                        <button className="pt-button">Test 3</button>
+                        <button className="pt-button">Quiz 1</button>
+                        <button className="pt-button">Quiz 2</button>
+                    </div>
                 </div>
-                <div className="bestPerformance">
-                    <h3>Best Performance in Topics</h3>
-                    <p>Topic 1</p>
-                    <p>Topic 2</p>
-                    <p>Topic 3</p>
-                    
-                </div>
-                <div className="worstPerformance">
-                    <h3>Worst Performance in Topics</h3>
-                    <p>Topic 1</p>
-                    <p>Topic 2</p>
-                    <p>Topic 3</p>
-                    
-                </div>  
-                <div>
-                    <h3>Test & Quiz History</h3>
-                    <button type="button">Test 1</button>
-                    <button type="button">Test 2</button>
-                    <button type="button">Test 3</button>
-                    <button type="button">Quiz 1</button>
-                    <button type="button">Quiz 2</button>
-                </div>
+            </div>
             
         </div>
         
