@@ -6,6 +6,15 @@
   font-family: Arial, Helvetica, sans-serif;
 }
 
+body{
+  min-height: 100vh;
+}
+
+#root{
+  height: 100%;
+  min-height: 100vh;
+}
+
 :root{
   --unselected-color: rgb(184, 184, 184);
   --background-color: white;
@@ -17,6 +26,7 @@
   --hover-background: #edeff4;
   --secondary-border-color: rgb(212, 212, 212);
   --error-color: rgb(192, 67, 67);
+  --topic-bckground: #edeff4;
 }
 
 [data-theme="dark"]{
@@ -26,6 +36,7 @@
   --search-background: #272727;
   --hover-background: rgb(37, 37, 37);
   --border-color: #454545;
+  --topic-bckground: #3c3c3c;
 }
 
 .errorMsg{
@@ -84,9 +95,7 @@ header input::placeholder{
 .hide{display: none;}
 
 .accountBtn{
-  padding: 8px 10px;
-  border-radius: 50%;
-  background-color: rgb(86, 95, 100);
+
   display: flex;
   justify-content: center;
   align-items: center;
@@ -106,7 +115,7 @@ header input::placeholder{
 
 #filter-dropdown{
   position: absolute;
-  background-color: var(--secondary-border-color);
+  background-color: var(--search-background);
   right: 15px;
   margin-top: .4rem;
   border-radius: 5px;
@@ -114,9 +123,27 @@ header input::placeholder{
   padding: 8px 12px;
 }
 
+#filter-dropdown p{
+  margin: .3rem 0;
+  color: var(--primary-text-color)
+}
+
 #filter-dropdown label{
   display: block;
   color: var(--secondary-text-color)
+}
+
+.homeLoadingContainer{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  grid-column: 1 /4;
+  height: 250px;
+}
+
+p.homeLoadingContainer{
+  font-size: 1.2rem;
+  color: var(--primary-text-color)
 }
 
 #account-dropdown{
@@ -125,7 +152,7 @@ header input::placeholder{
   top: 110%;
   right: 0;
   background-color: var(--background-color);
-  
+  z-index: 100;
   border: 1px solid rgba(172, 172, 172, 0.556);
   border-radius: 5px;
   font-size: 1rem;
@@ -300,16 +327,30 @@ button{
   padding: 8px 10px;
 }
 
+#sideNav h3{
+  color: var(--primary-text-color);
+}
+
 .form-field-container button{
   padding: 10px 16px;
   color: var(--primary-color);
   font-weight: 600;
   background-color: var(--background-color);
   border: none;
+  border-radius: 5px;
 }
 
 .form-field-container button:hover{
   background-color: var(--hover-background);
+}
+
+.form-field-container input:focus{
+  background-color: var(--search-background);
+  color: var(--primary-text-color);
+  padding: 8px 4px;
+  outline: unset;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
 }
 
 div.modal{
@@ -321,6 +362,7 @@ div.modal{
   background-color: #0a092d80;
   transform: translateY(-100%);
   transition: .5s ease-in-out linear;
+  z-index: 1000;
 }
 
 div.showModal{
@@ -328,15 +370,17 @@ div.showModal{
 }
 
 div.modal > div{
-  background-color: var(--background-color);
+  background-color: var(--search-background);
   width: fit-content;
   padding: .8rem 1.2rem;
   margin: 2rem auto ;
   border-radius: 5px;
+  color: var(--primary-text-color);
 }
 
 div.modal > div > h2{
   margin: 1.5rem 0;
+  color: var(--primary-text-color);
 }
 
 div.modal > div > input{
@@ -344,6 +388,11 @@ div.modal > div > input{
   display: block;
   width: 80%;
   margin: .5rem 0;
+  background-color: var(--search-background);
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  padding: 12px;
+  color: var(--primary-text-color)
 }
 
 h1{
@@ -355,6 +404,11 @@ div.modal > div > button{
   margin: 0 1rem 0 0;
   border-radius: 3px;
   font-weight: 600;
+  color: var(--primary-text-color)
+}
+
+.mainBtn{
+  background-color: var(--primary-color);
 }
 
 select{
@@ -371,7 +425,7 @@ select{
   display: none
 }
 
-#loginBtn{
+#toLoginBtn{
   background-color: var(--primary-color);
   cursor: pointer;
   padding: 8px 12px;
@@ -382,9 +436,13 @@ select{
 }
 
 #account-header-btn{
-  padding: 8px 10px;
   border-radius: 50%;
-  background-color: rgb(86, 95, 100);
+}
+
+.profileBtnOImg{
+  width: 35px;
+  height: 31px;
+  border-radius: 50%;
 }
 
 #dropdown-focus{
@@ -447,6 +505,7 @@ div.file-dropzone{
   flex-direction: column;
   align-items: center;
   height: 250px;
+  cursor: pointer;
   padding: 20px;
   border-width: 2px;
   border-radius: 5px;
@@ -458,8 +517,113 @@ div.file-dropzone{
   overflow-y: auto;
 }
 
+.login-container{
+  background-color: var(--primary-color);
+  position: relative;
+  height: 90.6vh;
+  
+}
+
+.login-container img{
+  width: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  z-index: 20;
+}
+
+.login-container h1{
+  text-align: center;
+  color: rgb(237, 237, 237);
+  font-size: 2.4rem;
+  margin-bottom: .5rem;
+}
+
+#welcome{
+  background-color: var(--primary-color);
+}
 
 
+.login-container form{
+  max-width: 450px;
+  margin: auto;
+  padding-top: 7rem;
+  height: 100%;
+  z-index: 100;
+  position: relative;
+}
+
+.login-container form label{
+  position: relative;
+  margin-bottom: .4rem;
+  display: block;
+}
+
+.login-container form label svg{
+  position: absolute;
+  width: 40px;
+  height: 24px;
+  top: 8px;
+  color: rgb(237, 237, 237);
+}
+
+.login-container form a{
+  text-decoration: none;
+  color: rgb(237, 237, 237);
+  width: 100%;
+  text-align: end;
+  display: block;
+  margin: .4rem 0;
+}
+
+.login-container form a#toCreate{
+  font-weight: 600;
+  background-color: rgb(46, 47, 48);
+  display: block;
+  width: 100%;
+  text-align: center;
+  text-decoration: none;
+  color: rgb(237, 237, 237);
+  margin: .4rem 0;
+  border-radius: 5px;
+  padding: 12px 12px;   
+}
+
+#loginBtn{
+  display: block;
+  width: 100%;
+  border: 2px solid #4a8d9e;
+  background-color: unset;
+  color: #4a8d9e;
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: 5px;
+  padding: 8px 12px;
+}
+
+#loginBtn:hover{
+  background-color: var(--primary-color);
+}
+
+
+
+.login-container form label input{
+  display: block;
+  padding: 12px 40px;
+  width: 100%;
+  background-color: unset;
+  outline: none;
+  border: 2px solid rgb(237, 237, 237);
+  font-size: 1rem;
+  border-radius: 5px;
+  color: rgb(237, 237, 237);
+
+}
+
+.login-container form label input::placeholder{
+  color: rgb(237, 237, 237);
+}
 
 button.generate-btn{
   background-color: var(--primary-color);
@@ -480,14 +644,15 @@ div.file-dropzone ~ p{
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+  max-width: 1000px;
 }
 
 #home-header button{
-  background-color: var(--border-color);
+  background-color: var(--search-background);;
   color: var(--secondary-text-color);
   padding: 8px 12px;
   display: inline-block;
-  margin-right: 1rem;
+  margin-right: .5rem;
   border-radius: 5px;
 }
 
@@ -633,14 +798,30 @@ div.file-dropzone ~ p{
 }
 
 div.studyItemContainer{
-  background-color: var(--border-color);
   padding: 8px 12px;
   border-radius: 5px;
+  cursor: pointer;
   height: 150px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   min-width: 0;
+  border: 2px solid var(--search-background);
+  
+  transition: border-bottom .2s ease-in-out;
+}
+
+div.studyItemContainer:hover{
+  border-bottom: 5px solid var(--search-background);
+
+}
+
+body[data-theme="dark"] div.studyItemContainer:hover{
+  border-bottom: 5px solid var(--primary-color);
+}
+
+body[data-theme="dark"] div.studyItemContainer{
+  background-color: var(--search-background);
 }
 
 div.studyItemContainer h2{
@@ -654,12 +835,16 @@ div.studyItemContainer h2{
 
 .studyItemHeader p{
   margin: .5rem 0 ;
-  background-color: rgb(212, 212, 212);
+  background-color: var(--topic-bckground);
   color: var(--secondary-text-color);
   width: max-content;
-  padding: 4px 6px;
+  padding: 4px 10px;
   border-radius: 20px;
   font-size: .9rem;
+}
+
+#root [data-theme="dark"] .studyItemHeader{
+  background-color: var(--search-background);
 }
 
 .studyItemFooter{
@@ -667,12 +852,22 @@ div.studyItemContainer h2{
   font-weight: 600;
 }
 .studyItemFooter a{
-  background-color: red;
-  display: inline-flex;
-  font-size: .9rem;
-  padding: .3rem .4rem;
+  height: 100%;
+  
+}
+
+.studyItemFooter a img{
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
-  color: black;
+  width: 25px;
+  height: 25px;
+  transform: translateY(7px);
+}
+
+#default-main nav a.activeLink, #home-header a.activeLink button{
+  background-color: var(--primary-color);
+  color: white;
 }
 
 label.checkbox-label{
@@ -1001,6 +1196,10 @@ input[type="text"]::placeholder{
   z-index: 100;
 }
 
+.sampleQuestionForm svg{
+  color: var(--primary-text-color)
+}
+
 .sampleQuestionForm{
   width: fit-content;
   background-color: var(--background-color);
@@ -1052,9 +1251,214 @@ input[type="text"]::placeholder{
 }
 
 .sampleQuestionItem p{
-  
   text-overflow:ellipsis;
   text-wrap: nowrap;
   overflow: hidden;
 }
 
+.testGrid{
+  display: grid;
+  grid-template-columns: 70% 25%;
+  justify-content: space-between;
+}
+
+.testGrid h1{
+  color: var(--primary-text-color);
+  font-size: 2.4rem;
+}
+
+.testPageHeader{
+  margin: .2rem 0 1rem 0;
+  grid-column: 1 / 3;
+}
+
+.testCreatorContainer img{
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+
+.testCreatorContainer a{
+  font-size: 1.2rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--secondary-text-color);
+}
+
+.testDateContainer.flex{
+  gap: .25rem
+}
+
+.testDateContainer svg{
+  fill: var(--secondary-text-color);
+  width: 20px;
+  height: 20px;
+}
+
+.testDateContainer p{
+  font-size: 1.2rem;
+  color: var(--secondary-text-color);
+}
+
+.testInfoContainer{
+  padding: 1.2rem 1rem;
+  border-radius: 5px;
+  box-shadow: 2px 2px var(--search-background);
+
+  border: 1px solid var(--search-background);
+}
+
+p.testDescription{
+  font-size: 1.2rem;
+  color: var(--primary-text-color);
+  font-weight: 600;
+  margin-bottom: .5rem;
+}
+
+div.testInfoSubContainer{
+  background-color: var(--search-background);
+  margin: .5rem 0;
+  padding: 5px 8px;
+  border-radius: 5px;
+
+}
+
+div.testInfoSubContainer p:first-child{
+  font-size: .9rem;
+  color: var(--secondary-text-color);
+  margin-bottom: .2rem;
+}
+
+div.testInfoSubContainer p:last-child{
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--primary-text-color);
+}
+
+#takeTestBtn{
+  text-decoration: none;
+  color: white;
+  font-weight: 600;
+  padding: 10px 8px;
+  display: block;
+  width: fit-content;
+  border-radius: 5px;
+  margin: .5rem 0;
+}
+
+.testTitleContainer{
+  justify-content: space-between;
+  width: 80%;
+}
+
+.testTitleContainer button{
+  padding: .2rem .3rem;
+  background-color: var(--search-background);
+  border-radius: 5px;
+}
+
+.testTitleContainer button svg{
+  fill: var(--primary-text-color);
+  width: 20px;
+  height: 20px;
+}
+
+p.testTopicContainer{
+  background-color: var(--search-background);
+  color: var(--secondary-text-color);
+  border-radius: 5px;
+  margin-bottom: .5rem;
+  padding: .5rem .8rem;
+}
+
+.profileHeaderContainer{
+  background-color: var(--search-background);
+  padding: 1rem .7rem;
+  display: flex;
+  border: 2px solid var(--border-color);
+  gap: .5rem;
+  max-width: 1000px;
+}
+
+.profileHeaderContainer img{
+  height: 100px;
+}
+
+.profileItemBtn{
+  color: var(--primary-text-color);
+  font-weight: 600;
+  font-size: .9rem;
+  padding: 0;
+  margin: 1rem 0;
+  border-bottom: 2px solid var(--primary-text-color);
+}
+
+.button.itemPreviousBtn{
+  font-size: 1rem;
+  padding: 1rem 6px;
+  background-color: unset;
+}
+
+
+.itemNavigationContainer{
+  margin-top:1rem;
+  display: flex;
+  justify-content: center;
+  max-width: 1000px;
+}
+
+.activePageBtn{
+  border-bottom: 1px solid var(--primary-text-color);
+  transform: translateY(1px);
+}
+
+.pageBtn{
+  padding: 0;
+  color: var(--primary-text-color)
+}
+
+.changeImageContainer{
+  position: relative;
+}
+
+.changeImageContainer img{
+  border-radius: 50%;
+}
+
+.changeImageContainer svg{
+  position: absolute;
+  right: 5px;
+  bottom: 10px;
+  height: 20px;
+  width: 20px;
+  color: white;
+}
+
+.editAvatarBtn{
+  background-color: var(--primary-color);
+  color: white;
+  font-weight: 500;
+  border-radius: 2px;
+  padding: 5px 8px;
+
+}
+
+.profileImgSideContainer{
+  display: flex;
+  flex-direction: column;
+  
+}
+
+.profile-upload.file-dropzone{
+  height: 60px;
+  overflow: hidden;
+
+}
+
+div.modal > div.profileImgUploadContainer > h2{
+  margin-bottom: .2rem;
+}
+
+div.modal > div.profileImgUploadContainer > p{
+  margin-bottom: .5rem;
+}

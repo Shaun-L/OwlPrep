@@ -1,6 +1,12 @@
-import { useState, useRef } from "react";
-import { Routes, Route, Link } from "react-router-dom";
+import { useState, useRef, useEffect, useContext } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import File_Dropzone from "./components/File_Dropzone";  // Import your File_Dropzone component
+import { MdOutlineLightMode } from "react-icons/md";
+import { MdOutlineNightlight } from "react-icons/md";
+import { FaUser } from "react-icons/fa";
+import { RxHamburgerMenu } from "react-icons/rx";
+import { GiOwl } from "react-icons/gi";
 
 import SignUp from "./pages/SignUp";
 import Home from "./pages/Home";
@@ -14,39 +20,88 @@ import Page404 from "./pages/404";
 import CreateTest from "./pages/CreateTest";
 import "./App.css"; 
 import { IoReturnUpBack } from "react-icons/io5";
-
+import Test from "./pages/Test";
+import { query } from "firebase/firestore";
+import Progress from "./pages/Progess";
+import Saves from "./pages/Saves";
+import { TokenContext } from "./hooks/TokenContext";
+import { getAuth, onAuthStateChanged } from "firebase/auth"
 
 function App() {
-    const [loggedIn, setLoggedIn] = useState(true);
-    const [showAccountDropdown, setShowAccountDropDown] = useState(false);
-    const [darkTheme, setDarkTheme] = useState(false);
-    const [topics,setTopics] = useState([{name: "fddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", keep: true, files: []} ])
-    const [uploadedFiles, setUploadedFiles] = useState([])
+  const dropdown = useRef(null)
+  const navigate = useNavigate()
+  const [searchQuery, setSearchQuery] = useState("")
+  const [username, setUsername] = useState([]);
+  const [profileImg, setProfileImg] = useState(""); // State for user name
+  const checkboxRef = useRef(null);
+  const [showMobileNav, setShowMobileNav] = useState(false)
+  const [email, setEmail] = useState("")
+  const [loggedIn, setLoggedIn] = useState(true);
+  const [showAccountDropdown, setShowAccountDropDown] = useState(false);
+  const [darkTheme, setDarkTheme] = useState(false);
+  const [topics,setTopics] = useState([])
+  const [uploadedFiles, setUploadedFiles] = useState([])
 
-    function changeDropdownView() {
-        setShowAccountDropDown(!showAccountDropdown);
+  const {token, setToken} = useContext(TokenContext)
+
+  useEffect(()=>{
+    const getLoggedInUser = async()=>{
+      const response = await fetch("http://127.0.0.1:5000/users", {
+        method: "GET", // Use the appropriate HTTP method
+        headers: {
+            "Authorization": `Bearer ${token}`, // Attach the Bearer token
+        },
+    });
+
+    // Parse and handle the response
+    if (response.ok) {
+        const data = await response.json();
+        setProfileImg(data.img_url);
+        setUsername(data.username)
+        setEmail(data.email)
+        console.log("Response Data:", data);
+    } else {
+        console.error("Error Response:", response.status, response.statusText);
+    }
     }
 
-    function logout() {
-        setLoggedIn(false);
-    }
+    getLoggedInUser()
+  }, [token])
 
-    function logginUser() {
-        setLoggedIn(true);
-    }
 
-    function closeDropdown() {
-        setShowAccountDropDown(false);
-    }
+  function changeDropdownView() {
+    setShowAccountDropDown(!showAccountDropdown);
+  }
 
-    function changeTheme() {
-        if (darkTheme) {
-        document.body.removeAttribute("data-theme");
-        } else {
-        document.body.setAttribute("data-theme", "dark");
-        }
-        setDarkTheme(!darkTheme);
+  function logout() {
+    const auth = getAuth();
+    auth.signOut()
+        .then(() => {
+
+            setToken(null); // Clear the token if stored locally
+        })
+        .catch((error) => {
+            console.error("Error logging out user:", error);
+        });
+  }
+
+  function logginUser() {
+    setLoggedIn(true);
+  }
+
+  function closeDropdown() {
+    setShowAccountDropDown(false);
+  }
+
+  function changeTheme() {
+    if (darkTheme) {
+      document.body.removeAttribute("data-theme");
+    } else {
+      document.body.setAttribute("data-theme", "dark");
     }
+    setDarkTheme(!darkTheme);
+
+}
 
   function changeUploadedFiles(fileName){
     let removeFile = false
@@ -209,19 +264,82 @@ function App() {
     }
   }
 
+  document.addEventListener("mousedown", (e)=>{
+
+    if(showAccountDropdown && !dropdown.current.contains(e.target)){
+      closeDropdown()
+    }
+  
+   })
+
   return (
     <>
+    <header>
+    
+    <div id="Logo">
+    
+      <RxHamburgerMenu className="mobileNavMenu" onClick={()=>setShowMobileNav(true)}/>
+      
+      <GiOwl color="#90C7C1" strokeWidth={20} width={"20px"} height={"40px"}></GiOwl><Link to="/">OwlPrep</Link></div>
+
+    <div>
+      <form onSubmit={(e)=>{
+        e.preventDefault()
+        navigate(`/?q=${searchQuery}`)
+        
+      }}>
+        <input type="text" placeholder="Search for a test" value={searchQuery} onChange={(e)=>setSearchQuery(e.currentTarget.value)}></input>
+      </form>
+    </div>
+
+    <div id="header-btns">
+      <div id="create-btn">+ Create</div>
+      <div>
+        {token ? <button className="accountBtn" onClick={changeDropdownView}><img src={profileImg} className="profileBtnOImg"/></button> : <Link id="toLoginBtn" to={"/login"}>Log In</Link> }
+      </div>
+      <div id="account-dropdown" ref={dropdown} className={`${showAccountDropdown ? "" : "hide"}`}>
+        <div id="account-dropdown-header" className="account-dropdown-section">
+          <div id="account-header-btn">
+            <img src={profileImg} className="profileBtnOImg"/>
+          </div>
+          <div>
+            <p id="user-account-email">{email}</p>
+            <p id="user-account-name">{username}</p>
+          </div>
+        </div>
+
+        <div className="account-dropdown-section">
+          <ul>
+            <li onClick={closeDropdown}><Link to={`/profiles/${username}`}>Account</Link></li>
+            <li onClick={closeDropdown}><Link to="/settings">Settings</Link></li>
+            <li><button type="button" onClick={changeTheme}>{darkTheme ? <div><MdOutlineLightMode height={"100%"}/> Light mode</div> : <div><MdOutlineNightlight height={"100%"}/> Dark mode</div>}</button></li>
+          </ul>
+        </div>
+
+        <div className="account-dropdown-section">
+          <button onClick={()=>{logout()
+          closeDropdown()}} id="logout-btn">Log out</button>
+        </div>
+      </div>
+    </div>
+    
+  </header>
+    
     <Routes>
-      <Route path="/" element={<Default logout={logout} setTopics={setTopics} topics={topics} setUploadedFiles={setUploadedFiles} loggedIn={loggedIn} closeDropdown={closeDropdown} showAccountDropdown={showAccountDropdown} theme={darkTheme} changeTheme={changeTheme} changeDropdownView={changeDropdownView}/>}>
+      <Route path="/" element={<Default logout={logout} setTopics={setTopics} topics={topics} setUploadedFiles={setUploadedFiles} loggedIn={loggedIn} closeDropdown={closeDropdown} showAccountDropdown={showAccountDropdown} theme={darkTheme} changeTheme={changeTheme} changeDropdownView={changeDropdownView} setShowMobileNav={setShowMobileNav} showMobileNav={showMobileNav}/>}>
         <Route index element={<Home></Home>}></Route>
-        <Route path="/signup" element={<SignUp></SignUp>}></Route>
-        <Route path="/login" element={<Login logginUser={logginUser}></Login>}></Route>
+        <Route path="saves" element={<Saves></Saves>}></Route>
+        <Route path="progress" element={<Progress></Progress>}></Route>
         <Route path="/forgot-password" element={<ForgotPassword></ForgotPassword>}></Route>
         <Route path="/settings" element={<Settings theme={darkTheme} selectThemeChange={selectThemeChange}/>}></Route>
-        <Route path="/profile/:username" element={<Profile/>}></Route>
+        <Route path="/profiles/:username" element={<Profile changeProfileImg={(url)=>setProfileImg(url)} userLoggedInEmail={email}/>}></Route>
         <Route path="/create-test" element={<CreateTest topics={topics} uploadedFiles={uploadedFiles} handleToggleFile={changeUploadedFiles} changeTopics={changeTopics}/>}></Route>
+        <Route path="practice-test/:id" element={<Test/>}></Route>
         <Route path="*" element={<Page404/>}></Route>
       </Route>
+
+      <Route path="/login" element={<Login logginUser={logginUser}></Login>}></Route>
+      <Route path="/signup" element={<SignUp></SignUp>}></Route>
     </Routes>
     </>
   );

@@ -2,61 +2,78 @@ import { useState } from "react";
 import PropTypes from 'prop-types';
 import { useNavigate, Link } from "react-router-dom";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import LoginImage from "../assets/svg.svg"
+import { LuUserRound } from "react-icons/lu";
+import { IoKeyOutline } from "react-icons/io5";
+import { TokenContext } from "../hooks/TokenContext";
+import { useContext } from "react";
 
 function Login({logginUser}) {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const navigate = useNavigate();
 
-    const handleLogin = async () => {
-        try {
-        const auth = getAuth();
-        await signInWithEmailAndPassword(auth, email, password);
-        alert("Login successful!");
-        logginUser()
-        navigate("/");
-        
-        } catch (error) {
-        alert("Error logging in: " + error.message);
-        }
-    };
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errMsg, setErrMsg] = useState("")
+  const [formError, setFormError] = useState(false)
+  const navigate = useNavigate();
+  const { token, setToken } = useContext(TokenContext);
 
-    return (
-        <div className="login-container">
-        {/* Left Section */}
-        <div className="login-left">
-            <div className="login-header">
-            {/* <a href="https://clipart-library.com/clipart/1910405.htm">
-                <img
-                src="https://clipart-library.com/img/1910405.png"
-                alt="OwlPrep Mascot"
-                className="mascot"
-                />
-            </a> */}
-            <h1 className="app-name">OwlPrep</h1>
-            </div>
-            <div className="login-form">
-            <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email"
-            />
-            <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
-            />
-            <button onClick={handleLogin}>Login</button>
-            <p>
-                Need an account? <Link to="/signup">Sign Up</Link>
-            </p>
-            <p>
-                Forgot your password? <Link to="/forgot-password">Reset Password</Link>
-            </p>
-            </div>
-        </div>
+  const handleLogin = async () => {
+    if(email.trim() == "" || password.trim() == ""){
+      setErrMsg("Missing Required Field")
+      setFormError(true)
+      return
+    }
+    try {
+      const auth = getAuth();
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const idToken = await userCredential.user.getIdToken();
+
+        // Store the token securely
+      setToken(idToken)
+      alert("Login successful!");
+      console.log(idToken)
+      logginUser()
+      navigate("/");
+      
+    } catch (error) {
+      alert("Error logging in: " + error.message);
+    }
+  };
+
+  return (
+    <div className="login-container">
+      <img src={LoginImage} alt="" />
+
+
+
+       <form className="login-form">
+          <h1>Login</h1>
+          <label>
+          <LuUserRound />
+          <input
+            type="text"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Username or E-mail"
+          />
+          </label>
+
+          <label >
+          <IoKeyOutline />
+
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+          />
+          </label>
+          <Link>Forgot password?</Link>
+          {formError && <p className="errorMsg">{errMsg}</p>}
+          <button type="button" onClick={handleLogin} id="loginBtn">Login</button>
+          <Link to="/signup" id="toCreate">Create an account</Link>
+          
+        </form>
 
         </div>
     );
