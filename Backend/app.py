@@ -6,6 +6,7 @@ from processing import process_pdf
 from firebase_config import db
 import firebase_admin
 from firebase_admin import firestore, auth
+from testgenerator import generate_test
 
 app = Flask(__name__)
 CORS(app)
@@ -175,11 +176,11 @@ def get_tests():
     if test_id:
         test = test_doc_ref.document(test_id).get()
         test_dict = test.to_dict()
-        uid = test_dict["creator"]
+        uid = test_dict["user"]
         user_ref = db.collection("users").document(uid)
         user = user_ref.get()
         user_dict = user.to_dict()
-        del test_dict["creator"]
+        del test_dict["user"]
         del user_dict['email']
         del user_dict["dark_theme"]
         return jsonify({"test": test_dict, "creator": user_dict}), 200
@@ -194,11 +195,11 @@ def get_tests():
             test_dict = test.to_dict()
             if search_query.lower() in test_dict.get("name", "").lower():
                 test_dict["id"] = test_id
-                uid = test_dict["creator"]
+                uid = test_dict["user"]
                 user_ref = db.collection("users").document(uid)
                 user = user_ref.get()
                 user_dict = user.to_dict()
-                del test_dict["creator"]
+                del test_dict["user"]
                 del user_dict['email']
                 del user_dict["dark_theme"]
                 matching_tests.append({"test": test_dict, "creator": user_dict})
@@ -206,11 +207,11 @@ def get_tests():
                 for topic in test_dict.get("topics"):
                     if search_query.lower() in topic.lower():
                         test_dict["id"] = test_id
-                        uid = test_dict["creator"]
+                        uid = test_dict["user"]
                         user_ref = db.collection("users").document(uid)
                         user = user_ref.get()
                         user_dict = user.to_dict()
-                        del test_dict["creator"]
+                        del test_dict["user"]
                         del user_dict['email']
                         del user_dict["dark_theme"]
                         matching_tests.append({"test": test_dict, "creator": user_dict})
@@ -229,11 +230,11 @@ def get_tests():
             print(test_dict.get("creator", ""))
             if creator_query == test_dict.get("creator", ""):
                 test_dict["id"] = test_id
-                uid = test_dict["creator"]
+                uid = test_dict["user"]
                 user_ref = db.collection("users").document(uid)
                 user = user_ref.get()
                 user_dict = user.to_dict()
-                del test_dict["creator"]
+                del test_dict["user"]
                 del user_dict['email']
                 del user_dict["dark_theme"]
                 matching_tests.append({"test": test_dict, "creator": user_dict})
@@ -247,11 +248,11 @@ def get_tests():
         test_dict = test.to_dict()
         test_dict["id"] = test_id
         
-        uid = test_dict["creator"]
+        uid = test_dict["user"]
         user_ref = db.collection("users").document(uid)
         user = user_ref.get()
         user_dict = user.to_dict()
-        del test_dict["creator"]
+        del test_dict["user"]
         del user_dict['email']
         del user_dict["dark_theme"]
         test_to_return.append({"test": test_dict, "creator": user_dict})
@@ -325,6 +326,118 @@ def login():
         return jsonify({"error": "Invalid email or user not found"}), 404
     except Exception as e:
         return jsonify({"error": f"Something went wrong: {str(e)}"}), 500
+
+
+### TEST CREATION ###
+
+
+@app.route("/generate-test", methods=["POST"])
+def generate_test_route():
+    data = request.json
+    user = data.get("user") # passes the uid
+    test_name = data.get("test_name")  # New field
+    test_description = data.get("test_description")  # New field
+    topics = data.get("topics")  # List of topic names
+    # test_length = data.get("test_length")  # Short, Medium, Long
+    # difficulty = data.get("difficulty")  # Easy, Medium, Hard
+    question_types = data.get("question_types")  # List of question types: ['MCQ', 'T/F', 'SAQ', 'SMQ'], for Multiple Choice, True/False, Short Answer Question, and Select Many
+
+    # Map difficulty levels
+    og_difficulty = data.get("difficulty")
+    difficulty_map = {0: "Easy", 1: "Medium", 2: "Hard"}
+    difficulty = difficulty_map.get(og_difficulty, "Medium")  # Default to "Medium" if invalid 
+    
+    # Map Test Lengths
+    og_test_length = data.get("test_length")
+    test_length_map = {0: "Short", 1: "Medium", 2: "Long"}
+    test_length = test_length_map.get(og_test_length, "Medium")
+
+    # Validate required fields
+    if not all([user, test_name, test_description, topics, test_length, difficulty, question_types]):
+        return jsonify({"error": "Missing required fields"}), 400
+
+    estimated_time_map = {"Short": 20, "Medium": 40, "Long": 60}
+    estimated_time = estimated_time_map[test_length]
+    # Fetch the user's username
+    user_doc_ref = db.collection("users").document(user)
+    user_doc = user_doc_ref.get()
+
+    if user_doc.exists:
+        user_data = user_doc.to_dict()
+        creator_name = user_data.get("username", "Unknown")
+    else:
+        creator_name = "Unknown"
+
+
+    # Generate the test questions
+    questions = generate_test(user, topics, test_length, difficulty, question_types)
+
+
+    # Create the final test object
+    test = {
+        "user": user,
+        "creator_name": creator_name,
+        "test_name": test_name,
+        "test_description": test_description,
+        "difficulty": og_difficulty,
+        "topics": topics,
+        "type": "Practice Test",
+        "question_types": question_types,
+        "estimated_time": estimated_time,
+        "test_length": og_test_length,
+        "questions": questions
+    }
+
+    # Save the generated test in the user's test collection
+    try:
+
+        _, test_ref = db.collection("tests").add(test)
+        # _, test_ref = user_doc_ref.collection("tests").add(test)
+        print(test_ref)
+        
+        # Return the response including the test ID for reference
+        return jsonify({
+            "message": "Test generated and saved successfully",
+            "test_id": test_ref.id,
+            "test": test
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+### Test Grader ###
+@app.route("/submit-test", methods=["POST"])
+def submit_test_route():
+    data = request.json
+    user = data.get("user")  # UID
+    test_id = data.get("test_id")  # ID of the original test
+    user_answers = data.get("answers")  # Dictionary: {1: 2, 2: "1--3", 3: 0, 4: "their short answer"}
+
+    if not all([user, test_id, user_answers]):
+        return jsonify({"error": "Missing required fields"}), 400
+
+    # Load the original test
+    test_doc = db.collection("tests").document(test_id).get()
+    if not test_doc.exists:
+        return jsonify({"error": "Test not found"}), 404
+
+    test_data = test_doc.to_dict()
+
+    # Now call the submit_test function
+    from submittest import submit_test
+    submitted_test, score = submit_test(user, test_id, test_data, user_answers)
+
+    try:
+        _, submission_ref = db.collection("submitted_tests").add(submitted_test)
+
+        return jsonify({
+            "message": "Test submitted successfully",
+            "submission_id": submission_ref.id,
+            "score": score,
+            "submitted_test": submitted_test
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 
 if __name__ == "__main__":
