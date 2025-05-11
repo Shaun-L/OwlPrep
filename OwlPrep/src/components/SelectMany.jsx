@@ -4,38 +4,44 @@ import CustomCheck from "./CustomCheck"
 export default function SelectMany({options, selected, test_id, question_id, setAnswer}){
     console.log("Session Storage: ", sessionStorage.getItem(`${test_id}/${question_id}`) &&  sessionStorage.getItem(`${test_id}/${question_id}`).split("~~") || [])
     console.log("Prevous Many Select: ", selected)
-    const [selectedOptions, setSelectedOptions] = useState(sessionStorage.getItem(`${test_id}/${question_id}`) && sessionStorage.getItem(`${test_id}/${question_id}`).split("~~") || [])
+    const [selectedIndices, setSelectedIndices] = useState(
+        sessionStorage.getItem(`${test_id}/${question_id}`) 
+            ? sessionStorage.getItem(`${test_id}/${question_id}`).split("~~") 
+            : []
+    )
     console.log("Select Many Select: ", selected)
-    console.log("Selected Options State: ", selectedOptions)
+    console.log("Selected Options State: ", selectedIndices)
     
     useEffect(()=>{
-        console.log("Selected Options Value Change: ", selectedOptions)
-    }, [selectedOptions])
+        console.log("Selected Options Value Change: ", selectedIndices)
+    }, [selectedIndices])
 
-    console.log(options, question_id,selectedOptions)
+    console.log(options, question_id,selectedIndices)
 
-    const onChange = (value)=>{
-        if(selectedOptions.includes(value)){
-            const newSelectedOptions = selectedOptions.filter(selectedOption=>selectedOption !== value)
-            sessionStorage.setItem(`${test_id}/${question_id}`, newSelectedOptions.join("~~"))
-            setAnswer(newSelectedOptions.join("~~"))
-            console.log("Option Unselected: ", newSelectedOptions)
-            setSelectedOptions(newSelectedOptions)
-        }else{
-            const newSelectedOptions = [...selectedOptions, value]
-            console.log("Option Selected: ", newSelectedOptions)
-            sessionStorage.setItem(`${test_id}/${question_id}`, newSelectedOptions.join("~~"))
-            setAnswer(newSelectedOptions.join("~~"))
-            setSelectedOptions(newSelectedOptions)
+    const onChange = (index) => {
+        if(selectedIndices.includes(index)){
+            const newSelectedIndices = selectedIndices.filter(i => i !== index)
+            sessionStorage.setItem(`${test_id}/${question_id}`, newSelectedIndices.join("~~"))
+            setAnswer(newSelectedIndices.join("~~"))
+            setSelectedIndices(newSelectedIndices)
+        } else {
+            const newSelectedIndices = [...selectedIndices, index]
+            sessionStorage.setItem(`${test_id}/${question_id}`, newSelectedIndices.join("~~"))
+            setAnswer(newSelectedIndices.join("~~"))
+            setSelectedIndices(newSelectedIndices)
         }
     }
     return(
         <form>
             {
-                options && options.map(option=>{
-                    console.log(selectedOptions.includes(option))
-                return <CustomCheck key={option} text={option} checked={selectedOptions.includes(option)} 
-                changeStorage={onChange}/>})
+                options && options.map((option, index) => 
+                    <CustomCheck 
+                        key={option} 
+                        text={option} 
+                        checked={selectedIndices.includes(index.toString())} 
+                        changeStorage={() => onChange(index.toString())}
+                    />
+                )
             }
         </form>
     )

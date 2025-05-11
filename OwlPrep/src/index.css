@@ -1,1 +1,133 @@
+.submitted-tests-container {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
 
+.submitted-tests-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.submitted-test-card {
+    background: var(--card-background);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+    position: relative;
+}
+
+.submitted-test-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.test-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.test-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--primary-text-color);
+}
+
+.difficulty-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.difficulty-badge.easy {
+    background-color: #E8F5E9;
+    color: #2E7D32;
+}
+
+.difficulty-badge.medium {
+    background-color: #FFF3E0;
+    color: #EF6C00;
+}
+
+.difficulty-badge.hard {
+    background-color: #FFEBEE;
+    color: #C62828;
+}
+
+.score-display {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    margin: 1rem auto;
+}
+
+.score-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.score-text h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--primary-text-color);
+}
+
+.test-details {
+    margin-top: 1rem;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.detail-item .label {
+    color: var(--secondary-text-color);
+}
+
+.detail-item .value {
+    color: var(--primary-text-color);
+    font-weight: 500;
+}
+
+.view-results-btn {
+    width: 100%;
+    padding: 0.75rem;
+    margin-top: 1rem;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.view-results-btn:hover {
+    background-color: var(--primary-color-dark);
+}
+
+.no-tests-message {
+    text-align: center;
+    padding: 3rem;
+    background: var(--card-background);
+    border-radius: 12px;
+    margin-top: 2rem;
+}
+
+.no-tests-message p {
+    color: var(--secondary-text-color);
+    margin-bottom: 1.5rem;
+}

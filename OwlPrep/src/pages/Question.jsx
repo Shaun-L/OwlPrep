@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react";
-import { Link, useParams, useLocation } from "react-router-dom";
+import { useEffect, useState, useContext } from "react";
+import { Link, useParams, useLocation, useNavigate } from "react-router-dom";
 import MultipleChoice from "../components/MultipleChoice";
 import ShortAnswer from "../components/ShortAnswer";
 import SelectMany from "../components/SelectMany";
-import { db } from "../firebaseUtils";
+import { db, auth } from "../firebaseUtils";
 import { addDoc, collection } from "firebase/firestore";
 import { TailSpin } from "react-loader-spinner";
 import TrueOrFalse from "../components/TrueOrFalse";
+import { TokenContext } from "../hooks/TokenContext";
 
 export default function Question(){
     const location = useLocation()
@@ -18,6 +19,8 @@ export default function Question(){
     const [loading, setLoading] = useState(true)
     const [errorMsg, setErrorMsg] = useState("")
     const [answer, setAnswer] = useState(null)
+    const { token } = useContext(TokenContext)
+    const navigate = useNavigate()
 
     useEffect(() => {
         return () => {
@@ -65,32 +68,64 @@ export default function Question(){
 
     },[test_id, question_id])
 
-    const submitTest = ()=>{
-        let answeredAll = true
-        for(let i = 0; i < testLength; i++){
-            if(!sessionStorage.getItem(`${test_id}/${i+1}`)){
-                answeredAll = false
-                setErrorMsg("There are still some unanswered questions left")
-                break;
+    const submitTest = async () => {
+        try {
+            // Get current user
+            const user = auth.currentUser;
+            if (!user) {
+                setErrorMsg("Please log in to submit your test");
+                return;
             }
-        }
 
-        const data = {}
+            // Check if all questions are answered
+            const allQuestionsAnswered = Array.from({ length: testLength }, (_, i) => {
+                return sessionStorage.getItem(`${test_id}/${i + 1}`) !== null;
+            }).every(answered => answered);
 
-        if(answeredAll){
-            //Send question response to backend
+            if (!allQuestionsAnswered) {
+                setErrorMsg("Please answer all questions before submitting");
+                return;
+            }
+
+            // Collect all answers
+            const answers = Array.from({ length: testLength }, (_, i) => {
+                const answer = sessionStorage.getItem(`${test_id}/${i + 1}`);
+                return {
+                    question_id: i + 1,
+                    answer: answer
+                };
+            });
+
+            // Submit the test
+            const response = await fetch("http://127.0.0.1:5000/submit-test", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    user: user.uid,  // Add the user's ID
+                    test_id: test_id,
+                    answers: answers
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to submit test");
+            }
+
+            const data = await response.json();
             
-            for(let i = 0; i < testLength; i++){
-                const userResponse = sessionStorage.getItem(`${test_id}/${i+1}`)
-                if(userResponse){
-                    data[i+1] = userResponse
-                }
+            // Clear session storage
+            for (let i = 1; i <= testLength; i++) {
+                sessionStorage.removeItem(`${test_id}/${i}`);
             }
 
-            console.log(data)
-            const docRef = addDoc(collection(db, "submitted"), data)
+            // Redirect to test results page
+            navigate(`/test-results/${data.submission_id}`);
+        } catch (error) {
+            setErrorMsg("Error submitting test: " + error.message);
         }
-
     }
 
     const questionOptionsFormat = (type, options, selected)=>{

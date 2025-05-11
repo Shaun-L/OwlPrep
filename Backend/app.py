@@ -493,8 +493,19 @@ def upload_image():
 
 @app.route('/images/<filename>', methods=['GET'])
 def serve_image(filename):
-    # Assuming your images are stored in a directory named 'static/images'
-    image_path = os.path.join('static\\images', filename)
+    # Use os.path.join with forward slashes for cross-platform compatibility
+    image_path = os.path.join('static', 'images', filename)
+    
+    # Check if file exists
+    if not os.path.exists(image_path):
+        # If the requested file is the default profile image and it doesn't exist,
+        # return a 404 with a helpful message
+        if filename == 'default-profile.jpg':
+            return jsonify({
+                "error": "Default profile image not found. Please upload a profile image or contact support."
+            }), 404
+        return jsonify({"error": "Image not found"}), 404
+        
     return send_file(image_path, mimetype='image/jpeg')
 
 @app.route('/login', methods=['POST'])
@@ -680,10 +691,13 @@ def submit_test_route():
     data = request.json
     user = data.get("user")  # UID
     test_id = data.get("test_id")  # ID of the original test
-    user_answers = data.get("answers")  # Dictionary: {1: 2, 2: "1--3", 3: 0, 4: "their short answer"}
+    answers_list = data.get("answers")  # List of {question_id, answer} objects
 
-    if not all([user, test_id, user_answers]):
+    if not all([user, test_id, answers_list]):
         return jsonify({"error": "Missing required fields"}), 400
+
+    # Convert list of answers to dictionary format
+    user_answers = {answer["question_id"]: answer["answer"] for answer in answers_list}
 
     # Load the original test
     test_doc = db.collection("tests").document(test_id).get()
@@ -694,7 +708,18 @@ def submit_test_route():
 
     # Now call the submit_test function
     from submittest import submit_test
-    submitted_test, score = submit_test(user, test_id, test_data, user_answers)
+    submitted_test, score_percentage, points_earned, points_possible = submit_test(user, test_id, test_data, user_answers)
+
+    # Include original test data in the submission
+    submitted_test.update({
+        "test_name": test_data.get("name", ""),
+        "test_description": test_data.get("description", ""),
+        "original_test_id": test_id,
+        "topics": test_data.get("topics", []),
+        "question_types": test_data.get("question_types", []),
+        "difficulty": test_data.get("difficulty", ""),
+        "created": datetime.now().strftime("%m/%d/%y")
+    })
 
     try:
         _, submission_ref = db.collection("submitted_tests").add(submitted_test)
@@ -702,12 +727,411 @@ def submit_test_route():
         return jsonify({
             "message": "Test submitted successfully",
             "submission_id": submission_ref.id,
-            "score": score,
+            "score_percentage": score_percentage,
+            "points_earned": points_earned,
+            "points_possible": points_possible,
             "submitted_test": submitted_test
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
+
+@app.route("/topics/recommendations", methods=["GET"])
+def get_topic_recommendations():
+    try:
+        # Get the current user from the authorization header
+        uid = get_current_user(header=request.headers)
+        if not uid:
+            return jsonify({"error": "User not authenticated"}), 401
+
+        # Get user's submitted tests to analyze performance
+        submitted_tests_ref = db.collection("submitted_tests")
+        user_submissions = submitted_tests_ref.where("user", "==", uid).get()
+
+        # Dictionary to store topic performance
+        topic_performance = {}
+        topic_count = {}
+
+        # Analyze submitted tests
+        for submission in user_submissions:
+            submission_data = submission.to_dict()
+            test_id = submission_data.get("test_id")
+            
+            # Get the original test to see topics
+            test_doc = db.collection("tests").document(test_id).get()
+            if not test_doc.exists:
+                continue
+                
+            test_data = test_doc.to_dict()
+            topics = test_data.get("topics", [])
+            score = submission_data.get("score", 0)
+            
+            # Update topic performance
+            for topic in topics:
+                if topic not in topic_performance:
+                    topic_performance[topic] = 0
+                    topic_count[topic] = 0
+                topic_performance[topic] += score
+                topic_count[topic] += 1
+
+        # Calculate average performance per topic
+        topic_averages = {}
+        for topic in topic_performance:
+            if topic_count[topic] > 0:
+                topic_averages[topic] = topic_performance[topic] / topic_count[topic]
+
+        # Get all available topics from user's uploaded materials
+        user_doc = db.collection("users").document(uid).get()
+        if not user_doc.exists:
+            return jsonify({"error": "User not found"}), 404
+
+        user_data = user_doc.to_dict()
+        all_topics = [topic["topic"] for topic in user_data.get("topics", [])]
+
+        # Sort topics by performance (lower scores need more practice)
+        recommended_topics = []
+        for topic in all_topics:
+            if topic in topic_averages:
+                recommended_topics.append({
+                    "topic": topic,
+                    "performance": topic_averages[topic],
+                    "needs_practice": topic_averages[topic] < 70  # Flag topics with <70% average
+                })
+            else:
+                # Topics not yet tested
+                recommended_topics.append({
+                    "topic": topic,
+                    "performance": None,
+                    "needs_practice": True
+                })
+
+        # Sort by needs_practice (True first) and then by performance (lower first)
+        recommended_topics.sort(key=lambda x: (not x["needs_practice"], x["performance"] if x["performance"] is not None else float('inf')))
+
+        return jsonify({
+            "recommendations": recommended_topics[:5],  # Return top 5 recommendations
+            "message": "Successfully retrieved topic recommendations"
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/topics/explain", methods=["POST"])
+def get_topic_explanation():
+    try:
+        # Get the current user from the authorization header
+        uid = get_current_user(header=request.headers)
+        if not uid:
+            return jsonify({"error": "User not authenticated"}), 401
+
+        # Get the topic from the request
+        data = request.json
+        topic = data.get("topic")
+        question_id = data.get("question_id")  # Optional: for specific question explanations
+
+        if not topic:
+            return jsonify({"error": "Topic is required"}), 400
+
+        # Get user's uploaded materials
+        user_doc = db.collection("users").document(uid).get()
+        if not user_doc.exists:
+            return jsonify({"error": "User not found"}), 404
+
+        user_data = user_doc.to_dict()
+        user_topics = user_data.get("topics", [])
+
+        # Find the topic in user's materials
+        topic_data = None
+        for t in user_topics:
+            if t["topic"].lower() == topic.lower():
+                topic_data = t
+                break
+
+        if not topic_data:
+            return jsonify({"error": "Topic not found in user's materials"}), 404
+
+        # If a specific question is requested, get its context
+        question_context = None
+        if question_id:
+            # Get the test that contains this question
+            submitted_tests_ref = db.collection("submitted_tests")
+            user_submissions = submitted_tests_ref.where("user", "==", uid).get()
+            
+            for submission in user_submissions:
+                submission_data = submission.to_dict()
+                questions = submission_data.get("questions", [])
+                for q in questions:
+                    if q.get("id") == question_id:
+                        question_context = {
+                            "question": q.get("question"),
+                            "user_answer": q.get("user_answer"),
+                            "correct_answer": q.get("correct_answer"),
+                            "score": q.get("score")
+                        }
+                        break
+                if question_context:
+                    break
+
+        # Get related topics for additional context
+        related_topics = []
+        for t in user_topics:
+            if t["topic"].lower() != topic.lower() and any(word in t["topic"].lower() for word in topic.lower().split()):
+                related_topics.append(t["topic"])
+
+        # Construct the explanation
+        explanation = {
+            "topic": topic_data["topic"],
+            "explanation": topic_data["text"],  # The main content from user's materials
+            "related_topics": related_topics[:3],  # Up to 3 related topics
+            "question_context": question_context,  # If a specific question was requested
+            "study_tips": [
+                "Review the main concepts in the explanation",
+                "Practice with related topics",
+                "Create flashcards for key terms"
+            ]
+        }
+
+        # If there's question context, add specific feedback
+        if question_context:
+            if question_context["score"] < 1:  # If the question was answered incorrectly
+                explanation["feedback"] = {
+                    "message": "It looks like you had trouble with this question. Here's what you need to know:",
+                    "key_points": [
+                        "Focus on understanding the main concept",
+                        "Note the differences between your answer and the correct answer",
+                        "Review the explanation above for clarification"
+                    ]
+                }
+
+        return jsonify({
+            "explanation": explanation,
+            "message": "Successfully retrieved topic explanation"
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/cheatsheet/generate", methods=["POST"])
+def generate_cheatsheet():
+    # Implementation of the endpoint
+    return jsonify({"error": "Endpoint not implemented"}), 501
+
+@app.route("/resources/recommend", methods=["GET"])
+def get_resource_recommendations():
+    try:
+        # Get the current user from the authorization header
+        uid = get_current_user(header=request.headers)
+        if not uid:
+            return jsonify({"error": "User not authenticated"}), 401
+
+        # Get optional topic filter from query parameters
+        topic_filter = request.args.get("topic")
+        resource_type = request.args.get("type", "all")  # all, video, article, practice
+
+        # Get user's topics and performance
+        user_doc = db.collection("users").document(uid).get()
+        if not user_doc.exists:
+            return jsonify({"error": "User not found"}), 404
+
+        user_data = user_doc.to_dict()
+        user_topics = [t["topic"] for t in user_data.get("topics", [])]
+
+        # Get user's performance data
+        submitted_tests_ref = db.collection("submitted_tests")
+        user_submissions = submitted_tests_ref.where("user", "==", uid).get()
+        
+        # Calculate topic performance
+        topic_performance = {}
+        topic_count = {}
+        for submission in user_submissions:
+            submission_data = submission.to_dict()
+            test_id = submission_data.get("test_id")
+            test_doc = db.collection("tests").document(test_id).get()
+            if test_doc.exists:
+                test_data = test_doc.to_dict()
+                topics = test_data.get("topics", [])
+                score = submission_data.get("score", 0)
+                for topic in topics:
+                    if topic not in topic_performance:
+                        topic_performance[topic] = 0
+                        topic_count[topic] = 0
+                    topic_performance[topic] += score
+                    topic_count[topic] += 1
+
+        # Calculate average performance per topic
+        topic_averages = {}
+        for topic in topic_performance:
+            if topic_count[topic] > 0:
+                topic_averages[topic] = topic_performance[topic] / topic_count[topic]
+
+        # Define resource types and their sources
+        resource_types = {
+            "video": {
+                "sources": ["YouTube", "Khan Academy", "Coursera"],
+                "format": "video tutorial"
+            },
+            "article": {
+                "sources": ["Wikipedia", "Medium", "Academic Papers"],
+                "format": "written explanation"
+            },
+            "practice": {
+                "sources": ["Quizlet", "Practice Problems", "Interactive Exercises"],
+                "format": "practice material"
+            }
+        }
+
+        # Generate recommendations
+        recommendations = []
+        topics_to_recommend = [topic_filter] if topic_filter else user_topics
+
+        for topic in topics_to_recommend:
+            performance = topic_averages.get(topic, None)
+            needs_help = performance is None or performance < 70
+
+            # Determine which resource types to recommend based on performance
+            if needs_help:
+                # If struggling, recommend all types
+                types_to_include = ["video", "article", "practice"]
+            else:
+                # If doing well, recommend practice to maintain
+                types_to_include = ["practice"]
+
+            # Filter by requested resource type
+            if resource_type != "all":
+                types_to_include = [resource_type] if resource_type in types_to_include else []
+
+            for r_type in types_to_include:
+                for source in resource_types[r_type]["sources"]:
+                    recommendation = {
+                        "topic": topic,
+                        "type": r_type,
+                        "source": source,
+                        "format": resource_types[r_type]["format"],
+                        "description": f"{source} {resource_types[r_type]['format']} for {topic}",
+                        "priority": "high" if needs_help else "medium",
+                        "estimated_time": "10-15 minutes" if r_type == "video" else "5-10 minutes" if r_type == "article" else "15-20 minutes"
+                    }
+                    recommendations.append(recommendation)
+
+        # Sort recommendations by priority and topic performance
+        recommendations.sort(key=lambda x: (
+            x["priority"] == "high",  # High priority first
+            topic_averages.get(x["topic"], 0)  # Then by topic performance
+        ))
+
+        return jsonify({
+            "recommendations": recommendations[:10],  # Return top 10 recommendations
+            "message": "Successfully retrieved resource recommendations",
+            "filters_applied": {
+                "topic": topic_filter,
+                "resource_type": resource_type
+            }
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/progress/track", methods=["GET"])
+def get_progress_track():
+    # Implementation of the endpoint
+    return jsonify({"error": "Endpoint not implemented"}), 501
+
+@app.route("/progress/update", methods=["POST"])
+def update_progress():
+    # Implementation of the endpoint
+    return jsonify({"error": "Endpoint not implemented"}), 501
+
+@app.route("/pathway/recommend", methods=["GET"])
+def get_pathway_recommend():
+    # Implementation of the endpoint
+    return jsonify({"error": "Endpoint not implemented"}), 501
+
+@app.route("/quiz/daily", methods=["GET"])
+def get_daily_quiz():
+    # Implementation of the endpoint
+    return jsonify({"error": "Endpoint not implemented"}), 501
+
+@app.route("/quiz/submit", methods=["POST"])
+def submit_daily_quiz():
+    # Implementation of the endpoint
+    return jsonify({"error": "Endpoint not implemented"}), 501
+
+@app.route("/tests/share", methods=["POST"])
+def share_test():
+    # Implementation of the endpoint
+    return jsonify({"error": "Endpoint not implemented"}), 501
+
+@app.route("/tests/download/:id", methods=["GET"])
+def download_test():
+    # Implementation of the endpoint
+    return jsonify({"error": "Endpoint not implemented"}), 501
+
+@app.route("/tests/feedback", methods=["POST"])
+def submit_test_feedback():
+    # Implementation of the endpoint
+    return jsonify({"error": "Endpoint not implemented"}), 501
+
+@app.route("/submitted-tests/<submission_id>", methods=["GET"])
+def get_submitted_test(submission_id):
+    try:
+        # Get the current user from the authorization header
+        uid = get_current_user(header=request.headers)
+        if not uid:
+            return jsonify({"error": "User not authenticated"}), 401
+
+        # Get the submitted test from Firestore
+        submission_doc = db.collection("submitted_tests").document(submission_id).get()
+        
+        if not submission_doc.exists:
+            return jsonify({"error": "Submitted test not found"}), 404
+
+        submission_data = submission_doc.to_dict()
+
+        # Verify that the user is authorized to view this submission
+        if submission_data.get("user") != uid:
+            return jsonify({"error": "Unauthorized to view this submission"}), 403
+
+        return jsonify(submission_data), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/submitted-tests", methods=["GET"])
+def get_user_submitted_tests():
+    try:
+        # Get the current user from the authorization header
+        uid = get_current_user(header=request.headers)
+        if not uid:
+            return jsonify({"error": "User not authenticated"}), 401
+
+        try:
+            # Try to get all submitted tests for the user with ordering
+            submitted_tests_ref = db.collection("submitted_tests")
+            user_submissions = submitted_tests_ref.where("user", "==", uid).order_by("created", direction=firestore.Query.DESCENDING).get()
+        except Exception as index_error:
+            # If the index isn't ready, fall back to just filtering by user
+            print("Index not ready, falling back to basic query:", str(index_error))
+            submitted_tests_ref = db.collection("submitted_tests")
+            user_submissions = submitted_tests_ref.where("user", "==", uid).get()
+        
+        submitted_tests = []
+        for submission in user_submissions:
+            test_data = submission.to_dict()
+            test_data["id"] = submission.id  # Include the document ID
+            submitted_tests.append(test_data)
+
+        # Sort the results manually if we had to fall back to the basic query
+        if not isinstance(user_submissions, firestore.Query):
+            submitted_tests.sort(key=lambda x: x.get("created", ""), reverse=True)
+
+        return jsonify({
+            "submitted_tests": submitted_tests,
+            "message": "Successfully retrieved submitted tests"
+        }), 200
+
+    except Exception as e:
+        print("Error fetching submitted tests:", str(e))  # Add logging
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)

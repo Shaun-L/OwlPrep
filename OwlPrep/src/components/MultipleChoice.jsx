@@ -2,23 +2,25 @@ import React, { useState } from "react"
 import CustomRadio from "./CustomRadio"
 
 export default function MultipleChoice({options, setAnswer, test_id, question_id}){
-    const [selectionOption, setSelectedOption] = useState(sessionStorage.getItem(`${test_id}/${question_id}`) || "")
+    const [selectedIndex, setSelectedIndex] = useState(sessionStorage.getItem(`${test_id}/${question_id}`) || "")
 
-    const onSelectionChange = (text)=>{
-        console.log(text);
-        setSelectedOption(text)
-        sessionStorage.setItem(`${test_id}/${question_id}`, text)
-        setAnswer(text)
+    const onSelectionChange = (index) => {
+        setSelectedIndex(index)
+        sessionStorage.setItem(`${test_id}/${question_id}`, index)
+        setAnswer(index)
     }
-
-    console.log(selectionOption)
-
-
 
     return(
         <form>
             {
-                options && options.map(option=><CustomRadio key={option} text={option} onSelectionChange={onSelectionChange} checked={option === selectionOption}/>)
+                options && options.map((option, index) => 
+                    <CustomRadio 
+                        key={option} 
+                        text={option} 
+                        onSelectionChange={() => onSelectionChange(index.toString())} 
+                        checked={index.toString() === selectedIndex}
+                    />
+                )
             }
         </form>
     )

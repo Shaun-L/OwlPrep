@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect, useContext } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { Link, useParams, useLocation  } from "react-router-dom";
@@ -18,6 +17,7 @@ import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword"; // Adding the ForgotPassword component
 import Profile from "./pages/Profile";
 import Page404 from "./pages/404";
+import TestResults from "./pages/TestResults";
 
 import CreateTest from "./pages/CreateTest";
 import "./App.css"; 
@@ -33,6 +33,8 @@ import LoadingImg from "./assets/loading.png"
 import ClearSessionOnNavigate from "./components/ClearSession";
 import Feedback from "./pages/Feedback";
 import Secure from "./components/Secure";
+import SubmittedTests from "./pages/SubmittedTests";
+import SubmittedTestReview from "./pages/SubmittedTestReview";
 
 function App() {
   const dropdown = useRef(null)
@@ -380,6 +382,7 @@ function App() {
           <ul>
             <li onClick={closeDropdown}><Link to={`/profiles/${username}`}>Account</Link></li>
             <li onClick={closeDropdown}><Link to="/settings">Settings</Link></li>
+            <li onClick={closeDropdown}><Link to="/submitted-tests">Submitted Tests</Link></li>
             <li><button type="button" onClick={changeTheme}>{darkTheme ? <div><MdOutlineLightMode height={"100%"}/> Light mode</div> : <div><MdOutlineNightlight height={"100%"}/> Dark mode</div>}</button></li>
           </ul>
         </div>
@@ -410,6 +413,9 @@ function App() {
           <Route path="/create-test" element={<CreateTest topics={topics} uploadedFiles={uploadedFiles} handleToggleFile={changeUploadedFiles} changeTopics={changeTopics} changeAlertText={setAlertText} changeAlertShow={setShowAlert}/>}></Route>
           <Route path="/settings" element={<Settings theme={darkTheme} selectThemeChange={selectThemeChange} changeUsername={setUsername}/>}></Route>
           <Route path="/tests/:test_id/:question_id" element={<Question/>}></Route>
+          <Route path="/test-results/:submission_id" element={<TestResults/>}></Route>
+          <Route path="/submitted-tests" element={<SubmittedTests />} />
+          <Route path="/submitted-tests/:submission_id/review/:question_id" element={<SubmittedTestReview />} />
         </Route>
         
         

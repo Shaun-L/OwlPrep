@@ -1,4 +1,3 @@
-
 *{
   box-sizing: border-box;
   margin: 0;
@@ -27,6 +26,11 @@ body{
   --secondary-border-color: rgb(212, 212, 212);
   --error-color: rgb(192, 67, 67);
   --topic-bckground: #edeff4;
+  --accent-color: #90C7C1;
+  --accent-hover-color: #7ab3ad;
+  --primary-bg-color: white;
+  --secondary-bg-color: #edeff4;
+  --hover-color: #edeff4;
 }
 
 [data-theme="dark"]{
@@ -37,6 +41,11 @@ body{
   --hover-background: rgb(37, 37, 37);
   --border-color: #454545;
   --topic-bckground: #3c3c3c;
+  --accent-color: #90C7C1;
+  --accent-hover-color: #7ab3ad;
+  --primary-bg-color: #1b1b1b;
+  --secondary-bg-color: #272727;
+  --hover-color: rgb(37, 37, 37);
 }
 
 .quizInstructionContainer p.errorMsg{

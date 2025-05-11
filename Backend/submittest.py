@@ -23,7 +23,7 @@ Student's Answer: {user_response}
 
 Grade the response:
 - Assign a score out of the total points possible.
-- Provide a short explanation.
+- Provide a short explanation formatted as if you are talking to the student.
 Return in strict JSON format:
 {{
     "score_awarded": (numeric score out of total points),
@@ -43,6 +43,7 @@ Grade the response:
 - State if it is Correct or Incorrect.
 - Explain why the correct answer is correct.
 - If the student's answer is wrong, explain why the wrong answer is wrong.
+- The explanation should be formatted as if you are talking to the student.
 Return in strict JSON with:
 {{
     "result": "Correct" or "Incorrect",
@@ -131,7 +132,7 @@ def submit_test(user, test_id, test_data, user_answers):
 
         # Special handling for SelectMultiple
         if question_type == "SMQ" and isinstance(user_response, str):
-            user_response = list(map(int, user_response.split("--")))
+            user_response = list(map(int, user_response.split("~~")))
 
         question_points = points_map.get(question_type, 10)
         total_points_possible += question_points
