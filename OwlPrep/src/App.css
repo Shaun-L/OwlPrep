@@ -39,6 +39,10 @@ body{
   --topic-bckground: #3c3c3c;
 }
 
+.quizInstructionContainer p.errorMsg{
+  color: var(--error-color);
+}
+
 .errorMsg{
   color: var(--error-color);
   font-weight: 600;
@@ -144,6 +148,20 @@ header input::placeholder{
 p.homeLoadingContainer{
   font-size: 1.2rem;
   color: var(--primary-text-color)
+}
+
+circle.RCP__progress{
+  stroke: var(--primary-color);
+}
+
+#gradedResult{
+  grid-column: 1 / 2;
+}
+
+p.center{
+  color:var(--primary-color);
+  position: absolute;
+  top: 0;
 }
 
 #account-dropdown{
@@ -1304,8 +1322,17 @@ input[type="text"]::placeholder{
   padding: 1.2rem 1rem;
   border-radius: 5px;
   box-shadow: 2px 2px var(--search-background);
-
+  
   border: 1px solid var(--search-background);
+}
+
+.resultText{
+  color: var(--primary-color)
+}
+
+#testTopicsContainer{
+  grid-column: 2 / 3;
+  grid-row: 3 / span 3;
 }
 
 p.testDescription{
@@ -1348,7 +1375,6 @@ div.testInfoSubContainer p:last-child{
 
 .testTitleContainer{
   justify-content: space-between;
-  width: 80%;
 }
 
 .testTitleContainer button{
@@ -1382,6 +1408,7 @@ p.testTopicContainer{
 
 .profileHeaderContainer img{
   height: 100px;
+  width: 100px;
 }
 
 .profileItemBtn{
@@ -1434,6 +1461,17 @@ p.testTopicContainer{
   color: white;
 }
 
+textarea.descriptionTextArea{
+  resize: none;
+  display: block;
+  width: 100%;
+  border-radius: 2px;
+  height: 50px;
+  padding: 8px;
+  background-color: var(--search-background);
+  color: var(--primary-text-color);
+}
+
 .editAvatarBtn{
   background-color: var(--primary-color);
   color: white;
@@ -1462,3 +1500,234 @@ div.modal > div.profileImgUploadContainer > h2{
 div.modal > div.profileImgUploadContainer > p{
   margin-bottom: .5rem;
 }
+
+.questionContainer{
+  border: 1px solid var(--secondary-border-color);
+  max-width: 600px;
+}
+
+.questionContainerFooter{
+  max-width: 600px;
+  display: flex;
+  justify-content: space-between;
+  margin: 1.2rem 0
+}
+
+.questionContainerFooter a{
+  background-color: var(--search-background);
+  color: var(--primary-text-color);
+  border-radius: 2px;
+  border: 1px solid var(--secondary-border-color);
+  text-decoration: none;
+  display: block;
+  padding: .5rem;
+
+}
+
+.questionPageContainer{
+  display: grid;
+  grid-template-columns: 75% 20%;
+  max-width: 1000px;
+}
+
+.questionContainerTitle{
+  background-color: var(--search-background);
+  color: var(--primary-text-color);
+  font-size: 1.2rem;
+  font-weight: 600;
+  border-bottom: 1px solid var(--secondary-border-color);
+  padding: .5rem .9rem;
+}
+
+.questionContainerBody{
+  padding: 1.2rem .9rem;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  white-space: normal;
+  overflow-x: hidden;
+  color: var(--primary-text-color);
+}
+
+h2.testTitle{
+  font-size: 2rem;
+}
+
+.quizInstructionContainer h2, h2.testTitle{
+  color: var(--primary-text-color)
+}
+
+.quizInstructionContainer h2{
+  margin-bottom: 1.5rem;
+}
+
+.quizInstructionContainer p{
+  color: var(--secondary-text-color)
+}
+
+h2.testTitle{
+  margin-bottom: .5rem;
+}
+
+.quizInstructionContainer{
+  margin-bottom: 1.5rem;
+}
+
+.questionContainerBody textarea{
+  background-color: var(--search-background);
+  resize: none;
+  height: 150px;
+  width: 100%;
+  padding: 1rem;
+  font-size: 1rem;
+  color: var(--primary-text-color)
+}
+
+
+.questionContainerBody p{
+  margin-bottom: 1rem;
+}
+
+.questionContainerBody label.custom-checkbox span.custom-check{
+  top: 13px;
+}
+
+.questionContainerBody label{
+  display: block;
+  word-wrap: break-word; /* Force long text to break lines */
+  overflow-wrap: break-word; /* Alternate property for compatibility */
+  white-space: normal;
+  width: 100%;
+  padding: .8rem 0;
+  border-top: 1px solid var(--secondary-border-color);
+}
+
+.questionContainerBody label.radio{
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  margin-right: 10px;
+  color: var(--primary-text-color)
+}
+
+.radioInput{
+  display: none
+}
+
+.customRadio{
+  height: .9em;
+  width: 1em;
+  border: 2px solid var(--border-color);
+  border-radius: 50%;
+  margin-right: 10px;
+  box-sizing: border-box;
+  padding: 1px .8px;
+}
+
+.customRadio::after{
+  content: "";
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: block;
+  transform: scale(0);
+  background-color: var(--primary-color);
+  transition: transform 0.15s;
+}
+
+.radioInput:checked + .customRadio::after{
+  transform: scale(1);
+}
+
+.overflow{
+  text-wrap:inherit;
+  width: 100%;
+}
+
+div.questionsLinkContainer a{
+  display: block;
+}
+
+.questionLinks{
+  padding: .1rem 1rem;
+  max-height: 450px;
+  overflow-y: auto;
+}
+
+.questionLinks a.current{
+  font-weight: 600;
+  color: var(--secondary-text-color)
+}
+
+.questionLinks a.answered{
+  color: var(--primary-color);
+}
+
+.questionLinks a.current.answered{
+  color: var(--primary-color);
+}
+
+.questionLinks a{
+  margin: .3rem 0;
+  text-decoration: none;
+  color: var(--secondary-text-color);
+}
+
+#selection{
+  margin-top: 1rem;
+  margin-left: 1rem;
+}
+
+#feedbackForm button{
+  display: block;
+  background-color: var(--search-background);
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 2px;
+  font-weight: 600;
+  width: 80px;
+}
+
+#feedbackForm textarea{
+  width: 100%;
+  max-width: 1000px;
+  height: 250px;
+  resize: none;
+  border: 1px solid var(--border-color);
+  border-radius: 2px;
+  padding: 1rem;
+  font-size: 1rem;
+  color: var(--primary-text-color);
+}
+
+#feedbackForm textarea:focus{
+  outline: none;
+}
+
+.testTitleContainer button svg.added{
+  fill: white;
+}
+
+button.added{
+  background-color: var(--primary-color);
+}
+
+p.alert{
+  background-color: var(--primary-color);
+  width: max-content;
+  position: fixed;
+  color: var(--background-color);
+  font-weight: 600;
+  text-align: center;
+  padding: 4px 100px;
+  border-radius: 2px;
+  top: 25px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-200%);
+  transition: transform .5s ease-in-out;
+  z-index: 1000;
+}
+
+p.alert.animate{
+  transform: translateX(-50%) translateY(0);
+}
+

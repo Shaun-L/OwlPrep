@@ -30,7 +30,6 @@ function Login({logginUser}) {
 
         // Store the token securely
       setToken(idToken)
-      alert("Login successful!");
       console.log(idToken)
       logginUser()
       navigate("/");

@@ -6,7 +6,7 @@ import PropTypes from "prop-types";
 import { TokenContext, } from "../hooks/TokenContext";
 
 
-export default function Settings({theme, selectThemeChange}) {
+export default function Settings({theme, selectThemeChange, changeUsername, changeEmail}) {
     Settings.propTypes = {
         theme: PropTypes.bool.isRequired,
         selectThemeChange: PropTypes.func.isRequired,
@@ -125,6 +125,7 @@ export default function Settings({theme, selectThemeChange}) {
         
         console.log()
         if(e.target.parentNode.parentNode.firstChild.type !== "password"){
+
             e.target.parentNode.parentNode.firstChild.disabled = false;
             e.target.parentNode.parentNode.firstChild.focus()
         }
@@ -133,6 +134,43 @@ export default function Settings({theme, selectThemeChange}) {
        
 
     };
+
+    const handleSaveUsername = async()=>{
+        console.log("Helloo")
+        const res = await fetch(" http://127.0.0.1:5000/users", {
+            method: "PUT",
+            headers: {
+                'content-type': 'application/json',
+                "Authorization": `Bearer ${token}`, // Attach the Bearer token
+            },
+            body: JSON.stringify({"username": username})
+        })
+
+        const data = await res.json()
+        console.log(data)
+
+        changeEmail(data.user.username)
+        setEditUsername(false)
+
+      
+    }
+
+    const handleSaveEmail = async()=>{
+        const res = await fetch(" http://127.0.0.1:5000/users", {
+            method: "PUT",
+            headers: {
+                'content-type': 'application/json',
+                "Authorization": `Bearer ${token}`, // Attach the Bearer token
+            },
+            body: JSON.stringify({"email": email})
+        })
+
+        const data = await res.json()
+        console.log(data)
+
+        changeUsername(data.user.email)
+        setEditUsername(false)
+    }
 
     return(
     <>
@@ -143,7 +181,7 @@ export default function Settings({theme, selectThemeChange}) {
             <input type="password" placeholder="password"></input>
             <button type="button" onClick={()=>setShowAuthenticationModal(false)}>Cancle</button>
             <button type="button" className="mainBtn">Confirm</button>
-=======
+
         
         </div>
       
@@ -163,7 +201,7 @@ export default function Settings({theme, selectThemeChange}) {
                         <div>
                             <button type="button" className={editUsername ? "hide" : ""} onClick={editField} data-field="username">Edit</button>
                             <button type="button" onClick={()=>setEditUsername(false)} className={!editUsername ? "hide" : ""}>Cancle</button>
-                            <button type="button" className={!editUsername ? "hide" : ""}>Save</button>
+                            <button type="button" className={!editUsername ? "hide" : ""}  onMouseDown={(e) => e.preventDefault()} onClick={handleSaveUsername}>Save</button>
                         </div>
                         
                     </div>
@@ -194,7 +232,7 @@ export default function Settings({theme, selectThemeChange}) {
                         <h3>Theme</h3>
                         
                         <div>
-                            <select name="theme" value={selectedTheme} onChange={changeSelectedTheme}> 
+                            <select name="theme" value={theme ? "dark" : "light"} onChange={changeSelectedTheme}> 
                                 <option value={"light"}>Light</option>
                                 <option value={"dark"}>Dark</option>
                             </select>

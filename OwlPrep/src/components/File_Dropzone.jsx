@@ -1,9 +1,10 @@
 
-import React, { useCallback, useMemo, useEffect, useState, useRef } from 'react';
+import React, { useCallback, useMemo, useEffect, useState, useRef, useContext } from 'react';
 import { useDropzone } from 'react-dropzone';
 import FileUploadComponent from './FileUploadComponent';
 import { byteConverter } from '../utils/byteconverter';
 import { TailSpin } from 'react-loader-spinner'
+import { TokenContext } from '../hooks/TokenContext';
 
 const baseStyle = {
     display: 'flex',
@@ -37,7 +38,7 @@ const baseStyle = {
 
 function File_Dropzone({submitFunc, setTopics, setUploadedFiles}) {
     const [files, setFiles] = useState([]);
-
+    const {token, setToken} = useContext(TokenContext)
     const first = useRef(false)
 
     const handleUpload = async () => {
@@ -51,6 +52,9 @@ function File_Dropzone({submitFunc, setTopics, setUploadedFiles}) {
       try {
           const response = await fetch("http://127.0.0.1:5000/upload", {
               method: "POST",
+              headers: {
+                "Authorization": `Bearer ${token}`, // Attach the Bearer token
+              },
               body: formData,
           });
   
@@ -79,9 +83,22 @@ function File_Dropzone({submitFunc, setTopics, setUploadedFiles}) {
 
               // console.log(fileToTopics)
               setUploadedFiles(files.map(file=>
-                {return {name: file.name, size:file.size, topics: data["files"][file.name].topics, keep: true}}))
+                {
+                  const topicsInFile = []
+
+                  for(let i = 0; i < topics.length; i++){
+                    console.log(data["topics"][topics[i]], topics[i])
+                    if(data["topics"][topics[i]].files.includes(file.name)){
+                      topicsInFile.push(topics[i])
+                    }
+                  }
+
+                  return {name: file.name, size:file.size, topics: topicsInFile, keep: true}}))
               console.log(Object.keys(data.topics))
               setTopics(Object.keys(data.topics).map((topic)=>{ 
+                console.log(topic)
+
+                console.log(topic, data.topics[topic].files)
                 return {name: topic, keep: true, files: data.topics[topic].files} }))
               setFiles([]); // Clear files after successful upload
           } else {

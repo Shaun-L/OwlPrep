@@ -12,7 +12,7 @@ import SampleQuestionItem from "../components/SampleQuestionItem";
 import FileUploadedComponent from "../components/FileUploadedComponent";
 import { TokenContext } from "../hooks/TokenContext";
 
-export default function CreateTest({topics, uploadedFiles, changeUploadedFiles, changeTopics, handleToggleFile}){
+export default function CreateTest({topics, uploadedFiles, changeUploadedFiles, changeTopics, handleToggleFile, changeAlertText, changeAlertShow}){
     const [testName, setTestName] = useState("");
     const [diff, setDiff] = useState(0)
     const [length, setLength] = useState(0)
@@ -23,6 +23,7 @@ export default function CreateTest({topics, uploadedFiles, changeUploadedFiles, 
     const [showSampleQuestionModal, setShowSampleQuestionModal] = useState(false)
     const [formError, setFormError] = useState(false)
     const [errorMsg, setErrorMsg] = useState("")
+    const [description, setDescription] = useState("")
     const [smSelected, setSMSelected] = useState(true)
     const {token, setToken} = useContext(TokenContext)
     const navigate = useNavigate()
@@ -67,10 +68,10 @@ export default function CreateTest({topics, uploadedFiles, changeUploadedFiles, 
 
         const questionTypeList = []
         console.log("Ya")
-        mcSelected && questionTypeList.push("Multiple Choice")
-        tfSelected && questionTypeList.push("True or False")
-        saSelected && questionTypeList.push("Short Answer")
-        smSelected && questionTypeList.push("Select Many")
+        mcSelected && questionTypeList.push("MCQ")
+        tfSelected && questionTypeList.push("T/F")
+        saSelected && questionTypeList.push("SAQ")
+        smSelected && questionTypeList.push("SMQ")
 
         const filteredTopics = topics.filter((topic)=>topic.keep).map((keepTopic)=>keepTopic.name)
         console.log(filteredTopics)
@@ -81,7 +82,9 @@ export default function CreateTest({topics, uploadedFiles, changeUploadedFiles, 
             difficulty: diff,
             questionTypes: questionTypeList,
             questions: [],
-            topics: filteredTopics
+            topics: filteredTopics,
+            length: length,
+            description: description
         }
 
         const res = await fetch(" http://127.0.0.1:5000/tests", {
@@ -94,8 +97,32 @@ export default function CreateTest({topics, uploadedFiles, changeUploadedFiles, 
         })
 
         const data = await res.json()
-
+        console.log(res)
         console.log(data)
+
+        if(res.status == 201){
+            setTimeout(()=>{changeAlertShow(false)}, 1500)
+            setTestName("");
+            setDiff(0)
+            setLength(0)
+            setMCSelected(true)
+            setTFSelected(true)
+            setSASelected(true)
+            setSampleQuestions([])
+            setShowSampleQuestionModal(false)
+            setFormError(false)
+            setErrorMsg("")
+            setDescription("")
+            setSMSelected(true)
+            changeAlertText(data.message)
+            changeAlertShow(true)
+        }
+
+
+
+    
+
+        
 
         // const newDoc = await addDoc(collection(db, 'tests'),{
         //     creator: "Freddy",
@@ -142,6 +169,11 @@ export default function CreateTest({topics, uploadedFiles, changeUploadedFiles, 
         <form id="TestForm">
             <label className="form-heading testNameInput">
                         <input type="text"  value={testName} onChange={(e)=>setTestName(e.target.value)} placeholder="Test Name"></input>
+            </label>
+
+            <label className="form-heading testDescription">
+                    Description:
+                        <textarea className="descriptionTextArea" value={description} onChange={(e)=>setDescription(e.target.value)}/>
             </label>
 
             <div>
