@@ -1,10 +1,12 @@
+
 import { useState, useEffect, useContext } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "../firebaseUtils"; // For user authentication and pulling data
 import PropTypes from "prop-types";
 import { TokenContext, } from "../hooks/TokenContext";
 
-export default function Settings({theme, selectThemeChange}) {
+
+export default function Settings({theme, selectThemeChange, changeUsername, changeEmail}) {
     Settings.propTypes = {
         theme: PropTypes.bool.isRequired,
         selectThemeChange: PropTypes.func.isRequired,
@@ -16,7 +18,12 @@ export default function Settings({theme, selectThemeChange}) {
     const [editEmail, setEditEmail] = useState(false);
     
     const [password, setPassword] = useState("edsdfsdf");
+
     const [editPassword, setEditPassword] = useState(false);
+    // Password changing states
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [authError, setAuthError] = useState();
 
     const [selectedTheme, setSelectedTheme] = useState(theme ? "dark" : "light");
 
@@ -47,6 +54,7 @@ export default function Settings({theme, selectThemeChange}) {
 
 
        
+
     }, []);
 
     function changeSelectedTheme(e){
@@ -57,11 +65,44 @@ export default function Settings({theme, selectThemeChange}) {
         setSelectedTheme(newTheme);
     }
 
+    const handleCancelPasswordChange = () => {
+        // If the password is not changed
+        setShowAuthenticationModal(false);
+        setCurrentPassword("");
+        setNewPassword("");
+        setAuthError("");
+        document.body.style.overflowY = "auto";
+    };
+
+    const handlePasswordChange = async () => {
+        // If the password is changed
+        try {
+            const user = auth.currentUser;
+            if (!user) {
+                setAuthError("User not authenticated.");
+                return;
+            }
+
+            // Store credintials for reauthentication
+            const credential = EmailAuthProvider.credential(user.email, currentPassword);
+            
+            // Reauthenticating the user
+            await reauthenticateWithCredential(user, credential);
+            // Updating the password
+            await updatePassword(user, newPassword);
+            console.log("Password updated successfully.");
+        } catch (error) {
+            console.error("Error updating password:", error);
+            setAuthError(error.message || "An error occurred while updating the password.");
+        }
+
+    };
+
     function editField(e){
         setEditUsername(false)
         setEditEmail(false)
         setEditPassword(false) // Resetting password edit field
-        
+
 
         const editFieldName = e.target.dataset.field;
         console.log(editFieldName)
@@ -77,12 +118,14 @@ export default function Settings({theme, selectThemeChange}) {
                 break;
             case "password":
                 setShowAuthenticationModal(true);
+                setEditPassword(true)
                 document.body.style.overflowY = "hidden";
                 break;
         }
         
         console.log()
         if(e.target.parentNode.parentNode.firstChild.type !== "password"){
+
             e.target.parentNode.parentNode.firstChild.disabled = false;
             e.target.parentNode.parentNode.firstChild.focus()
         }
@@ -90,9 +133,47 @@ export default function Settings({theme, selectThemeChange}) {
        
        
 
+    };
+
+    const handleSaveUsername = async()=>{
+        console.log("Helloo")
+        const res = await fetch(" http://127.0.0.1:5000/users", {
+            method: "PUT",
+            headers: {
+                'content-type': 'application/json',
+                "Authorization": `Bearer ${token}`, // Attach the Bearer token
+            },
+            body: JSON.stringify({"username": username})
+        })
+
+        const data = await res.json()
+        console.log(data)
+
+        changeEmail(data.user.username)
+        setEditUsername(false)
+
+      
     }
 
-    return(<>
+    const handleSaveEmail = async()=>{
+        const res = await fetch(" http://127.0.0.1:5000/users", {
+            method: "PUT",
+            headers: {
+                'content-type': 'application/json',
+                "Authorization": `Bearer ${token}`, // Attach the Bearer token
+            },
+            body: JSON.stringify({"email": email})
+        })
+
+        const data = await res.json()
+        console.log(data)
+
+        changeUsername(data.user.email)
+        setEditUsername(false)
+    }
+
+    return(
+    <>
     <div className={`modal ${showAuthenticationModal ? "showModal" : ""}`}>
         <div>
             <h2>Changing Password?</h2>
@@ -100,6 +181,8 @@ export default function Settings({theme, selectThemeChange}) {
             <input type="password" placeholder="password"></input>
             <button type="button" onClick={()=>setShowAuthenticationModal(false)}>Cancle</button>
             <button type="button" className="mainBtn">Confirm</button>
+
+        
         </div>
       
     </div>
@@ -118,7 +201,7 @@ export default function Settings({theme, selectThemeChange}) {
                         <div>
                             <button type="button" className={editUsername ? "hide" : ""} onClick={editField} data-field="username">Edit</button>
                             <button type="button" onClick={()=>setEditUsername(false)} className={!editUsername ? "hide" : ""}>Cancle</button>
-                            <button type="button" className={!editUsername ? "hide" : ""}>Save</button>
+                            <button type="button" className={!editUsername ? "hide" : ""}  onMouseDown={(e) => e.preventDefault()} onClick={handleSaveUsername}>Save</button>
                         </div>
                         
                     </div>
@@ -141,7 +224,7 @@ export default function Settings({theme, selectThemeChange}) {
             </div>
         </div>
 
-        <h2 className="settings-title">Appereance</h2>
+        <h2 className="settings-title">Appearance</h2>
         <div className="settings-container">
             <div>
                 <div className="settings-sub-section-container">
@@ -149,7 +232,7 @@ export default function Settings({theme, selectThemeChange}) {
                         <h3>Theme</h3>
                         
                         <div>
-                            <select name="theme" value={selectedTheme} onChange={changeSelectedTheme}> 
+                            <select name="theme" value={theme ? "dark" : "light"} onChange={changeSelectedTheme}> 
                                 <option value={"light"}>Light</option>
                                 <option value={"dark"}>Dark</option>
                             </select>
@@ -168,6 +251,7 @@ export default function Settings({theme, selectThemeChange}) {
                     <h3>Password</h3>
                     <div className="form-field-container">
                         <input type="password" value={password} onChange={(e)=>{setEmail(e.target.value)}} readOnly={!editPassword} disabled={!editPassword}></input>
+
                         
                         <div>
                             <button type="button" className={editPassword ? "hide" : ""} onClick={editField} data-field="password">Edit</button>

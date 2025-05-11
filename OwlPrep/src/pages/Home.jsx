@@ -18,7 +18,7 @@ export default function Home(){
     const [saFilterSelected, setSAFilterSelected] = useState(true)
     const [tfFilterSelected, setTFFilterSelected] = useState(true)
     const [smFilterSelected, setSMFilterSelected] = useState(true)
-    const [difficultyFilter, setDifficultyFilter] = useState(4)
+    const [difficultyFilter, setDifficultyFilter] = useState("All")
     const [numberOfPages, setNumberOfPages] = useState(1)
     const [loading, setLoading] = useState(false)
     const [currentPage, setCurrentPage] = useState(1)
@@ -48,6 +48,7 @@ export default function Home(){
                 try {
                     const res = await fetch(`http://127.0.0.1:5000/tests`, {method: "GET"});
                     const data = await res.json()
+                    console.log(data)
                     setItems(data.tests);
                     let newNumberOfPages = Math.floor(data.tests.length / 12)
                     newNumberOfPages += (data.tests.length % 12 != 0)? 1 : 0
@@ -65,7 +66,8 @@ export default function Home(){
         setTFFilterSelected(true)
         setSMFilterSelected(true)
         setShowFilterDropdown(false)
-        setDifficultyFilter(4)
+        setDifficultyFilter("All")
+        console.log(items)
     }, [searchParams])
 
     // useEffect(() => {
@@ -110,14 +112,14 @@ export default function Home(){
 
     const itemMapped = items.slice(currentPage*12-12, currentPage*12).filter(item=>{
         console.log()
-        if((!mcFilterSelected && item.test.questionTypes.includes("Multiple Choice")) || (!tfFilterSelected && item.test.questionTypes.includes("True or False")) ||
-           (!saFilterSelected && item.test.questionTypes.includes("Short Answer"))){
+        if((!mcFilterSelected && item.test.question_types.includes("MCQ")) || (!tfFilterSelected && item.test.question_types.includes("T/F")) ||
+           (!saFilterSelected && item.test.question_types.includes("SAQ")) || (!smFilterSelected && item.test.question_types.includes("SMQ"))){
             return false
         }
 
         return true
 
-    }).filter(item=> difficultyFilter == 4 || item.test.difficulty == difficultyFilter ).map((item)=><StudyItemContainer title={item.test.name} type={item.test.type} creator={item.creator.username} profileImg={item.creator.img_url} key={item.test.id} id={item.test.id}/>)
+    }).filter(item=> difficultyFilter == "All" || item.test.difficulty == difficultyFilter ).map((item)=><StudyItemContainer title={item.test.name} type={item.test.type} creator={item.creator.username} profileImg={item.creator.img_url} key={item.test.id} id={item.test.id}/>)
 
     return(<>
         <div id="home-header">
@@ -142,10 +144,10 @@ export default function Home(){
 
                 <p>Difficulty</p>
                 <select name="difficultyFilter" value={difficultyFilter} onChange={(e)=>setDifficultyFilter(e.currentTarget.value)}>
-                    <option value={4}>Any</option>
-                    <option value={0}>Easy</option>
-                    <option value={1}>Medium</option>
-                    <option value={2}>Hard</option>
+                    <option value={"All"}>Any</option>
+                    <option value={"Easy"}>Easy</option>
+                    <option value={"Medium"}>Medium</option>
+                    <option value={"Hard"}>Hard</option>
                 </select>
                 
                 </div>}
@@ -169,7 +171,7 @@ export default function Home(){
                 <button className="itemPreviousBtn button" type="button" onClick={()=>{
                     if(currentPage > 1){setCurrentPage(currentPage-1)}}}><FaCaretLeft/></button>
                 {
-                    [...Array(numberOfPages).keys()].map(i => <button onClick={()=>setCurrentPage(i+1)} className={"pageBtn " + (currentPage == i+1 && "activePageBtn")}>{i + 1}</button>)
+                    [...Array(numberOfPages).keys()].map(i => <button key={i+1} onClick={()=>setCurrentPage(i+1)} className={"pageBtn " + (currentPage == i+1 && "activePageBtn")}>{i + 1}</button>)
                 }
                 <button className="itemPreviousBtn button" type="button" onClick={()=>{
                     if(currentPage < numberOfPages){setCurrentPage(currentPage+1)}}}><FaCaretRight/></button>

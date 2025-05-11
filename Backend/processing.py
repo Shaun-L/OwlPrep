@@ -1,6 +1,7 @@
 import openai
 import PyPDF2
 import os
+import re
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -80,7 +81,11 @@ def process_pdf(pdf_path):
     topics = extract_topics_with_openai(text)
     topic_text_mapping = extract_relevant_text_with_openai(text, topics)
 
+    fileName = re.sub(r'(?<!_)_(?!_)', ' ', os.path.basename(pdf_path))
+    # Replace sequences of two or more underscores with one fewer
+    fileName = re.sub(r'(_{2,})', lambda match: '_' * (len(match.group(0)) - 1), fileName)
+
     for topic in topic_text_mapping:
-        topic_text_mapping[topic]["files"].append(os.path.basename(pdf_path))
+        topic_text_mapping[topic]["files"].append(fileName)
 
     return topic_text_mapping

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import { FaUser } from "react-icons/fa";
@@ -11,6 +12,7 @@ import DropzoneComponent from "../components/Dropzone";
 import axios from 'axios';
 import { TokenContext } from "../hooks/TokenContext";
 import { getAuth } from "firebase/auth";
+import LoadingImg from "../assets/loading.png"
 
 export default function Profile({changeProfileImg, userLoggedInEmail}){
     const [loggedInUsername, setLoggedInUsername] = useState("")
@@ -19,13 +21,14 @@ export default function Profile({changeProfileImg, userLoggedInEmail}){
     const [currentPage, setCurrentPage] = useState(1)
     const [numberOfPages, setNumberOfPages] = useState(1)
     const [showModal, setShowModal] = useState(false)
-    const [profileImage, setProfileImage] = useState("http://127.0.0.1:5000/images/default-profile.jpg")
+    const [profileImage, setProfileImage] = useState(LoadingImg)
     const [previewImage, setPreviewImage] = useState("")
     const [files, setFiles] = useState([])
     const avatarEditor = useRef(null)
     const {token, setToken} = useContext(TokenContext)
     const [errorMsg, setErrorMsg] = useState("")
     const [editableProfileImage, setEditableProfileImage] = useState(false)
+    const [creator, setCreator] = useState({})
  
     const onFileChange = (e)=>{
         const file = e.target.files[0]
@@ -45,10 +48,23 @@ export default function Profile({changeProfileImg, userLoggedInEmail}){
         })
         console.log(resp)
         console.log(resp.data.user.img_url)
+        console.log(resp.data)
 
-            
+        console.log(editableProfileImage, "Who")
+        
+
+        if(editableProfileImage){
+            setCreator({...creator, img_url: resp.data.user.img_url})
+        }
+
         setProfileImage(resp.data.user.img_url)
         changeProfileImg(resp.data.user.img_url)
+        setPreviewImage("")
+
+
+
+        
+
         setShowModal(false)
     }
 
@@ -84,7 +100,7 @@ export default function Profile({changeProfileImg, userLoggedInEmail}){
 
     useEffect(()=>{
         const getData = async ()=>{
-            const res = await fetch("http://127.0.0.1:5000/tests?creator=Freddy")
+            const res = await fetch(`http://127.0.0.1:5000/tests?creator=${username}`)
             const data = await res.json()
             const userRes = await fetch(`http://127.0.0.1:5000/users?username=${username}`, {
                 method: "GET", // Use the appropriate HTTP method
@@ -106,6 +122,7 @@ export default function Profile({changeProfileImg, userLoggedInEmail}){
             
             setNumberOfPages(newNumberOfPages)
             setTests(data.tests)
+            setCreator(data.creator)
             setProfileImage(userData.img_url)
             setEditableProfileImage(loggedInUser.username == username)
         }
@@ -113,7 +130,7 @@ export default function Profile({changeProfileImg, userLoggedInEmail}){
         getData()
     }, [])
 
-    const itemsMapped = tests.slice(currentPage*9-9, currentPage*9).map((item)=><StudyItemContainer title={item.name} type={item.type} creator={item.creator} key={item.id} id={item.id}/>)
+    const itemsMapped = tests.slice(currentPage*9-9, currentPage*9).map((item)=><StudyItemContainer title={item.name} type={item.type} creator={creator.username} key={item.id} id={item.id} profileImg={creator.img_url}/>)
 
     return (<>
     <div className={"modal " + (showModal && "showModal")}>
@@ -137,7 +154,7 @@ export default function Profile({changeProfileImg, userLoggedInEmail}){
     </div>
     <div className="profileHeaderContainer">
         <div className="changeImageContainer" onClick={()=>setShowModal(true)}>
-            <img src={`${profileImage}`} loading="lazy"></img>
+            <img src={profileImage}></img>
             </div>
         <div className="profileImgSideContainer">
             <h1>{username}</h1>
@@ -158,7 +175,7 @@ export default function Profile({changeProfileImg, userLoggedInEmail}){
     {
         itemsMapped.length !== 0 && 
     <div className="flex itemNavigationContainer">
-        <button className="itemPreviousBtn button" type="button" onClick={loggedInUser == username && (()=>{
+        <button className="itemPreviousBtn button" type="button" onClick={loggedInUsername == username && (()=>{
             if(currentPage > 1){setCurrentPage(currentPage-1)}} )}><FaCaretLeft/></button>
         {
             [...Array(numberOfPages).keys()].map(i => <button onClick={()=>setCurrentPage(i+1)} className={"pageBtn " + (currentPage == i+1 && "activePageBtn")}>{i + 1}</button>)
@@ -169,3 +186,5 @@ export default function Profile({changeProfileImg, userLoggedInEmail}){
     
     </>)
 }
+
+

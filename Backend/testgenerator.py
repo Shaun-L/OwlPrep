@@ -313,32 +313,33 @@ def generate_question(topic, text, question_type, difficulty, current_question_p
     
     return question_data
 
+
 def generate_test(user, topics, test_length, difficulty, question_types):
     """
-    Create a test by generating a fixed number of questions regardless of the number of topics.
+    Create a test by generating questions for the selected topics.
     """
     logging.info(f"Generating test for user: {user} | Topics: {topics} | Test Length: {test_length} | Difficulty: {difficulty} | Question Types: {question_types}")
 
     test = {"questions": {}}  # Store questions as a dictionary
-
-    # Updated number of questions per test
-    num_questions = {"Short": 10, "Medium": 20, "Long": 30}.get(test_length, 20)
+    num_questions = {"Short": 5, "Medium": 10, "Long": 15}.get(test_length, 10)
 
     question_number = 1  # Track question numbers
     current_question_pull = []  # Maintain a list of already generated questions
 
-    # Flatten the topics across question types
-    while question_number <= num_questions:
-        for topic in topics:
-            text = fetch_topic_text(topic, user)
+    for topic in topics:
+        logging.debug(f"Fetching text for topic: {topic}")
+        text = fetch_topic_text(topic, user)  # Fetch topic text from Firestore
 
-            if not text:
-                logging.warning(f"No text found for topic: {topic} (Skipping)")
-                continue  # Skip if no text found
+        if not text:
+            logging.warning(f"No text found for topic: {topic} (Skipping)")
+            continue  # Skip if no text found
 
+        num_questions_per_topic = num_questions // len(topics)
+        logging.debug(f"Generating {num_questions_per_topic} questions for topic: {topic}")
+
+        for _ in range(num_questions_per_topic):  # Distribute questions across topics
             for q_type in question_types:
-                if question_number > num_questions:
-                    break  # Stop if we've reached the required number
+                logging.debug(f"Generating {q_type} question for topic: {topic}")
 
                 question_data = generate_question(topic, text, q_type, difficulty, current_question_pull)
                 if not question_data:
@@ -346,21 +347,20 @@ def generate_test(user, topics, test_length, difficulty, question_types):
                     continue
 
                 for q in question_data:
-                    if question_number > num_questions:
-                        break
+                    logging.debug(f"Generated Question {question_number}: {q['question']}")
 
                     test["questions"][str(question_number)] = {
                         "question": q["question"],
-                        "options": q.get("choices", []),
-                        "answer": q.get("answer", q.get("expected_answer", "")),
+                        "options": q["choices"],
+                        "answer": q["answer"],
                         "type": q["type"],
                         "difficulty": q["difficulty"]
                     }
-                    current_question_pull.append(q["question"])
-                    question_number += 1
+                    current_question_pull.append(q["question"])  # Avoid duplicates
+                    question_number += 1  # Increment question number
 
     logging.info(f"Test generation complete. Total questions: {len(test['questions'])}")
-    return test["questions"]
+    return test["questions"] # I got lazy
 """
 Excpected output of test:
 test:

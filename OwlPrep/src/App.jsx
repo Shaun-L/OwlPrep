@@ -1,6 +1,8 @@
+
 import { useState, useRef, useEffect, useContext } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
+import { Link, useParams, useLocation  } from "react-router-dom";
+
 import File_Dropzone from "./components/File_Dropzone";  // Import your File_Dropzone component
 import { MdOutlineLightMode } from "react-icons/md";
 import { MdOutlineNightlight } from "react-icons/md";
@@ -26,13 +28,18 @@ import Progress from "./pages/Progess";
 import Saves from "./pages/Saves";
 import { TokenContext } from "./hooks/TokenContext";
 import { getAuth, onAuthStateChanged } from "firebase/auth"
+import Question from "./pages/Question";
+import LoadingImg from "./assets/loading.png"
+import ClearSessionOnNavigate from "./components/ClearSession";
+import Feedback from "./pages/Feedback";
+import Secure from "./components/Secure";
 
 function App() {
   const dropdown = useRef(null)
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState("")
   const [username, setUsername] = useState([]);
-  const [profileImg, setProfileImg] = useState(""); // State for user name
+  const [profileImg, setProfileImg] = useState(LoadingImg); // State for user name
   const checkboxRef = useRef(null);
   const [showMobileNav, setShowMobileNav] = useState(false)
   const [email, setEmail] = useState("")
@@ -41,8 +48,29 @@ function App() {
   const [darkTheme, setDarkTheme] = useState(false);
   const [topics,setTopics] = useState([])
   const [uploadedFiles, setUploadedFiles] = useState([])
+  const [saves, setSaves] = useState([])
+  const [alertText, setAlertText] = useState("Nice")
+  const [showAlert, setShowAlert] = useState(false)
 
   const {token, setToken} = useContext(TokenContext)
+  const { test_id } = useParams();
+
+  const location = useLocation();
+
+  useEffect(() => {
+    console.log("Global", location.pathname)
+    if (!location.pathname.startsWith('/tests/')) {
+      console.log("OwlPrep")
+      sessionStorage.clear()
+    }
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (showAlert) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [showAlert]);
+
 
   useEffect(()=>{
     const getLoggedInUser = async()=>{
@@ -59,6 +87,11 @@ function App() {
         setProfileImg(data.img_url);
         setUsername(data.username)
         setEmail(data.email)
+        setSaves(data?.saves ?? [])
+        setDarkTheme(data?.dark_theme)
+        if(data?.dark_theme){
+          document.body.setAttribute("data-theme", "dark");
+        }
         console.log("Response Data:", data);
     } else {
         console.error("Error Response:", response.status, response.statusText);
@@ -79,6 +112,7 @@ function App() {
         .then(() => {
 
             setToken(null); // Clear the token if stored locally
+            navigate("/")
         })
         .catch((error) => {
             console.error("Error logging out user:", error);
@@ -93,7 +127,7 @@ function App() {
     setShowAccountDropDown(false);
   }
 
-  function changeTheme() {
+  async function changeTheme() {
     if (darkTheme) {
       document.body.removeAttribute("data-theme");
     } else {
@@ -101,7 +135,20 @@ function App() {
     }
     setDarkTheme(!darkTheme);
 
+    const res = await fetch(" http://127.0.0.1:5000/users", {
+      method: "PUT",
+      headers: {
+          'content-type': 'application/json',
+          "Authorization": `Bearer ${token}`, // Attach the Bearer token
+      },
+      body: JSON.stringify({dark_theme: !darkTheme})
+  })
+
+  const data = await res.json()
+  console.log(data)
+
 }
+
 
   function changeUploadedFiles(fileName){
     let removeFile = false
@@ -209,7 +256,9 @@ function App() {
             console.log("Unkept files", unkeptTopics)
             if(removeTopic){
               const filesToRemove = []
+              console.log("Uploaded Files:", uploadedFiles)
               uploadedFiles.forEach(file=>{
+                console.log(file.topics)
                 let removeFile = true;
                 for(let i = 0; i < file.topics.length; i++){
                   if(unkeptTopics.includes(file.topics[i])){
@@ -253,7 +302,7 @@ function App() {
     
 }
 
-  function selectThemeChange(themeName) {
+  async function selectThemeChange(themeName) {
     console.log(themeName);
     if (themeName === "light") {
       document.body.removeAttribute("data-theme");
@@ -262,7 +311,23 @@ function App() {
       document.body.setAttribute("data-theme", "dark");
       setDarkTheme(true);
     }
+
+    const res = await fetch(" http://127.0.0.1:5000/users", {
+            method: "PUT",
+            headers: {
+                'content-type': 'application/json',
+                "Authorization": `Bearer ${token}`, // Attach the Bearer token
+            },
+            body: JSON.stringify({"dark_theme": themeName == "light" ? false : true})
+        })
+
+        const data = await res.json()
+        console.log(data)
   }
+
+  
+
+
 
   document.addEventListener("mousedown", (e)=>{
 
@@ -274,6 +339,9 @@ function App() {
 
   return (
     <>
+
+    <p className={showAlert ? "animate alert" : "alert"}>{alertText}</p>
+
     <header>
     
     <div id="Logo">
@@ -324,22 +392,33 @@ function App() {
     </div>
     
   </header>
-    
     <Routes>
       <Route path="/" element={<Default logout={logout} setTopics={setTopics} topics={topics} setUploadedFiles={setUploadedFiles} loggedIn={loggedIn} closeDropdown={closeDropdown} showAccountDropdown={showAccountDropdown} theme={darkTheme} changeTheme={changeTheme} changeDropdownView={changeDropdownView} setShowMobileNav={setShowMobileNav} showMobileNav={showMobileNav}/>}>
         <Route index element={<Home></Home>}></Route>
-        <Route path="saves" element={<Saves></Saves>}></Route>
-        <Route path="progress" element={<Progress></Progress>}></Route>
+
+        
+        <Route path="feedback" element={<Feedback></Feedback>}></Route>
+
         <Route path="/forgot-password" element={<ForgotPassword></ForgotPassword>}></Route>
-        <Route path="/settings" element={<Settings theme={darkTheme} selectThemeChange={selectThemeChange}/>}></Route>
+        
         <Route path="/profiles/:username" element={<Profile changeProfileImg={(url)=>setProfileImg(url)} userLoggedInEmail={email}/>}></Route>
-        <Route path="/create-test" element={<CreateTest topics={topics} uploadedFiles={uploadedFiles} handleToggleFile={changeUploadedFiles} changeTopics={changeTopics}/>}></Route>
-        <Route path="practice-test/:id" element={<Test/>}></Route>
+        
+        <Route path="tests/:id" element={<Test saves={saves} editSaves={setSaves}/>}></Route>
+        <Route element={<Secure/>}>
+          <Route path="saves" element={<Saves></Saves>}></Route>
+          <Route path="progress" element={<Progress></Progress>}></Route>
+          <Route path="/create-test" element={<CreateTest topics={topics} uploadedFiles={uploadedFiles} handleToggleFile={changeUploadedFiles} changeTopics={changeTopics} changeAlertText={setAlertText} changeAlertShow={setShowAlert}/>}></Route>
+          <Route path="/settings" element={<Settings theme={darkTheme} selectThemeChange={selectThemeChange} changeUsername={setUsername}/>}></Route>
+          <Route path="/tests/:test_id/:question_id" element={<Question/>}></Route>
+        </Route>
+        
+        
         <Route path="*" element={<Page404/>}></Route>
       </Route>
 
       <Route path="/login" element={<Login logginUser={logginUser}></Login>}></Route>
       <Route path="/signup" element={<SignUp></SignUp>}></Route>
+
     </Routes>
     </>
   );

@@ -10,6 +10,8 @@ import { GiOwl } from "react-icons/gi";
 import { RxHamburgerMenu } from "react-icons/rx";
 import File_Dropzone from "../components/File_Dropzone";
 import { IoMdArrowDropdown } from "react-icons/io";
+import { VscFeedback } from "react-icons/vsc";
+
 
 
 export default function Default({loggedIn, topics, setTopics, logout,closeDropdown, setUploadedFiles, showAccountDropdown, changeDropdownView, theme, changeTheme, setShowMobileNav, showMobileNav}){
@@ -48,6 +50,7 @@ export default function Default({loggedIn, topics, setTopics, logout,closeDropdo
 
             <div className="sideNavSubContainer">
                 <NavLink to="/" className={({isActive})=>(isActive ? 'activeLink' : '')}><FaHome/>Home</NavLink>
+                <NavLink to="/feedback" className={({isActive})=>(isActive ? 'activeLink' : '')}><VscFeedback/>Feedback</NavLink>
                 
                 <NavLink to="/saves" className={({isActive})=>(isActive ? 'activeLink' : '')}><CiBookmark/> Saves</NavLink>
                 <NavLink to="/progress" className={({isActive})=>(isActive ? 'activeLink' : '')}><RiProgress1Line/> Progress</NavLink>
