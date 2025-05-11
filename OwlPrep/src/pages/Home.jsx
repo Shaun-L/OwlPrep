@@ -112,6 +112,11 @@ export default function Home(){
 
     const itemMapped = items.slice(currentPage*12-12, currentPage*12).filter(item=>{
         console.log()
+        // Filter out daily quizzes from the home page
+        if (item.test.type === "Daily Quiz" || item.test.is_daily === true) {
+            return false;
+        }
+        
         if((!mcFilterSelected && item.test.question_types.includes("MCQ")) || (!tfFilterSelected && item.test.question_types.includes("T/F")) ||
            (!saFilterSelected && item.test.question_types.includes("SAQ")) || (!smFilterSelected && item.test.question_types.includes("SMQ"))){
             return false

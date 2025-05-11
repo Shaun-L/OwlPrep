@@ -8,6 +8,7 @@ import { LuFileSpreadsheet } from "react-icons/lu";
 import { LuLetterText } from "react-icons/lu";
 import { GiOwl } from "react-icons/gi";
 import { RxHamburgerMenu } from "react-icons/rx";
+import { MdOutlineCalendarToday } from "react-icons/md";
 import File_Dropzone from "../components/File_Dropzone";
 import { IoMdArrowDropdown } from "react-icons/io";
 import { VscFeedback } from "react-icons/vsc";
@@ -57,8 +58,9 @@ export default function Default({loggedIn, topics, setTopics, logout,closeDropdo
             </div>
             <div className="sideNavSubContainer">
                 <h3>Start Here</h3>
-                <Link ><LuFileSpreadsheet/> Cheetsheet</Link>
+                <NavLink to="/create-cheatsheet" className={({isActive})=>(isActive ? 'activeLink' : '')}><LuFileSpreadsheet/> Cheatsheet</NavLink>
                 <NavLink to="/create-test" className={({isActive})=>(isActive ? 'activeLink' : '')}><LuLetterText/> Practice Test</NavLink>
+                <NavLink to="/daily-quiz" className={({isActive})=>(isActive ? 'activeLink' : '')}><MdOutlineCalendarToday/> Daily Quiz</NavLink>
             </div>
 
             <div className="fileUploadArea sideNavSubContainer">

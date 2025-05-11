@@ -22,7 +22,7 @@ Correct Answer: {original_question['answer']}
 Student's Answer: {user_response}
 
 Grade the response:
-- Assign a score out of the total points possible.
+- Assign a score out of the 10 total points possible.
 - Provide a short explanation formatted as if you are talking to the student.
 Return in strict JSON format:
 {{
@@ -114,7 +114,7 @@ def submit_test(user, test_id, test_data, user_answers):
         "T/F": 5,
         "MCQ": 10,
         "SMQ": 10,
-        "SAQ": 15
+        "SAQ": 10
     }
 
     total_points_earned = 0
@@ -143,6 +143,10 @@ def submit_test(user, test_id, test_data, user_answers):
         if question_type in ["SMQ", "SAQ"]:
             points_awarded = grading_result.get("score_awarded", 0)
             explanation = grading_result.get("explanation", "")
+        elif question_type == "SMQ":
+            result = grading_result.get("result", "Incorrect")
+            explanation = grading_result.get("explanation", "")
+            points_awarded = question_points if result.lower() == "correct" else 0
         else:
             result = grading_result.get("result", "Incorrect")
             explanation = grading_result.get("explanation", "")

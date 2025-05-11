@@ -333,30 +333,70 @@ def get_tests():
     question_number = request.args.get("question", None)
 
     print(search_query)
-    test_doc_ref = db.collection("tests")
+    
     if test_id:
-        test = test_doc_ref.document(test_id).get()
-        test_dict = test.to_dict()
-
+        # First, check in regular tests collection
+        test_doc = db.collection("tests").document(test_id).get()
+        test_dict = None
+        
+        # If test exists in regular tests collection
+        if test_doc.exists:
+            test_dict = test_doc.to_dict()
+        else:
+            # If not in regular tests, check in daily quizzes
+            daily_quiz_doc = db.collection("daily_quizzes").document(test_id).get()
+            if daily_quiz_doc.exists:
+                test_dict = daily_quiz_doc.to_dict()
+        
+        # If test_dict is still None, test doesn't exist in either collection
+        if not test_dict:
+            return jsonify({"error": "Test not found"}), 404
+            
         if question_number:
+            # Check if questions key exists and the question number is valid
+            if "questions" not in test_dict or question_number not in test_dict["questions"]:
+                return jsonify({"error": "Question not found"}), 404
+                
             question_to_send = test_dict["questions"][question_number]
             
-            return jsonify({"question": question_to_send, "test_length": len(test_dict["questions"]), "test_name": test_dict["name"]}), 200
+            return jsonify({
+                "question": question_to_send, 
+                "test_length": len(test_dict["questions"]), 
+                "test_name": test_dict.get("name", "Daily Quiz")
+            }), 200
         else:
-            uid = test_dict["user"]
+            uid = test_dict.get("user")
+            if not uid:
+                return jsonify({"error": "User information missing"}), 400
+                
             user_ref = db.collection("users").document(uid)
             user = user_ref.get()
+            
+            if not user.exists:
+                return jsonify({"error": "User not found"}), 404
+                
             user_dict = user.to_dict()
-            del test_dict["user"]
-            del user_dict['email']
-            del user_dict["dark_theme"]
-            return jsonify({"test": test_dict, "creator": user_dict}), 200
-        
-        
+            
+            # Make a copy of test_dict to modify
+            response_test_dict = test_dict.copy()
+            
+            # Only delete if key exists to avoid KeyError
+            if "user" in response_test_dict:
+                del response_test_dict["user"]
+                
+            # Make a copy of user_dict to modify
+            response_user_dict = user_dict.copy()
+            
+            # Only delete if keys exist to avoid KeyError
+            if "email" in response_user_dict:
+                del response_user_dict["email"]
+            if "dark_theme" in response_user_dict:
+                del response_user_dict["dark_theme"]
+            
+            return jsonify({"test": response_test_dict, "creator": response_user_dict}), 200
 
-    
     if search_query:
-        tests = test_doc_ref.get()
+        tests = db.collection("tests").get()
         
         matching_tests = []
 
@@ -413,7 +453,7 @@ def get_tests():
         print(user_id)
 
 
-        tests = test_doc_ref.get()
+        tests = db.collection("tests").get()
         user_ref = db.collection("users").document(user_id)
         user = user_ref.get()
         user_dict = user.to_dict()
@@ -433,7 +473,7 @@ def get_tests():
         return jsonify({"tests": matching_tests, "creator": user_dict}), 200
 
     
-    tests = test_doc_ref.get()
+    tests = db.collection("tests").get()
     tests = tests[:24]
     test_to_return = []
     for test in tests:
@@ -913,8 +953,277 @@ def get_topic_explanation():
 
 @app.route("/cheatsheet/generate", methods=["POST"])
 def generate_cheatsheet():
-    # Implementation of the endpoint
-    return jsonify({"error": "Endpoint not implemented"}), 501
+    try:
+        # Check for authorization
+        if "Authorization" not in request.headers:
+            return jsonify({"error": "Not authorized"}), 401
+        
+        uid = get_current_user(header=request.headers)
+        if not uid:
+            return jsonify({"error": "Authentication error"}), 401
+        
+        # Get the request data
+        data = request.json
+        
+        # Extract cheatsheet details
+        cheatsheet_name = data.get("name")
+        topics = data.get("topics", [])
+        hint_level = data.get("hint_level", 1)  # 0=Easy, 1=Medium, 2=Hard
+        cheatsheet_size = data.get("size", 1)  # 0=Small, 1=Medium, 2=Large
+        hint_types = data.get("hint_types", [])  # Definitions, Examples, Graphics, Bullets
+        
+        # Validate required fields
+        if not all([cheatsheet_name, topics, hint_types]):
+            return jsonify({"error": "Missing required fields"}), 400
+        
+        # Make sure we have at least one topic
+        if len(topics) == 0:
+            return jsonify({"error": "At least one topic is required"}), 400
+        
+        # Make sure we have at least one hint type
+        if len(hint_types) == 0:
+            return jsonify({"error": "At least one hint type is required"}), 400
+        
+        # Fetch topic content for selected topics
+        topic_content = {}
+        user_doc_ref = db.collection("users").document(uid)
+        user_doc = user_doc_ref.get()
+        
+        if not user_doc.exists:
+            return jsonify({"error": "User not found"}), 404
+        
+        user_data = user_doc.to_dict()
+        user_topics = user_data.get("topics", [])
+        
+        for topic_name in topics:
+            for topic in user_topics:
+                if topic["topic"] == topic_name:
+                    topic_content[topic_name] = topic["text"]
+                    break
+        
+        # Map hint level and size to descriptive terms
+        hint_level_map = {0: "Easy", 1: "Medium", 2: "Hard"}
+        size_map = {0: "3x5 Index Card", 1: "8.5x11 One Side", 2: "8.5x11 Two Sides"}
+        
+        hint_level_desc = hint_level_map.get(hint_level, "Medium")
+        size_desc = size_map.get(cheatsheet_size, "8.5x11 One Side")
+        
+        # Calculate content limits based on size
+        max_content_length = {
+            0: 250,   # 3x5 Index Card - about 250 words
+            1: 500,   # 8.5x11 One Side - about 500 words
+            2: 1000,  # 8.5x11 Two Sides - about 1000 words
+        }.get(cheatsheet_size, 500)
+        
+        # Generate the cheatsheet content using OpenAI
+        from processing import client
+        
+        # Prepare the hint types text
+        hint_types_text = ", ".join(hint_types)
+        
+        # Build the cheatsheet content with OpenAI
+        cheatsheet_content = ""
+        
+        for topic_name, content in topic_content.items():
+            prompt = f"""
+            Create a concise cheatsheet section for the topic "{topic_name}" based on the following content:
+            
+            {content[:2000]}  # Limit content to prevent prompt size issues
+            
+            The cheatsheet should:
+            1. Be formatted for a {size_desc}
+            2. Include {hint_types_text}
+            3. Be at a {hint_level_desc} level of detail
+            4. Be concise and well-organized
+            5. Prioritize the most important information
+            6. Include any formulas, key definitions, and critical concepts
+            
+            Format the response as markdown with clear headings, bullet points, and sections.
+            """
+            
+            try:
+                response = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[
+                        {"role": "system", "content": "You are an expert at creating concise, well-organized study guides and cheatsheets."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=0.7,
+                    max_tokens=1500,
+                )
+                
+                topic_content_generated = response.choices[0].message.content.strip()
+                cheatsheet_content += f"\n\n## {topic_name}\n\n{topic_content_generated}"
+                
+            except Exception as e:
+                print(f"Error generating content for topic {topic_name}: {str(e)}")
+                return jsonify({"error": f"Error generating cheatsheet content: {str(e)}"}), 500
+        
+        # Create the final cheatsheet object
+        cheatsheet = {
+            "user": uid,
+            "name": cheatsheet_name,
+            "topics": topics,
+            "hint_level": hint_level,
+            "hint_level_desc": hint_level_desc,
+            "size": cheatsheet_size,
+            "size_desc": size_desc,
+            "hint_types": hint_types,
+            "content": cheatsheet_content,
+            "created": datetime.now().strftime("%m/%d/%y"),
+            "type": "Cheatsheet"
+        }
+        
+        # Save the cheatsheet to Firestore
+        cheatsheet_ref = db.collection("cheatsheets").add(cheatsheet)
+        cheatsheet_id = cheatsheet_ref[1].id
+        
+        return jsonify({
+            "message": "Cheatsheet generated successfully",
+            "cheatsheet_id": cheatsheet_id,
+            "cheatsheet": cheatsheet
+        }), 201
+        
+    except Exception as e:
+        return jsonify({"error": f"Error generating cheatsheet: {str(e)}"}), 500
+
+@app.route("/cheatsheet/<cheatsheet_id>", methods=["GET"])
+def get_cheatsheet(cheatsheet_id):
+    try:
+        # Check for authorization
+        if "Authorization" not in request.headers:
+            return jsonify({"error": "Not authorized"}), 401
+        
+        uid = get_current_user(header=request.headers)
+        if not uid:
+            return jsonify({"error": "Authentication error"}), 401
+        
+        # Get the cheatsheet from Firestore
+        cheatsheet_doc = db.collection("cheatsheets").document(cheatsheet_id).get()
+        
+        if not cheatsheet_doc.exists:
+            return jsonify({"error": "Cheatsheet not found"}), 404
+        
+        cheatsheet_data = cheatsheet_doc.to_dict()
+        
+        # Verify that the user is authorized to view this cheatsheet
+        if cheatsheet_data.get("user") != uid:
+            return jsonify({"error": "Unauthorized to view this cheatsheet"}), 403
+        
+        # Return the cheatsheet
+        return jsonify({
+            "cheatsheet": cheatsheet_data,
+            "id": cheatsheet_id
+        }), 200
+        
+    except Exception as e:
+        return jsonify({"error": f"Error retrieving cheatsheet: {str(e)}"}), 500
+
+@app.route("/cheatsheets", methods=["GET"])
+def get_user_cheatsheets():
+    try:
+        # Check for authorization
+        if "Authorization" not in request.headers:
+            return jsonify({"error": "Not authorized"}), 401
+        
+        uid = get_current_user(header=request.headers)
+        if not uid:
+            return jsonify({"error": "Authentication error"}), 401
+        
+        # Get all cheatsheets for the user
+        cheatsheets_ref = db.collection("cheatsheets").where("user", "==", uid)
+        cheatsheets = cheatsheets_ref.get()
+        
+        # Format the response
+        cheatsheets_list = []
+        for cheatsheet in cheatsheets:
+            cheatsheet_data = cheatsheet.to_dict()
+            cheatsheet_data["id"] = cheatsheet.id
+            cheatsheets_list.append(cheatsheet_data)
+        
+        return jsonify({
+            "cheatsheets": cheatsheets_list
+        }), 200
+        
+    except Exception as e:
+        return jsonify({"error": f"Error retrieving cheatsheets: {str(e)}"}), 500
+
+@app.route("/cheatsheet/download/<cheatsheet_id>", methods=["GET"])
+def download_cheatsheet(cheatsheet_id):
+    try:
+        # Check for authorization
+        if "Authorization" not in request.headers:
+            return jsonify({"error": "Not authorized"}), 401
+        
+        uid = get_current_user(header=request.headers)
+        if not uid:
+            return jsonify({"error": "Authentication error"}), 401
+        
+        # Get the cheatsheet from Firestore
+        cheatsheet_doc = db.collection("cheatsheets").document(cheatsheet_id).get()
+        
+        if not cheatsheet_doc.exists:
+            return jsonify({"error": "Cheatsheet not found"}), 404
+        
+        cheatsheet_data = cheatsheet_doc.to_dict()
+        
+        # Verify that the user is authorized to download this cheatsheet
+        if cheatsheet_data.get("user") != uid:
+            return jsonify({"error": "Unauthorized to download this cheatsheet"}), 403
+        
+        # Get the cheatsheet content
+        cheatsheet_content = cheatsheet_data.get("content", "")
+        cheatsheet_name = cheatsheet_data.get("name", "cheatsheet")
+        
+        # Create a simple HTML document from the markdown content
+        from flask import make_response
+        import markdown
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>{cheatsheet_name}</title>
+            <style>
+                body {{ 
+                    font-family: Arial, sans-serif;
+                    line-height: 1.6;
+                    max-width: 800px;
+                    margin: 0 auto;
+                    padding: 20px;
+                }}
+                h1 {{ color: #2c3e50; }}
+                h2 {{ color: #3498db; border-bottom: 1px solid #eee; padding-bottom: 5px; }}
+                h3 {{ color: #2980b9; }}
+                ul {{ padding-left: 20px; }}
+                pre {{ background-color: #f8f8f8; padding: 10px; border-radius: 5px; overflow-x: auto; }}
+                code {{ font-family: monospace; }}
+                .formula {{ background-color: #f2f2f2; padding: 5px; border-radius: 3px; }}
+                .definition {{ font-style: italic; }}
+                .important {{ font-weight: bold; color: #e74c3c; }}
+                .page-break {{ page-break-after: always; }}
+                table {{ border-collapse: collapse; width: 100%; }}
+                th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
+                th {{ background-color: #f2f2f2; }}
+                img {{ max-width: 100%; }}
+            </style>
+        </head>
+        <body>
+            <h1>{cheatsheet_name}</h1>
+            {markdown.markdown(cheatsheet_content)}
+        </body>
+        </html>
+        """
+        
+        # Create a response with the HTML content
+        response = make_response(html_content)
+        response.headers["Content-Type"] = "text/html"
+        response.headers["Content-Disposition"] = f"attachment; filename={cheatsheet_name.replace(' ', '_')}.html"
+        
+        return response
+        
+    except Exception as e:
+        return jsonify({"error": f"Error downloading cheatsheet: {str(e)}"}), 500
 
 @app.route("/resources/recommend", methods=["GET"])
 def get_resource_recommendations():
@@ -1031,15 +1340,129 @@ def get_resource_recommendations():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route("/progress/track", methods=["GET"])
+@app.route("/progress", methods=["GET"])
 def get_progress_track():
-    # Implementation of the endpoint
-    return jsonify({"error": "Endpoint not implemented"}), 501
-
-@app.route("/progress/update", methods=["POST"])
-def update_progress():
-    # Implementation of the endpoint
-    return jsonify({"error": "Endpoint not implemented"}), 501
+    try:
+        # Check for authorization
+        if "Authorization" not in request.headers:
+            return jsonify({"error": "Not authorized"}), 401
+        
+        uid = get_current_user(header=request.headers)
+        if not uid:
+            return jsonify({"error": "Authentication error"}), 401
+        
+        # Get user information
+        user_doc = db.collection("users").document(uid).get()
+        if not user_doc.exists:
+            return jsonify({"error": "User not found"}), 404
+        
+        user_data = user_doc.to_dict()
+        user_topics = [t["topic"] for t in user_data.get("topics", [])]
+        
+        # Get submitted tests data
+        submitted_tests_ref = db.collection("submitted_tests").where("user", "==", uid)
+        submitted_tests = submitted_tests_ref.get()
+        
+        # Process test data
+        tests_data = []
+        total_tests = 0
+        total_score = 0
+        topic_performance = {}
+        topic_count = {}
+        daily_quiz_performance = []
+        practice_test_performance = []
+        test_history = []
+        
+        for test in submitted_tests:
+            test_data = test.to_dict()
+            test_id = test.id
+            
+            # Extract basic test info
+            score_percentage = test_data.get("score_percentage", 0)
+            points_earned = test_data.get("points_earned", 0)
+            points_possible = test_data.get("points_possible", 1)  # Avoid division by zero
+            test_date = test_data.get("created", "Unknown")
+            test_name = test_data.get("test_name", f"Test {test_id}")
+            test_type = test_data.get("type", "Practice Test")
+            is_daily = "Daily Quiz" in test_name
+            
+            # Add to test history
+            test_history.append({
+                "id": test_id,
+                "name": test_name,
+                "score": score_percentage,
+                "date": test_date,
+                "type": "Daily Quiz" if is_daily else "Practice Test"
+            })
+            
+            # Update aggregated statistics
+            total_tests += 1
+            total_score += score_percentage
+            
+            # Get the original test to extract topic information
+            original_test_id = test_data.get("original_test_id")
+            if original_test_id:
+                original_test_doc = db.collection("tests").document(original_test_id).get()
+                if original_test_doc.exists:
+                    original_test_data = original_test_doc.to_dict()
+                    test_topics = original_test_data.get("topics", [])
+                    
+                    # Track performance by topic
+                    for topic in test_topics:
+                        if topic not in topic_performance:
+                            topic_performance[topic] = 0
+                            topic_count[topic] = 0
+                        topic_performance[topic] += score_percentage
+                        topic_count[topic] += 1
+                    
+                    # Track performance by test type
+                    if is_daily:
+                        daily_quiz_performance.append({
+                            "date": test_date,
+                            "score": score_percentage
+                        })
+                    else:
+                        practice_test_performance.append({
+                            "date": test_date,
+                            "score": score_percentage
+                        })
+        
+        # Calculate average performance by topic
+        topic_averages = []
+        for topic, score in topic_performance.items():
+            if topic_count[topic] > 0:
+                topic_averages.append({
+                    "topic": topic,
+                    "performance": round(score / topic_count[topic], 1)
+                })
+        
+        # Sort topics by performance (for best/worst)
+        topic_averages.sort(key=lambda x: x["performance"], reverse=True)
+        
+        # Calculate overall statistics
+        avg_score = round(total_score / total_tests, 1) if total_tests > 0 else 0
+        
+        # Create response object
+        progress_data = {
+            "overall_stats": {
+                "total_tests": total_tests,
+                "average_score": avg_score
+            },
+            "topic_performance": topic_averages,
+            "best_topics": topic_averages[:3] if len(topic_averages) >= 3 else topic_averages,
+            "worst_topics": topic_averages[-3:][::-1] if len(topic_averages) >= 3 else sorted(topic_averages, key=lambda x: x["performance"]),
+            "daily_quiz_performance": sorted(daily_quiz_performance, key=lambda x: x["date"]),
+            "practice_test_performance": sorted(practice_test_performance, key=lambda x: x["date"]),
+            "test_history": sorted(test_history, key=lambda x: x["date"], reverse=True)
+        }
+        
+        return jsonify({
+            "progress_data": progress_data,
+            "message": "Successfully retrieved progress data"
+        }), 200
+        
+    except Exception as e:
+        return jsonify({"error": f"Error retrieving progress data: {str(e)}"}), 500
 
 @app.route("/pathway/recommend", methods=["GET"])
 def get_pathway_recommend():
@@ -1048,13 +1471,94 @@ def get_pathway_recommend():
 
 @app.route("/quiz/daily", methods=["GET"])
 def get_daily_quiz():
-    # Implementation of the endpoint
-    return jsonify({"error": "Endpoint not implemented"}), 501
+    # Check for authorization
+    if("Authorization" not in request.headers):
+        return jsonify({'error': 'Not authorized'}), 401
+    
+    uid = get_current_user(header=request.headers)
+    if not uid:
+        return jsonify({"error": "Authentication error"}), 401
+    
+    # Get today's date to check if daily quiz already exists
+    today = datetime.now().strftime("%Y-%m-%d")
+    
+    # Check if user already has a quiz for today in the tests collection
+    tests_ref = db.collection("tests").where("user", "==", uid).where("type", "==", "Daily Quiz").where("date", "==", today)
+    existing_quiz = tests_ref.get()
+    
+    if len(existing_quiz) > 0:
+        # Quiz already exists, return it
+        quiz_doc = existing_quiz[0]
+        quiz_data = quiz_doc.to_dict()
+        quiz_id = quiz_doc.id
+        return jsonify({
+            "message": "Daily quiz retrieved",
+            "quiz_id": quiz_id,
+            "quiz": quiz_data
+        }), 200
+    
+    # Fetch user's topics
+    user_doc_ref = db.collection("users").document(uid)
+    user_doc = user_doc_ref.get()
+    
+    if not user_doc.exists:
+        return jsonify({"error": "User not found"}), 404
+    
+    user_data = user_doc.to_dict()
+    user_topics = user_data.get("topics", [])
+    
+    # Check if user has uploaded any topics
+    if not user_topics or len(user_topics) == 0:
+        return jsonify({"error": "No topics found. Upload study materials first."}), 400
+    
+    # Select 3 random topics (or fewer if user has less than 3)
+    import random
+    num_topics = min(3, len(user_topics))
+    selected_topics = random.sample([topic["topic"] for topic in user_topics], num_topics)
+    
+    # Ensure balanced question types
+    question_types = ["MCQ", "T/F", "SAQ", "SMQ"]
+    
+    # Generate questions with testgenerator.py
+    try:
+        # We'll use "Short" to generate 10 questions
+        questions = generate_test(uid, selected_topics, "Short", "Medium", question_types)
+        
+        # Make sure we have exactly 10 questions
+        question_items = list(questions.items())
+        if len(question_items) > 10:
+            question_items = question_items[:10]
+        questions = {k: v for k, v in question_items}
+        
+        # Create the daily quiz object
+        daily_quiz = {
+            "user": uid,
+            "name": f"Daily Quiz - {today}",
+            "description": f"Daily practice quiz with {len(selected_topics)} topic(s): {', '.join(selected_topics)}",
+            "difficulty": "Medium",
+            "topics": selected_topics,
+            "type": "Daily Quiz",  # Use this to identify daily quizzes
+            "question_types": question_types,
+            "test_length": "Short",  # Always short for daily quizzes
+            "questions": questions,
+            "date": today,
+            "created": datetime.now().strftime("%m/%d/%y"),
+            "is_daily": True  # Additional field to easily identify daily quizzes
+        }
+        
+        # Save the generated quiz in the regular tests collection
+        quiz_ref = db.collection("tests").add(daily_quiz)
+        quiz_id = quiz_ref[1].id
+        
+        return jsonify({
+            "message": "Daily quiz generated successfully",
+            "quiz_id": quiz_id,
+            "quiz": daily_quiz
+        }), 201
+        
+    except Exception as e:
+        return jsonify({"error": f"Error generating daily quiz: {str(e)}"}), 500
 
-@app.route("/quiz/submit", methods=["POST"])
-def submit_daily_quiz():
-    # Implementation of the endpoint
-    return jsonify({"error": "Endpoint not implemented"}), 501
 
 @app.route("/tests/share", methods=["POST"])
 def share_test():
@@ -1066,10 +1570,46 @@ def download_test():
     # Implementation of the endpoint
     return jsonify({"error": "Endpoint not implemented"}), 501
 
-@app.route("/tests/feedback", methods=["POST"])
-def submit_test_feedback():
-    # Implementation of the endpoint
-    return jsonify({"error": "Endpoint not implemented"}), 501
+@app.route("/feedback", methods=["POST"])
+def submit_feedback():
+    try:
+        # Check for authorization
+        if "Authorization" not in request.headers:
+            return jsonify({"error": "Not authorized"}), 401
+        
+        uid = get_current_user(header=request.headers)
+        if not uid:
+            return jsonify({"error": "Authentication error"}), 401
+        
+        # Get the feedback data
+        data = request.json
+        feedback_topic = data.get("topic")
+        feedback_content = data.get("content")
+        
+        # Validate required fields
+        if not feedback_topic or not feedback_content:
+            return jsonify({"error": "Missing required fields"}), 400
+            
+        # Create feedback object
+        feedback = {
+            "user": uid,
+            "topic": feedback_topic,
+            "content": feedback_content,
+            "created": datetime.now().strftime("%m/%d/%y"),
+            "status": "pending"  # pending, reviewed, resolved
+        }
+        
+        # Save the feedback to Firestore
+        feedback_ref = db.collection("feedback").add(feedback)
+        feedback_id = feedback_ref[1].id
+        
+        return jsonify({
+            "message": "Feedback submitted successfully",
+            "feedback_id": feedback_id
+        }), 201
+        
+    except Exception as e:
+        return jsonify({"error": f"Error submitting feedback: {str(e)}"}), 500
 
 @app.route("/submitted-tests/<submission_id>", methods=["GET"])
 def get_submitted_test(submission_id):

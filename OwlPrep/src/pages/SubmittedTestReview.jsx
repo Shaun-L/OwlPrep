@@ -6,6 +6,7 @@ import MultipleChoice from "../components/MultipleChoice";
 import ShortAnswer from "../components/ShortAnswer";
 import SelectMany from "../components/SelectMany";
 import TrueOrFalse from "../components/TrueOrFalse";
+import "../styles/SubmittedTestReview.css";
 
 export default function SubmittedTestReview() {
     const { submission_id, question_id } = useParams();
@@ -197,6 +198,12 @@ export default function SubmittedTestReview() {
 
     return (
         <div className="submitted-test-review-container">
+            <div className="navigation-bar">
+                <Link to="/" className="nav-link home-link">Home</Link>
+                <Link to="/submitted-tests" className="nav-link">All Tests</Link>
+                <Link to={`/test-results/${submission_id}`} className="nav-link">Test Overview</Link>
+            </div>
+            
             <div className="main-content">
                 <div className="test-header">
                     <h1>{testData.test_name}</h1>
@@ -210,12 +217,12 @@ export default function SubmittedTestReview() {
 
                 <div className="navigation-buttons">
                     {previousQuestion > 0 && (
-                        <Link to={`/submitted-tests/${submission_id}/review/${previousQuestion}`} className="nav-button">
+                        <Link to={`/submitted-tests/${submission_id}/review/${previousQuestion}`} className="nav-button prev-button">
                             Previous Question
                         </Link>
                     )}
                     {nextQuestion <= totalQuestions && (
-                        <Link to={`/submitted-tests/${submission_id}/review/${nextQuestion}`} className="nav-button">
+                        <Link to={`/submitted-tests/${submission_id}/review/${nextQuestion}`} className="nav-button next-button">
                             Next Question
                         </Link>
                     )}
@@ -227,9 +234,14 @@ export default function SubmittedTestReview() {
                 <div className="question-links">
                     {questionLinks}
                 </div>
-                <Link to={`/submitted-tests`} className="back-to-results">
-                    Back to Results
-                </Link>
+                <div className="sidebar-actions">
+                    <Link to={`/test-results/${submission_id}`} className="overview-link">
+                        View Test Overview
+                    </Link>
+                    <Link to={`/submitted-tests`} className="back-to-results">
+                        Back to All Tests
+                    </Link>
+                </div>
             </div>
         </div>
     );

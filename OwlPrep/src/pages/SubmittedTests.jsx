@@ -70,9 +70,14 @@ export default function SubmittedTests() {
     return (
         <div className="submitted-tests-container">
             <h1>Submitted Tests</h1>
+            <div className="back-navigation">
+                <button onClick={() => navigate('/')} className="back-home-btn">
+                    Back to Home
+                </button>
+            </div>
             <div className="submitted-tests-grid">
                 {submittedTests.map((test) => (
-                    <div key={test.id} className="submitted-test-card" onClick={() => navigate(`/test-results/${test.id}`)}>
+                    <div key={test.id} className="submitted-test-card">
                         <div className="test-header">
                             <h2>{test.test_name}</h2>
                             <span className={`difficulty-badge ${test.difficulty.toLowerCase()}`}>
@@ -84,10 +89,13 @@ export default function SubmittedTests() {
                             <ProgressBar 
                                 progress={test.score_percentage} 
                                 radius={40}
-                                strokeWidth={8}
-                                strokeColor={test.score_percentage >= 70 ? "#4CAF50" : test.score_percentage >= 50 ? "#FFA726" : "#EF5350"}
-                                trackStrokeWidth={8}
+                                strokeWidth={6}
+                                trackStrokeWidth={6}
                                 trackStrokeColor="#e6e6e6"
+                                trackStrokeLinecap="round"
+                                strokeLinecap="round"
+                                pointerRadius={0}
+                                initialAnimation={true}
                             />
                             <div className="score-text">
                                 <h3>{test.score_percentage}%</h3>
@@ -110,12 +118,13 @@ export default function SubmittedTests() {
                         </div>
 
                         <div className="test-actions">
+                            <Link to={`/test-results/${test.id}`} className="overview-button">
+                                Test Overview
+                            </Link>
                             <Link to={`/submitted-tests/${test.id}/review/1`} className="review-button">
-                                Review Test
+                                Review Questions
                             </Link>
                         </div>
-
-                        <button className="view-results-btn">View Results</button>
                     </div>
                 ))}
             </div>

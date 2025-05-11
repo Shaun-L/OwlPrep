@@ -1,8 +1,9 @@
 import { useEffect, useState, useContext } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { TokenContext } from "../hooks/TokenContext";
 import { TailSpin } from "react-loader-spinner";
 import ProgressBar from 'react-customizable-progressbar';
+import "../styles/TestResults.css";
 
 export default function TestResults() {
     const { submission_id } = useParams();
@@ -27,11 +28,10 @@ export default function TestResults() {
                 }
 
                 const data = await response.json();
-                console.log("Received test results:", data); // Debug log
                 setTestResults(data);
                 setLoading(false);
             } catch (err) {
-                console.error("Error fetching results:", err); // Debug log
+                console.error("Error fetching results:", err);
                 setError(err.message);
                 setLoading(false);
             }
@@ -60,71 +60,123 @@ export default function TestResults() {
         return <div className="error-container">No results found</div>;
     }
 
-    // Debug log to see the structure of testResults
-    console.log("Rendering with testResults:", testResults);
-
-    // Ensure questions is an array before mapping
-    const questions = Array.isArray(testResults.questions) ? testResults.questions : [];
+    // Calculate correct and incorrect counts
+    const questionsObj = testResults.questions || {};
+    const questions = Object.entries(questionsObj).map(([id, data]) => ({
+        id: parseInt(id),
+        ...data
+    })).sort((a, b) => a.id - b.id);
+    
+    const correctCount = questions.filter(q => 
+        q.points_awarded === q.points_possible).length;
+    const incorrectCount = questions.length - correctCount;
 
     return (
         <div className="test-results-container">
-            <h1>Test Results</h1>
+            <div className="navigation-bar">
+                <Link to="/" className="nav-link home-link">Home</Link>
+                <Link to="/submitted-tests" className="nav-link">All Tests</Link>
+            </div>
+            
+            <h1>{testResults.test_name} - Results</h1>
             
             <div className="results-summary">
-                <div className="score-display">
-                    <ProgressBar 
-                        progress={testResults.score_percentage} 
-                        radius={100}
-                        strokeWidth={10}
-                        strokeColor="#4CAF50"
-                        trackStrokeWidth={10}
-                        trackStrokeColor="#e6e6e6"
-                    />
-                    <div className="score-text">
-                        <h2>{testResults.score_percentage}%</h2>
-                        <p>Score</p>
+                <div className="score-card">
+                    <div className="score-display">
+                        <ProgressBar 
+                            progress={testResults.score_percentage} 
+                            radius={50}
+                            strokeWidth={8}
+                            trackStrokeWidth={8}
+                            trackStrokeColor="#e6e6e6"
+                            trackStrokeLinecap="round"
+                            strokeLinecap="round"
+                            pointerRadius={0}
+                            initialAnimation={true}
+                        />
+                        <div className="score-text">
+                            <h2>{testResults.score_percentage}%</h2>
+                        </div>
+                    </div>
+                    
+                    <div className="score-details">
+                        <div className="stat-item">
+                            <span className="label">Points:</span>
+                            <span className="value">{testResults.points_earned} / {testResults.points_possible}</span>
+                        </div>
+                        <div className="stat-item">
+                            <span className="label">Correct:</span>
+                            <span className="value correct-count">{correctCount}</span>
+                        </div>
+                        <div className="stat-item">
+                            <span className="label">Incorrect:</span>
+                            <span className="value incorrect-count">{incorrectCount}</span>
+                        </div>
                     </div>
                 </div>
 
                 <div className="results-details">
-                    <h2>{testResults.test_name}</h2>
-                    <p>{testResults.test_description}</p>
+                    {testResults.test_description && (
+                        <div className="description-container">
+                            <h3>Description</h3>
+                            <p>{testResults.test_description}</p>
+                        </div>
+                    )}
                     
-                    <div className="stats-grid">
-                        <div className="stat-item">
-                            <h3>Points Earned</h3>
-                            <p>{testResults.points_earned} / {testResults.points_possible}</p>
+                    <div className="topics-container">
+                        <h3>Topics</h3>
+                        <div className="topics-list">
+                            {Array.isArray(testResults.topics) && testResults.topics.map((topic, index) => (
+                                <span key={index} className="topic-badge">{topic}</span>
+                            ))}
                         </div>
-                        <div className="stat-item">
-                            <h3>Topics</h3>
-                            <p>{Array.isArray(testResults.topics) ? testResults.topics.join(", ") : ""}</p>
-                        </div>
-                        <div className="stat-item">
-                            <h3>Question Types</h3>
-                            <p>{Array.isArray(testResults.question_types) ? testResults.question_types.join(", ") : ""}</p>
+                    </div>
+                    
+                    <div className="question-types-container">
+                        <h3>Question Types</h3>
+                        <div className="question-types-list">
+                            {Array.isArray(testResults.question_types) && testResults.question_types.map((type, index) => (
+                                <span key={index} className="question-type-badge">{type}</span>
+                            ))}
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="questions-review">
-                <h2>Question Review</h2>
-                {questions.map((question, index) => (
-                    <div key={index} className={`question-review ${question.score < 1 ? 'incorrect' : 'correct'}`}>
-                        <h3>Question {index + 1}</h3>
-                        <p className="question-text">{question.question}</p>
-                        <div className="answer-details">
-                            <p><strong>Your Answer:</strong> {question.user_answer}</p>
-                            <p><strong>Correct Answer:</strong> {question.correct_answer}</p>
-                            <p><strong>Score:</strong> {question.score} points</p>
-                        </div>
-                    </div>
-                ))}
+            <div className="results-actions">
+                <Link to={`/submitted-tests/${submission_id}/review/1`} className="review-button">
+                    Review Questions
+                </Link>
+                {testResults.original_test_id && (
+                    <Link to={`/tests/${testResults.original_test_id}`} className="retake-button">
+                        Retake Test
+                    </Link>
+                )}
+                <Link to="/submitted-tests" className="back-button">
+                    Back to All Tests
+                </Link>
             </div>
 
-            <div className="actions">
-                <button onClick={() => navigate('/')} className="mainBtn">Back to Home</button>
-                <button onClick={() => navigate(`/tests/${testResults.original_test_id}`)} className="mainBtn">Review Test</button>
+            <div className="questions-summary">
+                <h2>Questions Overview</h2>
+                <div className="questions-grid">
+                    {questions.map((question) => {
+                        const isCorrect = question.points_awarded === question.points_possible;
+                        return (
+                            <Link 
+                                key={question.id} 
+                                to={`/submitted-tests/${submission_id}/review/${question.id}`}
+                                className={`question-card ${isCorrect ? 'correct' : 'incorrect'}`}
+                            >
+                                <div className="question-number">Question {question.id}</div>
+                                <div className="question-score">
+                                    <span>{question.points_awarded} / {question.points_possible}</span>
+                                    <div className={`status-indicator ${isCorrect ? 'correct' : 'incorrect'}`}></div>
+                                </div>
+                            </Link>
+                        );
+                    })}
+                </div>
             </div>
         </div>
     );

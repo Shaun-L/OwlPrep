@@ -19,6 +19,7 @@ export default function Question(){
     const [loading, setLoading] = useState(true)
     const [errorMsg, setErrorMsg] = useState("")
     const [answer, setAnswer] = useState(null)
+    const [submitting, setSubmitting] = useState(false)
     const { token } = useContext(TokenContext)
     const navigate = useNavigate()
 
@@ -87,6 +88,9 @@ export default function Question(){
                 return;
             }
 
+            // Show loading indicator
+            setSubmitting(true);
+
             // Collect all answers
             const answers = Array.from({ length: testLength }, (_, i) => {
                 const answer = sessionStorage.getItem(`${test_id}/${i + 1}`);
@@ -124,6 +128,7 @@ export default function Question(){
             // Redirect to test results page
             navigate(`/test-results/${data.submission_id}`);
         } catch (error) {
+            setSubmitting(false);
             setErrorMsg("Error submitting test: " + error.message);
         }
     }
@@ -156,6 +161,27 @@ export default function Question(){
   sessionStorage.getItem(`${test_id}/${i + 1}`) ? "answered" : ""
 }${(i + 1).toString() === question_id ? " current" : ""}`}>{`Question ${i+1}`}</Link>
 })
+
+    if (submitting) {
+        return (
+            <div className="submission-loading-container">
+                <div className="submission-loading-content">
+                    <img 
+                        src="/favicon.png" 
+                        alt="OwlPrep Mascot" 
+                        className="loading-mascot"
+                        style={{ width: '120px', marginBottom: '20px' }}
+                    />
+                    <h2>Grading Your Test</h2>
+                    <p>This may take a minute as our AI grader evaluates your answers...</p>
+                    <div className="spinner-container">
+                        <TailSpin visible={true} height="60" width="60" color={getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim()} ariaLabel="tail-spin-loading" radius="1" />
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return(
         <>
         <div className="questionPageContainer">
@@ -170,7 +196,7 @@ export default function Question(){
 
                 {
                 loading ? <div style={{ marginTop: "80px", marginLeft: "5px" }}>
-                <TailSpin   visible={true} height="40" width="40" color={getComputedStyle(root).getPropertyValue('--secondary-text-color').trim()} ariaLabel="tail-spin-loading" radius="1" wrapperStyle={{}} wrapperClass="loader" />
+                <TailSpin visible={true} height="40" width="40" color={getComputedStyle(document.documentElement).getPropertyValue('--secondary-text-color').trim()} ariaLabel="tail-spin-loading" radius="1" wrapperStyle={{}} wrapperClass="loader" />
                 
             </div> : <><div className="questionContainer">
                     <div className="questionContainerTitle">Question {question_id}</div>

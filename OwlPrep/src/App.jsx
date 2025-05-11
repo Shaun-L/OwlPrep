@@ -35,6 +35,9 @@ import Feedback from "./pages/Feedback";
 import Secure from "./components/Secure";
 import SubmittedTests from "./pages/SubmittedTests";
 import SubmittedTestReview from "./pages/SubmittedTestReview";
+import DailyQuiz from "./pages/DailyQuiz";
+import CreateCheatsheet from "./pages/CreateCheatsheet";
+import CheatsheetView from "./pages/CheatsheetView";
 
 function App() {
   const dropdown = useRef(null)
@@ -411,11 +414,14 @@ function App() {
           <Route path="saves" element={<Saves></Saves>}></Route>
           <Route path="progress" element={<Progress></Progress>}></Route>
           <Route path="/create-test" element={<CreateTest topics={topics} uploadedFiles={uploadedFiles} handleToggleFile={changeUploadedFiles} changeTopics={changeTopics} changeAlertText={setAlertText} changeAlertShow={setShowAlert}/>}></Route>
+          <Route path="/create-cheatsheet" element={<CreateCheatsheet topics={topics} uploadedFiles={uploadedFiles} handleToggleFile={changeUploadedFiles} changeTopics={changeTopics} changeUploadedFiles={changeUploadedFiles} changeAlertText={setAlertText} changeAlertShow={setShowAlert}/>}></Route>
+          <Route path="/cheatsheet/:id" element={<CheatsheetView />}></Route>
           <Route path="/settings" element={<Settings theme={darkTheme} selectThemeChange={selectThemeChange} changeUsername={setUsername}/>}></Route>
           <Route path="/tests/:test_id/:question_id" element={<Question/>}></Route>
           <Route path="/test-results/:submission_id" element={<TestResults/>}></Route>
           <Route path="/submitted-tests" element={<SubmittedTests />} />
           <Route path="/submitted-tests/:submission_id/review/:question_id" element={<SubmittedTestReview />} />
+          <Route path="/daily-quiz" element={<DailyQuiz />} />
         </Route>
         
         

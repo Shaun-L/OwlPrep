@@ -11,6 +11,7 @@ import SampleQuestionModal from "../components/SampleQuestionModal";
 import SampleQuestionItem from "../components/SampleQuestionItem";
 import FileUploadedComponent from "../components/FileUploadedComponent";
 import { TokenContext } from "../hooks/TokenContext";
+import { TailSpin } from "react-loader-spinner";
 
 export default function CreateTest({topics, uploadedFiles, changeUploadedFiles, changeTopics, handleToggleFile, changeAlertText, changeAlertShow}){
     const [testName, setTestName] = useState("");
@@ -25,6 +26,7 @@ export default function CreateTest({topics, uploadedFiles, changeUploadedFiles, 
     const [errorMsg, setErrorMsg] = useState("")
     const [description, setDescription] = useState("")
     const [smSelected, setSMSelected] = useState(true)
+    const [generating, setGenerating] = useState(false)
     const {token, setToken} = useContext(TokenContext)
     const navigate = useNavigate()
 
@@ -87,54 +89,53 @@ export default function CreateTest({topics, uploadedFiles, changeUploadedFiles, 
             description: description
         }
 
-        const res = await fetch(" http://127.0.0.1:5000/tests", {
-            method: "POST",
-            headers: {
-                'content-type': 'application/json',
-                "Authorization": `Bearer ${token}`, // Attach the Bearer token
-            },
-            body: JSON.stringify(dataBody)
-        })
+        // Show loading indicator
+        setGenerating(true);
 
-        const data = await res.json()
-        console.log(res)
-        console.log(data)
+        try {
+            const res = await fetch(" http://127.0.0.1:5000/tests", {
+                method: "POST",
+                headers: {
+                    'content-type': 'application/json',
+                    "Authorization": `Bearer ${token}`, // Attach the Bearer token
+                },
+                body: JSON.stringify(dataBody)
+            });
 
-        if(res.status == 201){
-            setTimeout(()=>{changeAlertShow(false)}, 1500)
-            setTestName("");
-            setDiff(0)
-            setLength(0)
-            setMCSelected(true)
-            setTFSelected(true)
-            setSASelected(true)
-            setSampleQuestions([])
-            setShowSampleQuestionModal(false)
-            setFormError(false)
-            setErrorMsg("")
-            setDescription("")
-            setSMSelected(true)
-            changeAlertText(data.message)
-            changeAlertShow(true)
+            const data = await res.json();
+            console.log(res);
+            console.log(data);
+
+            if(res.status == 201){
+                setTimeout(()=>{changeAlertShow(false)}, 1500);
+                setTestName("");
+                setDiff(0);
+                setLength(0);
+                setMCSelected(true);
+                setTFSelected(true);
+                setSASelected(true);
+                setSampleQuestions([]);
+                setShowSampleQuestionModal(false);
+                setFormError(false);
+                setErrorMsg("");
+                setDescription("");
+                setSMSelected(true);
+                changeAlertText(data.message);
+                changeAlertShow(true);
+                
+                // Navigate to the test
+                navigate(`/tests/${data.test_id}/1`);
+            } else {
+                setGenerating(false);
+                setErrorMsg(data.error || "Error generating test");
+                setFormError(true);
+            }
+        } catch (error) {
+            setGenerating(false);
+            console.error("Error generating test:", error);
+            setErrorMsg("Failed to generate test. Please try again.");
+            setFormError(true);
         }
-
-
-
-    
-
-        
-
-        // const newDoc = await addDoc(collection(db, 'tests'),{
-        //     creator: "Freddy",
-        //     name: testName,
-        //     type: "Practice Test",
-        //     difficulty: diff,
-        //     questionTypes: questionTypeList,
-        //     questions: [],
-        //     topics: filteredTopics
-        // }).then(()=>{
-        
-        // }).catch((err)=>alert(err))
     }
 
     function deleteSampleQuestion(question){
@@ -154,6 +155,26 @@ export default function CreateTest({topics, uploadedFiles, changeUploadedFiles, 
     const fileSelectors = uploadedFiles.map(file => {
         return <FileUploadedComponent key={file.name}  filename={file.name} filesize={byteConverter(file.size)} handleToggleFile={handleToggleFile} keep={file.keep}/>
       })
+
+    if (generating) {
+        return (
+            <div className="generation-loading-container">
+                <div className="generation-loading-content">
+                    <img 
+                        src="/favicon.png" 
+                        alt="OwlPrep Mascot" 
+                        className="loading-mascot"
+                        style={{ width: '120px', marginBottom: '20px' }}
+                    />
+                    <h2>Generating Your Test</h2>
+                    <p>This may take a minute as our AI analyzes your materials and creates questions...</p>
+                    <div className="spinner-container">
+                        <TailSpin visible={true} height="60" width="60" color={getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim()} ariaLabel="tail-spin-loading" radius="1" />
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
     <>

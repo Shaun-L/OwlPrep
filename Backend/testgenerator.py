@@ -321,10 +321,25 @@ def generate_test(user, topics, test_length, difficulty, question_types):
     logging.info(f"Generating test for user: {user} | Topics: {topics} | Test Length: {test_length} | Difficulty: {difficulty} | Question Types: {question_types}")
 
     test = {"questions": {}}  # Store questions as a dictionary
-    num_questions = {"Short": 5, "Medium": 10, "Long": 15}.get(test_length, 10)
+    num_questions = {"Short": 10, "Medium": 15, "Long": 20}.get(test_length, 10)
 
     question_number = 1  # Track question numbers
     current_question_pull = []  # Maintain a list of already generated questions
+    
+    # Calculate how many questions to generate per topic
+    questions_per_topic = num_questions // len(topics)
+    
+    # Calculate how many questions to generate per question type within each topic
+    questions_per_type = {}
+    if len(question_types) > 0:
+        # Distribute question types evenly
+        base_count = questions_per_topic // len(question_types)
+        remainder = questions_per_topic % len(question_types)
+        
+        for i, q_type in enumerate(question_types):
+            questions_per_type[q_type] = base_count + (1 if i < remainder else 0)
+
+    total_questions_generated = 0
 
     for topic in topics:
         logging.debug(f"Fetching text for topic: {topic}")
@@ -334,19 +349,28 @@ def generate_test(user, topics, test_length, difficulty, question_types):
             logging.warning(f"No text found for topic: {topic} (Skipping)")
             continue  # Skip if no text found
 
-        num_questions_per_topic = num_questions // len(topics)
-        logging.debug(f"Generating {num_questions_per_topic} questions for topic: {topic}")
-
-        for _ in range(num_questions_per_topic):  # Distribute questions across topics
-            for q_type in question_types:
-                logging.debug(f"Generating {q_type} question for topic: {topic}")
-
+        # Generate questions for each question type
+        for q_type in question_types:
+            # Skip if we've already reached our quota for this question type
+            if questions_per_type.get(q_type, 0) <= 0:
+                continue
+                
+            logging.debug(f"Generating {questions_per_type[q_type]} {q_type} questions for topic: {topic}")
+            
+            for _ in range(questions_per_type[q_type]):
+                # Stop if we've hit our total question limit
+                if total_questions_generated >= num_questions:
+                    break
+                    
                 question_data = generate_question(topic, text, q_type, difficulty, current_question_pull)
                 if not question_data:
                     logging.warning(f"No questions generated for topic: {topic}, type: {q_type}")
                     continue
 
                 for q in question_data:
+                    if total_questions_generated >= num_questions:
+                        break
+                        
                     logging.debug(f"Generated Question {question_number}: {q['question']}")
 
                     test["questions"][str(question_number)] = {
@@ -358,6 +382,11 @@ def generate_test(user, topics, test_length, difficulty, question_types):
                     }
                     current_question_pull.append(q["question"])  # Avoid duplicates
                     question_number += 1  # Increment question number
+                    total_questions_generated += 1
+        
+        # Move to the next topic if we've hit our quota
+        if total_questions_generated >= num_questions:
+            break
 
     logging.info(f"Test generation complete. Total questions: {len(test['questions'])}")
     return test["questions"] # I got lazy

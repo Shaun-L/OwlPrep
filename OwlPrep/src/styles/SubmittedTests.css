@@ -19,8 +19,8 @@
     background-color: var(--secondary-bg-color);
     border-radius: 8px;
     padding: 1.5rem;
-    cursor: pointer;
     transition: transform 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .submitted-test-card:hover {
@@ -58,7 +58,7 @@
 }
 
 .difficulty-badge.hard {
-    background-color: #ef5350;
+    background-color: var(--error-color);
     color: white;
 }
 
@@ -67,19 +67,26 @@
     width: 100px;
     height: 100px;
     margin: 0 auto 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Override progress bar stroke color */
+circle.RCP__progress {
+    stroke: var(--primary-color);
 }
 
 .score-text {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     text-align: center;
+    z-index: 2;
 }
 
 .score-text h3 {
     margin: 0;
     color: var(--primary-text-color);
+    font-size: 1.5rem;
 }
 
 .test-details {
@@ -97,46 +104,72 @@
     font-weight: bold;
 }
 
+.detail-item .value {
+    color: var(--primary-text-color);
+}
+
 .test-actions {
     margin-top: 1rem;
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.overview-button, .review-button {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 500;
+    text-align: center;
+    transition: all 0.2s ease;
+    flex: 1;
+}
+
+.overview-button {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.overview-button:hover {
+    background-color: var(--accent-hover-color);
 }
 
 .review-button {
-    padding: 0.8rem 1.5rem;
     background-color: var(--accent-color);
     color: white;
-    text-decoration: none;
-    border-radius: 6px;
-    transition: background-color 0.2s ease;
 }
 
 .review-button:hover {
     background-color: var(--accent-hover-color);
 }
 
-.view-results-btn {
-    width: 100%;
-    padding: 0.8rem;
-    margin-top: 1rem;
-    background-color: var(--primary-bg-color);
-    color: var(--primary-text-color);
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
+.back-navigation {
+    margin-bottom: 2rem;
 }
 
-.view-results-btn:hover {
-    background-color: var(--hover-color);
+.back-home-btn {
+    padding: 0.5rem 1rem;
+    background-color: var(--search-background);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--primary-text-color);
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.back-home-btn:hover {
+    background-color: var(--hover-background);
 }
 
 .no-tests-message {
     text-align: center;
-    padding: 3rem;
+    padding: 2rem;
     background-color: var(--secondary-bg-color);
     border-radius: 8px;
+    margin-top: 2rem;
 }
 
 .no-tests-message p {
@@ -145,11 +178,12 @@
 }
 
 .mainBtn {
-    padding: 0.8rem 1.5rem;
-    background-color: var(--accent-color);
-    color: white;
+    padding: 0.75rem 1.5rem;
     border: none;
-    border-radius: 6px;
+    border-radius: 4px;
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
@@ -168,7 +202,7 @@
 .error-container {
     text-align: center;
     padding: 2rem;
-    color: #f44336;
+    color: var(--error-color);
     background-color: rgba(244, 67, 54, 0.1);
     border-radius: 8px;
     margin: 2rem;
