@@ -25,7 +25,16 @@ export default function Saves(){
         getSaves()
     }, [])
 
-    const itemMapped = items.map((item)=><StudyItemContainer title={item.test.name} type={item.test.type} creator={item.creator.username} profileImg={item.creator.img_url} key={item.test.id} id={item.test.id}/>)
+    const itemMapped = items.map((item)=><StudyItemContainer 
+        title={item.test.name} 
+        type={item.test.type} 
+        creator={item.creator.username} 
+        profileImg={item.creator.img_url} 
+        key={item.test.id} 
+        id={item.test.id}
+        difficulty={item.test.difficulty}
+        test_length={item.test.test_length}
+    />)
     return(<>
     <h1>Saves</h1>
 

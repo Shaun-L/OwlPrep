@@ -6,9 +6,6 @@ import { collection, addDoc } from "firebase/firestore";
 import { redirect, useNavigate } from "react-router-dom";
 import FileUploadComponent from "../components/FileUploadComponent";
 import { byteConverter } from "../utils/byteconverter";
-import sampleQuestionModal from "../components/SampleQuestionModal";
-import SampleQuestionModal from "../components/SampleQuestionModal";
-import SampleQuestionItem from "../components/SampleQuestionItem";
 import FileUploadedComponent from "../components/FileUploadedComponent";
 import { TokenContext } from "../hooks/TokenContext";
 import { TailSpin } from "react-loader-spinner";
@@ -20,8 +17,6 @@ export default function CreateTest({topics, uploadedFiles, changeUploadedFiles, 
     const [mcSelected, setMCSelected] = useState(true)
     const [tfSelected, setTFSelected] = useState(true)
     const [saSelected, setSASelected] = useState(true)
-    const [sampleQuestions, setSampleQuestions] = useState([])
-    const [showSampleQuestionModal, setShowSampleQuestionModal] = useState(false)
     const [formError, setFormError] = useState(false)
     const [errorMsg, setErrorMsg] = useState("")
     const [description, setDescription] = useState("")
@@ -32,7 +27,7 @@ export default function CreateTest({topics, uploadedFiles, changeUploadedFiles, 
 
     useEffect(()=>{
         setFormError(false)
-    }, [uploadedFiles, topics, mcSelected, tfSelected, sampleQuestions, smSelected, saSelected, diff, length])
+    }, [uploadedFiles, topics, mcSelected, tfSelected, smSelected, saSelected, diff, length])
 
     async function submitTestForm(){
         console.log(mcSelected,tfSelected,saSelected)
@@ -114,8 +109,6 @@ export default function CreateTest({topics, uploadedFiles, changeUploadedFiles, 
                 setMCSelected(true);
                 setTFSelected(true);
                 setSASelected(true);
-                setSampleQuestions([]);
-                setShowSampleQuestionModal(false);
                 setFormError(false);
                 setErrorMsg("");
                 setDescription("");
@@ -137,18 +130,6 @@ export default function CreateTest({topics, uploadedFiles, changeUploadedFiles, 
             setFormError(true);
         }
     }
-
-    function deleteSampleQuestion(question){
-        console.log(question)
-        setSampleQuestions(old=>old.filter(val=>val.question!==question))
-    }
-
-
-    function closeModal(){
-        setShowSampleQuestionModal(false);
-    }
-
-    
 
     console.log(topics)
 
@@ -178,7 +159,6 @@ export default function CreateTest({topics, uploadedFiles, changeUploadedFiles, 
 
     return (
     <>
-    {showSampleQuestionModal && <SampleQuestionModal closeModal={closeModal} setSampleQuestions={setSampleQuestions} sampleQuestions={sampleQuestions} onDelete={deleteSampleQuestion}/>}
     <div id="createTestPageContainer">
         <div>
             <h1>Generate a practice test</h1>
@@ -229,15 +209,6 @@ export default function CreateTest({topics, uploadedFiles, changeUploadedFiles, 
                     <label className="checkbox-label custom-checkbox"><input type="checkbox" onChange={()=>setTFSelected(!tfSelected)}  name="question-type" value="true or false" checked={tfSelected}></input><span className="custom-check"></span>True or False</label>
                     <label className="checkbox-label custom-checkbox"><input type="checkbox" onChange={()=>setSASelected(!saSelected)}  name="question-type" value="short answer" checked={saSelected}></input><span className="custom-check"></span>Short Answer</label>
                     <label className="checkbox-label custom-checkbox"><input type="checkbox" onChange={()=>setSMSelected(!smSelected)}  name="question-type" value="select many" checked={smSelected}></input><span className="custom-check"></span>Select Many</label>
-            </div>
-
-            <div className="sampleQuestionFormField">
-                <div className="flex"><p className="form-heading">Sample Question:</p> <button onClick={()=>{setShowSampleQuestionModal(true)}}className="button addQuestionBtn" type="button">+</button></div>
-                <div className="sampleQuestionContainer">
-                {
-                    sampleQuestions.length == 0 ? <p>Custom questions will be shown here</p> : sampleQuestions.map((val, i)=><SampleQuestionItem questionNumber={i+1} question={val.question} onDelete={deleteSampleQuestion}/>)}
-                </div>
-
             </div>
 
             <div className="topics-in-grid">

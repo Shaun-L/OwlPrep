@@ -13,6 +13,13 @@ logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
 
+# Define test length thresholds
+TEST_LENGTH_QUESTIONS = {
+    "Short": 10,    # Short tests have exactly 10 questions
+    "Medium": 15,   # Medium tests have exactly 15 questions
+    "Long": 20      # Long tests have exactly 20 questions
+}
+
 def fetch_topic_text(topic_name, user):
     """
     Fetch the topic text from Firestore based on the topic name, looking in the user's document.
@@ -321,13 +328,14 @@ def generate_test(user, topics, test_length, difficulty, question_types):
     logging.info(f"Generating test for user: {user} | Topics: {topics} | Test Length: {test_length} | Difficulty: {difficulty} | Question Types: {question_types}")
 
     test = {"questions": {}}  # Store questions as a dictionary
-    num_questions = {"Short": 10, "Medium": 15, "Long": 20}.get(test_length, 10)
+    num_questions = TEST_LENGTH_QUESTIONS.get(test_length, 10)
 
     question_number = 1  # Track question numbers
     current_question_pull = []  # Maintain a list of already generated questions
     
     # Calculate how many questions to generate per topic
     questions_per_topic = num_questions // len(topics)
+    extra_questions = num_questions % len(topics)
     
     # Calculate how many questions to generate per question type within each topic
     questions_per_type = {}
@@ -341,7 +349,8 @@ def generate_test(user, topics, test_length, difficulty, question_types):
 
     total_questions_generated = 0
 
-    for topic in topics:
+    # First pass: distribute questions according to initial allocation
+    for topic_index, topic in enumerate(topics):
         logging.debug(f"Fetching text for topic: {topic}")
         text = fetch_topic_text(topic, user)  # Fetch topic text from Firestore
 
@@ -349,15 +358,23 @@ def generate_test(user, topics, test_length, difficulty, question_types):
             logging.warning(f"No text found for topic: {topic} (Skipping)")
             continue  # Skip if no text found
 
+        # Add extra question to this topic if needed
+        topic_question_allotment = questions_per_topic
+        if topic_index < extra_questions:
+            topic_question_allotment += 1
+
+        topic_questions_generated = 0
+            
         # Generate questions for each question type
         for q_type in question_types:
-            # Skip if we've already reached our quota for this question type
-            if questions_per_type.get(q_type, 0) <= 0:
-                continue
+            # Calculate questions for this type for this topic
+            type_questions = questions_per_type.get(q_type, 0)
+            if topic_index < extra_questions and q_type == question_types[0]:
+                type_questions += 1  # Add extra question to first type of topics that get extras
                 
-            logging.debug(f"Generating {questions_per_type[q_type]} {q_type} questions for topic: {topic}")
+            logging.debug(f"Generating {type_questions} {q_type} questions for topic: {topic}")
             
-            for _ in range(questions_per_type[q_type]):
+            for _ in range(type_questions):
                 # Stop if we've hit our total question limit
                 if total_questions_generated >= num_questions:
                     break
@@ -383,13 +400,93 @@ def generate_test(user, topics, test_length, difficulty, question_types):
                     current_question_pull.append(q["question"])  # Avoid duplicates
                     question_number += 1  # Increment question number
                     total_questions_generated += 1
+                    topic_questions_generated += 1
+                    
+                    # Stop if we've generated enough questions for this topic
+                    if topic_questions_generated >= topic_question_allotment:
+                        break
+            
+            # Stop generating questions for this topic if we've met its quota
+            if topic_questions_generated >= topic_question_allotment:
+                break
+    
+    # Second pass: fill in any remaining questions needed to meet the target
+    while total_questions_generated < num_questions:
+        logging.info(f"Need {num_questions - total_questions_generated} more questions to reach target of {num_questions}")
         
-        # Move to the next topic if we've hit our quota
-        if total_questions_generated >= num_questions:
-            break
+        # Choose a random topic and question type to generate the remaining questions
+        import random
+        random_topic = random.choice(topics)
+        random_type = random.choice(question_types)
+        
+        text = fetch_topic_text(random_topic, user)
+        if not text:
+            continue
+        
+        question_data = generate_question(random_topic, text, random_type, difficulty, current_question_pull)
+        if not question_data:
+            continue
+            
+        for q in question_data:
+            if total_questions_generated >= num_questions:
+                break
+                
+            logging.debug(f"Generated additional Question {question_number}: {q['question']}")
+
+            test["questions"][str(question_number)] = {
+                "question": q["question"],
+                "options": q["choices"],
+                "answer": q["answer"],
+                "type": q["type"],
+                "difficulty": q["difficulty"]
+            }
+            current_question_pull.append(q["question"])
+            question_number += 1
+            total_questions_generated += 1
 
     logging.info(f"Test generation complete. Total questions: {len(test['questions'])}")
-    return test["questions"] # I got lazy
+    
+    # Final verification to ensure we have exactly the right number of questions
+    if len(test["questions"]) != num_questions:
+        logging.warning(f"Expected {num_questions} questions but generated {len(test['questions'])}. Adjusting...")
+        
+        # If too few, generate more
+        if len(test["questions"]) < num_questions:
+            while len(test["questions"]) < num_questions:
+                random_topic = random.choice(topics)
+                random_type = random.choice(question_types)
+                text = fetch_topic_text(random_topic, user)
+                
+                if not text:
+                    continue
+                    
+                question_data = generate_question(random_topic, text, random_type, difficulty, current_question_pull)
+                if not question_data:
+                    continue
+                
+                for q in question_data:
+                    if len(test["questions"]) >= num_questions:
+                        break
+                        
+                    test["questions"][str(question_number)] = {
+                        "question": q["question"],
+                        "options": q["choices"],
+                        "answer": q["answer"],
+                        "type": q["type"],
+                        "difficulty": q["difficulty"]
+                    }
+                    question_number += 1
+        
+        # If too many, remove some
+        elif len(test["questions"]) > num_questions:
+            excess = len(test["questions"]) - num_questions
+            for _ in range(excess):
+                # Remove the highest-numbered questions
+                max_key = max(map(int, test["questions"].keys()))
+                del test["questions"][str(max_key)]
+    
+    logging.info(f"Final test contains exactly {len(test['questions'])} questions.")
+    return test["questions"]
 """
 Excpected output of test:
 test:

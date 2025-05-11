@@ -38,6 +38,10 @@ import SubmittedTestReview from "./pages/SubmittedTestReview";
 import DailyQuiz from "./pages/DailyQuiz";
 import CreateCheatsheet from "./pages/CreateCheatsheet";
 import CheatsheetView from "./pages/CheatsheetView";
+import AdaptivePathway from "./pages/AdaptivePathway";
+import PathwaySession from "./pages/PathwaySession";
+import ShareTest from "./pages/ShareTest";
+import SharedTest from "./pages/SharedTest";
 
 function App() {
   const dropdown = useRef(null)
@@ -79,32 +83,63 @@ function App() {
 
   useEffect(()=>{
     const getLoggedInUser = async()=>{
-      const response = await fetch("http://127.0.0.1:5000/users", {
-        method: "GET", // Use the appropriate HTTP method
-        headers: {
-            "Authorization": `Bearer ${token}`, // Attach the Bearer token
-        },
-    });
+      if (!token) {
+        console.log("No token available, cannot fetch user data");
+        return;
+      }
+      
+      console.log("Fetching user data with token:", token);
+      try {
+        const response = await fetch("http://127.0.0.1:5000/users", {
+          method: "GET",
+          headers: {
+              "Authorization": `Bearer ${token}`,
+          },
+        });
 
-    // Parse and handle the response
-    if (response.ok) {
-        const data = await response.json();
-        setProfileImg(data.img_url);
-        setUsername(data.username)
-        setEmail(data.email)
-        setSaves(data?.saves ?? [])
-        setDarkTheme(data?.dark_theme)
-        if(data?.dark_theme){
-          document.body.setAttribute("data-theme", "dark");
+        // Parse and handle the response
+        if (response.ok) {
+            const data = await response.json();
+            console.log("User data fetched successfully:", data);
+            
+            // Set profile image with fallback
+            if (data.img_url && data.img_url.trim() !== "") {
+              setProfileImg(data.img_url);
+            } else {
+              setProfileImg(LoadingImg); // Use default image
+            }
+            
+            // Set username with fallback
+            if (data.username) {
+              setUsername(data.username);
+            } else {
+              console.warn("Username not found in user data");
+            }
+            
+            setEmail(data.email || "");
+            setSaves(data?.saves ?? []);
+            
+            // Handle theme
+            setDarkTheme(!!data?.dark_theme);
+            if(data?.dark_theme){
+              document.body.setAttribute("data-theme", "dark");
+            } else {
+              document.body.removeAttribute("data-theme");
+            }
+        } else {
+            console.error("Error Response:", response.status, response.statusText);
+            const errorText = await response.text();
+            console.error("Error Details:", errorText);
         }
-        console.log("Response Data:", data);
-    } else {
-        console.error("Error Response:", response.status, response.statusText);
-    }
-    }
+      } catch (error) {
+        console.error("Exception fetching user data:", error);
+      }
+    };
 
-    getLoggedInUser()
-  }, [token])
+    if (token) {
+      getLoggedInUser();
+    }
+  }, [token]);
 
 
   function changeDropdownView() {
@@ -422,9 +457,14 @@ function App() {
           <Route path="/submitted-tests" element={<SubmittedTests />} />
           <Route path="/submitted-tests/:submission_id/review/:question_id" element={<SubmittedTestReview />} />
           <Route path="/daily-quiz" element={<DailyQuiz />} />
+          <Route path="/adaptive-pathway" element={<AdaptivePathway />} />
+          <Route path="/adaptive-pathway/:session_id" element={<PathwaySession />} />
+          <Route path="/share-test" element={<ShareTest />} />
         </Route>
         
-        
+        {/* SharedTest doesn't need authentication */}
+        <Route path="/shared-test/:testId" element={<SharedTest />} />
+
         <Route path="*" element={<Page404/>}></Route>
       </Route>
 

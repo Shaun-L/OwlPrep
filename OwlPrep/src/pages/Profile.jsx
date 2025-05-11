@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import { FaUser } from "react-icons/fa";
@@ -130,7 +129,16 @@ export default function Profile({changeProfileImg, userLoggedInEmail}){
         getData()
     }, [])
 
-    const itemsMapped = tests.slice(currentPage*9-9, currentPage*9).map((item)=><StudyItemContainer title={item.name} type={item.type} creator={creator.username} key={item.id} id={item.id} profileImg={creator.img_url}/>)
+    const itemsMapped = tests.slice(currentPage*9-9, currentPage*9).map((item)=><StudyItemContainer 
+        title={item.name} 
+        type={item.type} 
+        creator={creator.username} 
+        key={item.id} 
+        id={item.id} 
+        profileImg={creator.img_url}
+        difficulty={item.difficulty} 
+        test_length={item.test_length}
+    />)
 
     return (<>
     <div className={"modal " + (showModal && "showModal")}>

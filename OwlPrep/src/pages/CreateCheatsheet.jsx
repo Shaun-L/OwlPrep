@@ -4,8 +4,6 @@ import { db } from "../firebaseUtils";
 import { collection, addDoc } from "firebase/firestore";
 import FileUploadedComponent from "../components/FileUploadedComponent";
 import { byteConverter } from "../utils/byteconverter";
-import SampleQuestionModal from "../components/SampleQuestionModal";
-import SampleQuestionItem from "../components/SampleQuestionItem";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { API_URL } from "../constants";
@@ -18,10 +16,7 @@ export default function CreateCheatsheet({ topics, uploadedFiles, changeUploaded
     const [size, setSize] = useState(1); // 0=Small, 1=Medium, 2=Large
     const [definitionsSelected, setDefinitionsSelected] = useState(true);
     const [examplesSelected, setExamplesSelected] = useState(true);
-    const [graphicsSelected, setGraphicsSelected] = useState(true);
     const [bulletsSelected, setBulletsSelected] = useState(true);
-    const [sampleQuestions, setSampleQuestions] = useState([]);
-    const [showSampleQuestionModal, setShowSampleQuestionModal] = useState(false);
     const [formError, setFormError] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
     const [isGenerating, setIsGenerating] = useState(false);
@@ -32,11 +27,11 @@ export default function CreateCheatsheet({ topics, uploadedFiles, changeUploaded
 
     useEffect(() => {
         setFormError(false);
-    }, [uploadedFiles, topics, definitionsSelected, examplesSelected, graphicsSelected, bulletsSelected, size, hintLevel]);
+    }, [uploadedFiles, topics, definitionsSelected, examplesSelected, bulletsSelected, size, hintLevel]);
 
     async function generateCheatsheet() {
         // Validation checks
-        if (!definitionsSelected && !examplesSelected && !graphicsSelected && !bulletsSelected) {
+        if (!definitionsSelected && !examplesSelected && !bulletsSelected) {
             setFormError(true);
             setErrorMsg("Must select at least one hint type");
             return;
@@ -67,7 +62,6 @@ export default function CreateCheatsheet({ topics, uploadedFiles, changeUploaded
         const hintTypes = [];
         if (definitionsSelected) hintTypes.push("Definitions");
         if (examplesSelected) hintTypes.push("Examples");
-        if (graphicsSelected) hintTypes.push("Graphics");
         if (bulletsSelected) hintTypes.push("Bullet points from slides");
 
         // Prepare data for API call
@@ -76,8 +70,7 @@ export default function CreateCheatsheet({ topics, uploadedFiles, changeUploaded
             topics: selectedTopics,
             hint_level: hintLevel,
             size: size,
-            hint_types: hintTypes,
-            sample_questions: sampleQuestions
+            hint_types: hintTypes
         };
 
         try {
@@ -119,14 +112,6 @@ export default function CreateCheatsheet({ topics, uploadedFiles, changeUploaded
         window.open(`${API_URL}/cheatsheet/download/${generatedCheatsheet.id}?token=${token}`, '_blank');
     }
 
-    function closeModal() {
-        setShowSampleQuestionModal(false);
-    }
-
-    function deleteSampleQuestion(question) {
-        setSampleQuestions(old => old.filter(val => val.question !== question));
-    }
-
     // Render file selectors for uploaded files
     const fileSelectors = uploadedFiles.map(file => {
         return (
@@ -142,15 +127,6 @@ export default function CreateCheatsheet({ topics, uploadedFiles, changeUploaded
 
     return (
         <>
-            {showSampleQuestionModal && (
-                <SampleQuestionModal 
-                    closeModal={closeModal} 
-                    setSampleQuestions={setSampleQuestions} 
-                    sampleQuestions={sampleQuestions} 
-                    onDelete={deleteSampleQuestion}
-                />
-            )}
-            
             <div id="createTestPageContainer">
                 <div>
                     <h1>Generate a Cheatsheet</h1>
@@ -223,17 +199,6 @@ export default function CreateCheatsheet({ topics, uploadedFiles, changeUploaded
                                 <label className="checkbox-label custom-checkbox">
                                     <input 
                                         type="checkbox" 
-                                        onChange={() => setGraphicsSelected(!graphicsSelected)} 
-                                        name="hint-type" 
-                                        value="Graphics" 
-                                        checked={graphicsSelected}
-                                    />
-                                    <span className="custom-check"></span>
-                                    Graphics
-                                </label>
-                                <label className="checkbox-label custom-checkbox">
-                                    <input 
-                                        type="checkbox" 
                                         onChange={() => setBulletsSelected(!bulletsSelected)} 
                                         name="hint-type" 
                                         value="Bullet points from slides" 
@@ -242,33 +207,6 @@ export default function CreateCheatsheet({ topics, uploadedFiles, changeUploaded
                                     <span className="custom-check"></span>
                                     Bullet points from slides
                                 </label>
-                            </div>
-
-                            <div className="sampleQuestionFormField">
-                                <div className="flex">
-                                    <p className="form-heading">Sample Questions:</p> 
-                                    <button 
-                                        onClick={() => setShowSampleQuestionModal(true)}
-                                        className="button addQuestionBtn" 
-                                        type="button"
-                                    >
-                                        +
-                                    </button>
-                                </div>
-                                <div className="sampleQuestionContainer">
-                                    {sampleQuestions.length === 0 ? (
-                                        <p>Custom questions will be shown here</p>
-                                    ) : (
-                                        sampleQuestions.map((val, i) => (
-                                            <SampleQuestionItem 
-                                                key={i}
-                                                questionNumber={i + 1} 
-                                                question={val.question} 
-                                                onDelete={deleteSampleQuestion}
-                                            />
-                                        ))
-                                    )}
-                                </div>
                             </div>
 
                             <div className="topics-in-grid">

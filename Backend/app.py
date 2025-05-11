@@ -6,8 +6,9 @@ import firebase_admin
 from processing import process_pdf
 from firebase_config import db
 from firebase_admin import firestore, auth, credentials
-from testgenerator import generate_test
+from testgenerator import generate_test, generate_question
 from datetime import datetime
+import json
 
 
 app = Flask(__name__)
@@ -82,36 +83,40 @@ def upload_file():
     filename = filename.replace("_", " ")
 
     # Process PDF
-    topic_data = process_pdf(file_path)
+    try:
+        topic_data = process_pdf(file_path)
 
-    # Store topics under the user instead of files
-    user_doc_ref = db.collection("users").document(uid)
+        # Store topics under the user instead of files
+        user_doc_ref = db.collection("users").document(uid)
 
-    topics_list = [
-        {
+        topics_list = []
+        for topic, data in topic_data.items():
+            # Check if text is a string or a list and handle accordingly
+            if isinstance(data["text"], list):
+                text_content = "\n\n".join(data["text"])
+            else:
+                text_content = data["text"]
+                
+            topics_list.append({
             "topic": topic,
-            "text": data["text"]
-        }
-        for topic, data in topic_data.items()
-    ]
+                "text": text_content
+            })
 
     # Add the topics to the user document
-    #May need i dont know
-    #
-    user_doc_ref.set({
-        "topics": topics_list
-    }, merge=True)
+        user_doc_ref.set({
+            "topics": topics_list
+        }, merge=True)
 
-    # Fetch the file document with its topics and timestamp
-    print("Hello")
-   
-    
+        print("File processed successfully")
 
     # Return both the processed topic_data and the file data from Firebase
-    return jsonify({
-        "message": "File processed successfully",
-        "topics": topic_data,  # Return the topics from PDF processing
-    })
+        return jsonify({
+            "message": "File processed successfully",
+            "topics": topic_data,  # Return the topics from PDF processing
+        })
+    except Exception as e:
+        print(f"Error processing file: {str(e)}")
+        return jsonify({"error": f"Error processing file: {str(e)}"}), 500
 
 
 @app.route("/users", methods=["PUT"])
@@ -351,7 +356,7 @@ def get_tests():
         # If test_dict is still None, test doesn't exist in either collection
         if not test_dict:
             return jsonify({"error": "Test not found"}), 404
-            
+
         if question_number:
             # Check if questions key exists and the question number is valid
             if "questions" not in test_dict or question_number not in test_dict["questions"]:
@@ -394,7 +399,7 @@ def get_tests():
                 del response_user_dict["dark_theme"]
             
             return jsonify({"test": response_test_dict, "creator": response_user_dict}), 200
-
+    
     if search_query:
         tests = db.collection("tests").get()
         
@@ -724,6 +729,86 @@ def generate_test_route():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
+@app.route("/tests/<test_id>/share", methods=["GET"])
+def get_shared_test(test_id):
+    """
+    Get a test by ID without requiring authentication for sharing.
+    This endpoint allows anyone with the test ID to access the test.
+    """
+    print(f"Accessing shared test with ID: {test_id}")
+    try:
+        # Get the test document
+        test_doc = db.collection("tests").document(test_id).get()
+        
+        if not test_doc.exists:
+            print(f"Test not found: {test_id}")
+            return jsonify({"error": "Test not found"}), 404
+            
+        test_data = test_doc.to_dict()
+        print(f"Test found: {test_data.get('title', 'Untitled')}")
+        
+        # Create a shareable version (exclude certain fields)
+        shareable_test = {
+            "id": test_id,
+            "title": test_data.get("title", "Shared Test"),
+            "description": test_data.get("description", ""),
+            "type": test_data.get("type", "Quiz"),
+            "questions": test_data.get("questions", []),
+            "shared": True,
+            "original_user": test_data.get("user"),  # Keep track of original creator
+            "created_at": test_data.get("created_at")
+        }
+        
+        return jsonify(shareable_test), 200
+        
+    except Exception as e:
+        print(f"Error retrieving shared test: {str(e)}")
+        return jsonify({"error": f"Error retrieving test: {str(e)}"}), 500
+
+@app.route("/tests/<test_id>/clone", methods=["POST"])
+def clone_shared_test(test_id):
+    """
+    Clone a shared test for the current user.
+    """
+    try:
+        # Check authorization
+        if "Authorization" not in request.headers:
+            return jsonify({"error": "Not authorized"}), 401
+        
+        uid = get_current_user(header=request.headers)
+        if not uid:
+            return jsonify({"error": "Authentication error"}), 401
+        
+        # Get the original test
+        test_doc = db.collection("tests").document(test_id).get()
+        if not test_doc.exists:
+            return jsonify({"error": "Test not found"}), 404
+            
+        original_test = test_doc.to_dict()
+        
+        # Create a clone for the current user
+        cloned_test = {
+            "title": f"{original_test.get('title', 'Shared Test')} (Cloned)",
+            "description": original_test.get("description", ""),
+            "type": original_test.get("type", "Quiz"),
+            "questions": original_test.get("questions", []),
+            "user": uid,
+            "cloned_from": test_id,
+            "original_user": original_test.get("user"),
+            "created_at": firestore.SERVER_TIMESTAMP,
+        }
+        
+        # Add to database
+        _, test_ref = db.collection("tests").add(cloned_test)
+        
+        return jsonify({
+            "id": test_ref.id,
+            "message": "Test cloned successfully"
+        }), 201
+        
+    except Exception as e:
+        print(f"Error cloning test: {str(e)}")
+        return jsonify({"error": f"Error cloning test: {str(e)}"}), 500 
 
 ### Test Grader ###
 @app.route("/submit-test", methods=["POST"])
@@ -1151,13 +1236,27 @@ def get_user_cheatsheets():
 @app.route("/cheatsheet/download/<cheatsheet_id>", methods=["GET"])
 def download_cheatsheet(cheatsheet_id):
     try:
-        # Check for authorization
-        if "Authorization" not in request.headers:
+        # Check for authorization in headers or query parameters
+        token = None
+        
+        # First check headers
+        if "Authorization" in request.headers:
+            token_header = request.headers["Authorization"]
+            if token_header.startswith("Bearer "):
+                token = token_header.split("Bearer ")[1]
+        
+        # If not in headers, check query parameters
+        if not token and "token" in request.args:
+            token = request.args.get("token")
+        
+        if not token:
             return jsonify({"error": "Not authorized"}), 401
         
-        uid = get_current_user(header=request.headers)
-        if not uid:
-            return jsonify({"error": "Authentication error"}), 401
+        # Verify token
+        try:
+            uid = auth.verify_id_token(token)["uid"]
+        except Exception as e:
+            return jsonify({"error": f"Invalid token: {str(e)}"}), 401
         
         # Get the cheatsheet from Firestore
         cheatsheet_doc = db.collection("cheatsheets").document(cheatsheet_id).get()
@@ -1528,7 +1627,29 @@ def get_daily_quiz():
         question_items = list(questions.items())
         if len(question_items) > 10:
             question_items = question_items[:10]
-        questions = {k: v for k, v in question_items}
+        elif len(question_items) < 10:
+            # If we don't have enough questions, log this issue
+            logging.warning(f"Daily quiz generated only {len(question_items)} questions instead of 10")
+            
+            # We should not need this fallback since we fixed the generate_test function,
+            # but keeping it as an extra precaution
+            while len(question_items) < 10:
+                # Generate more questions to fill in the gaps
+                additional_questions = generate_test(uid, selected_topics, "Short", "Medium", question_types)
+                additional_items = list(additional_questions.items())
+                
+                # Add new questions until we reach 10
+                for item in additional_items:
+                    if len(question_items) >= 10:
+                        break
+                    # Only add if not a duplicate question number
+                    if item[0] not in [q[0] for q in question_items]:
+                        question_items.append(item)
+        
+        # Ensure questions are numbered sequentially from 1-10
+        questions = {}
+        for i, (_, question_data) in enumerate(question_items[:10], 1):
+            questions[str(i)] = question_data
         
         # Create the daily quiz object
         daily_quiz = {
@@ -1545,6 +1666,10 @@ def get_daily_quiz():
             "created": datetime.now().strftime("%m/%d/%y"),
             "is_daily": True  # Additional field to easily identify daily quizzes
         }
+        
+        # Verify we have exactly 10 questions
+        if len(daily_quiz["questions"]) != 10:
+            return jsonify({"error": f"Failed to generate exactly 10 questions. Generated {len(daily_quiz['questions'])} instead."}), 500
         
         # Save the generated quiz in the regular tests collection
         quiz_ref = db.collection("tests").add(daily_quiz)
@@ -1672,6 +1797,419 @@ def get_user_submitted_tests():
     except Exception as e:
         print("Error fetching submitted tests:", str(e))  # Add logging
         return jsonify({"error": str(e)}), 500
+
+# Add the new adaptive learning pathway endpoints
+@app.route("/adaptive-pathway/start", methods=["POST"])
+def start_adaptive_pathway():
+    """
+    Start a new adaptive learning pathway session based on selected topics.
+    """
+    try:
+        # Check authorization
+        if "Authorization" not in request.headers:
+            return jsonify({"error": "Not authorized"}), 401
+        
+        uid = get_current_user(header=request.headers)
+        if not uid:
+            return jsonify({"error": "Authentication error"}), 401
+        
+        # Get request data
+        data = request.json
+        selected_topics = data.get("topics", [])
+        
+        if not selected_topics:
+            return jsonify({"error": "At least one topic must be selected"}), 400
+        
+        # Fetch user's topics data
+        user_doc = db.collection("users").document(uid).get()
+        if not user_doc.exists:
+            return jsonify({"error": "User not found"}), 404
+            
+        user_data = user_doc.to_dict()
+        user_topics = user_data.get("topics", [])
+        
+        # Verify topics exist
+        valid_topics = []
+        topic_texts = {}
+        
+        for topic_name in selected_topics:
+            topic_found = False
+            for topic in user_topics:
+                if topic["topic"] == topic_name:
+                    valid_topics.append(topic_name)
+                    topic_texts[topic_name] = topic["text"]
+                    topic_found = True
+                    break
+            
+            if not topic_found:
+                return jsonify({"error": f"Topic '{topic_name}' not found in user's materials"}), 400
+        
+        # Generate initial questions (5 questions)
+        question_types = ["MCQ", "T/F", "SAQ", "SMQ"]
+        questions = generate_adaptive_questions(uid, valid_topics, topic_texts, 5, question_types)
+        
+        # Create a new pathway session
+        pathway_session = {
+            "user": uid,
+            "topics": valid_topics,
+            "current_round": 1,
+            "total_rounds": 0,
+            "question_types": question_types,
+            "questions": questions,
+            "answers": {},
+            "topic_mastery": {topic: 0 for topic in valid_topics},  # 0% mastery to start
+            "created": datetime.now().strftime("%m/%d/%y"),
+            "last_updated": datetime.now().strftime("%m/%d/%y"),
+            "status": "active"
+        }
+        
+        # Save the session
+        session_ref = db.collection("adaptive_pathways").add(pathway_session)
+        session_id = session_ref[1].id
+        
+        # Return the session data with questions
+        return jsonify({
+            "session_id": session_id,
+            "topics": valid_topics,
+            "current_round": 1,
+            "questions": questions,
+            "topic_mastery": pathway_session["topic_mastery"]
+        }), 201
+        
+    except Exception as e:
+        print(f"Error starting adaptive pathway: {str(e)}")
+        return jsonify({"error": f"Error starting adaptive pathway: {str(e)}"}), 500
+
+@app.route("/adaptive-pathway/<session_id>/submit", methods=["POST"])
+def submit_adaptive_answers(session_id):
+    """
+    Submit answers for the current round and get new questions based on performance.
+    """
+    try:
+        # Check authorization
+        if "Authorization" not in request.headers:
+            return jsonify({"error": "Not authorized"}), 401
+        
+        uid = get_current_user(header=request.headers)
+        if not uid:
+            return jsonify({"error": "Authentication error"}), 401
+        
+        # Get answers from request
+        data = request.json
+        answers = data.get("answers", {})
+        
+        if not answers:
+            return jsonify({"error": "No answers provided"}), 400
+        
+        # Get the pathway session
+        session_doc = db.collection("adaptive_pathways").document(session_id).get()
+        if not session_doc.exists:
+            return jsonify({"error": "Pathway session not found"}), 404
+            
+        session_data = session_doc.to_dict()
+        
+        # Verify user owns this session
+        if session_data.get("user") != uid:
+            return jsonify({"error": "Unauthorized to access this pathway session"}), 403
+            
+        # Verify session is active
+        if session_data.get("status") != "active":
+            return jsonify({"error": "Pathway session is no longer active"}), 400
+            
+        # Grade the answers
+        questions = session_data.get("questions", {})
+        correct_count = 0
+        total_questions = len(answers)
+        
+        results = {}
+        topic_performance = {}
+        
+        for question_id, user_answer in answers.items():
+            if question_id in questions:
+                question = questions[question_id]
+                correct = is_answer_correct(question, user_answer)
+                
+                # Track performance by topic
+                topic = question.get("topic")
+                if topic not in topic_performance:
+                    topic_performance[topic] = {"correct": 0, "total": 0}
+                
+                topic_performance[topic]["total"] += 1
+                if correct:
+                    correct_count += 1
+                    topic_performance[topic]["correct"] += 1
+                
+                results[question_id] = {
+                    "correct": correct,
+                    "question": question["question"],
+                    "user_answer": user_answer,
+                    "correct_answer": question["answer"] if question["type"] != "SAQ" else question["expected_answer"]
+                }
+        
+        # Update topic mastery
+        topic_mastery = session_data.get("topic_mastery", {})
+        
+        for topic, perf in topic_performance.items():
+            if perf["total"] > 0:
+                # Add 10% mastery if all correct, 5% if some correct, -5% if all wrong
+                correct_ratio = perf["correct"] / perf["total"]
+                
+                if correct_ratio == 1.0:
+                    # All correct - add 10%
+                    mastery_change = 10
+                elif correct_ratio > 0:
+                    # Some correct - add 5%
+                    mastery_change = 5
+                else:
+                    # All wrong - subtract 5% (but not below 0)
+                    mastery_change = -5
+                
+                topic_mastery[topic] = max(0, min(100, topic_mastery[topic] + mastery_change))
+        
+        # Update session with new data
+        current_round = session_data.get("current_round", 1) + 1
+        all_topics_mastered = all(mastery >= 90 for mastery in topic_mastery.values())
+        
+        # Decide if we should continue or end the session
+        if all_topics_mastered:
+            status = "completed"
+            new_questions = {}
+        else:
+            status = "active"
+            # Generate new questions, focusing on topics with lower mastery
+            low_mastery_topics = [t for t, m in topic_mastery.items() if m < 90]
+            
+            # Get topic texts
+            user_doc = db.collection("users").document(uid).get()
+            user_data = user_doc.to_dict()
+            user_topics = user_data.get("topics", [])
+            
+            topic_texts = {}
+            for topic_data in user_topics:
+                if topic_data["topic"] in low_mastery_topics:
+                    topic_texts[topic_data["topic"]] = topic_data["text"]
+            
+            # Generate new questions based on weaker topics
+            new_questions = generate_adaptive_questions(
+                uid, 
+                low_mastery_topics, 
+                topic_texts,
+                5, 
+                session_data.get("question_types", ["MCQ", "T/F"])
+            )
+        
+        # Save all results
+        session_ref = db.collection("adaptive_pathways").document(session_id)
+        
+        # Update the session
+        session_ref.update({
+            "current_round": current_round,
+            "total_rounds": session_data.get("total_rounds", 0) + 1,
+            "answers": {**session_data.get("answers", {}), **answers},
+            "topic_mastery": topic_mastery,
+            "questions": new_questions,
+            "last_updated": datetime.now().strftime("%m/%d/%y"),
+            "status": status
+        })
+        
+        # Return session progress and next questions
+        round_score = (correct_count / total_questions) * 100 if total_questions > 0 else 0
+        
+        return jsonify({
+            "session_id": session_id,
+            "current_round": current_round,
+            "round_results": {
+                "score": round_score,
+                "correct": correct_count,
+                "total": total_questions,
+                "question_results": results
+            },
+            "topic_mastery": topic_mastery,
+            "questions": new_questions,
+            "status": status,
+            "all_topics_mastered": all_topics_mastered
+        }), 200
+        
+    except Exception as e:
+        print(f"Error submitting adaptive pathway answers: {str(e)}")
+        return jsonify({"error": f"Error submitting answers: {str(e)}"}), 500
+
+@app.route("/adaptive-pathway/<session_id>", methods=["GET"])
+def get_adaptive_pathway_session(session_id):
+    """
+    Get the current state of an adaptive learning pathway session.
+    """
+    try:
+        # Check authorization
+        if "Authorization" not in request.headers:
+            return jsonify({"error": "Not authorized"}), 401
+        
+        uid = get_current_user(header=request.headers)
+        if not uid:
+            return jsonify({"error": "Authentication error"}), 401
+        
+        # Get the pathway session
+        session_doc = db.collection("adaptive_pathways").document(session_id).get()
+        if not session_doc.exists:
+            return jsonify({"error": "Pathway session not found"}), 404
+            
+        session_data = session_doc.to_dict()
+        
+        # Verify user owns this session
+        if session_data.get("user") != uid:
+            return jsonify({"error": "Unauthorized to access this pathway session"}), 403
+        
+        # Return session data
+        return jsonify({
+            "session_id": session_id,
+            "topics": session_data.get("topics", []),
+            "current_round": session_data.get("current_round", 1),
+            "total_rounds": session_data.get("total_rounds", 0),
+            "questions": session_data.get("questions", {}),
+            "topic_mastery": session_data.get("topic_mastery", {}),
+            "status": session_data.get("status", "active")
+        }), 200
+        
+    except Exception as e:
+        print(f"Error getting adaptive pathway session: {str(e)}")
+        return jsonify({"error": f"Error retrieving session: {str(e)}"}), 500
+
+@app.route("/adaptive-pathway/list", methods=["GET"])
+def list_adaptive_pathways():
+    """
+    List all adaptive learning pathway sessions for the user.
+    """
+    try:
+        # Check authorization
+        if "Authorization" not in request.headers:
+            return jsonify({"error": "Not authorized"}), 401
+        
+        uid = get_current_user(header=request.headers)
+        if not uid:
+            return jsonify({"error": "Authentication error"}), 401
+        
+        # Get all pathway sessions for this user
+        sessions_ref = db.collection("adaptive_pathways").where("user", "==", uid).get()
+        
+        sessions = []
+        for doc in sessions_ref:
+            session_data = doc.to_dict()
+            sessions.append({
+                "id": doc.id,
+                "topics": session_data.get("topics", []),
+                "current_round": session_data.get("current_round", 1),
+                "total_rounds": session_data.get("total_rounds", 0),
+                "topic_mastery": session_data.get("topic_mastery", {}),
+                "status": session_data.get("status", "active"),
+                "created": session_data.get("created", ""),
+                "last_updated": session_data.get("last_updated", "")
+            })
+        
+        return jsonify({
+            "sessions": sessions
+        }), 200
+        
+    except Exception as e:
+        print(f"Error listing adaptive pathways: {str(e)}")
+        return jsonify({"error": f"Error listing sessions: {str(e)}"}), 500
+
+def generate_adaptive_questions(uid, topics, topic_texts, num_questions, question_types):
+    """
+    Generate adaptive questions focusing on the provided topics.
+    This is a simplified version that distributes questions evenly among topics.
+    """
+    questions = {}
+    question_number = 1
+    
+    # Distribute questions evenly among topics
+    questions_per_topic = max(1, num_questions // len(topics))
+    remaining_questions = num_questions - (questions_per_topic * len(topics))
+    
+    for topic in topics:
+        topic_question_count = questions_per_topic + (1 if remaining_questions > 0 else 0)
+        remaining_questions -= 1 if remaining_questions > 0 else 0
+        
+        # Get topic text
+        text = topic_texts.get(topic)
+        if not text:
+            continue
+            
+        # Get question types to use
+        types_to_use = question_types.copy()
+        
+        # Generate questions for this topic
+        for i in range(topic_question_count):
+            # Select a question type
+            q_type = types_to_use[i % len(types_to_use)]
+            
+            # Generate the question
+            question_data = generate_question(topic, text, q_type, "Medium", [])
+            
+            if question_data and len(question_data) > 0:
+                q = question_data[0]
+                
+                # Add to questions
+                questions[str(question_number)] = {
+                    "question": q["question"],
+                    "options": q.get("choices", []),
+                    "answer": q.get("answer", q.get("expected_answer", "")),
+                    "expected_answer": q.get("expected_answer", ""),
+                    "type": q["type"],
+                    "topic": topic
+                }
+                
+                question_number += 1
+    
+    return questions
+
+def is_answer_correct(question, user_answer):
+    """
+    Check if the user's answer is correct based on the question type.
+    """
+    q_type = question.get("type")
+    
+    if q_type == "MCQ" or q_type == "T/F":
+        # For multiple choice and true/false, compare indices
+        try:
+            correct_answer = int(question.get("answer"))
+            user_answer_int = int(user_answer)
+            return correct_answer == user_answer_int
+        except:
+            return False
+            
+    elif q_type == "SMQ":
+        # For select many, compare arrays of indices
+        try:
+            correct_answers = question.get("answer", [])
+            
+            # Convert user_answer to list if it's a string
+            if isinstance(user_answer, str):
+                try:
+                    user_answer = json.loads(user_answer)
+                except:
+                    return False
+            
+            # Sort both lists for comparison
+            if isinstance(correct_answers, list) and isinstance(user_answer, list):
+                return sorted(correct_answers) == sorted(user_answer)
+            return False
+        except:
+            return False
+            
+    elif q_type == "SAQ":
+        # For short answer, use keyword matching
+        # This is simplified - in real app you'd want more sophisticated text matching
+        expected_answer = question.get("expected_answer", "").lower()
+        user_answer_text = str(user_answer).lower()
+        
+        # Check if key keywords from expected answer are in user answer
+        keywords = [word for word in expected_answer.split() if len(word) > 3]
+        matches = sum(1 for keyword in keywords if keyword in user_answer_text)
+        
+        # Consider correct if at least 50% of keywords match
+        return matches >= max(1, len(keywords) // 2)
+    
+    return False
 
 if __name__ == "__main__":
     app.run(debug=True)

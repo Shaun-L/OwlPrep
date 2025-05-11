@@ -1,6 +1,6 @@
 import { useState } from "react";
 import PropTypes from 'prop-types';
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import LoginImage from "../assets/svg.svg"
 import { LuUserRound } from "react-icons/lu";
@@ -15,7 +15,12 @@ function Login({logginUser}) {
   const [errMsg, setErrMsg] = useState("")
   const [formError, setFormError] = useState(false)
   const navigate = useNavigate();
+  const location = useLocation();
   const { token, setToken } = useContext(TokenContext);
+  
+  // Check if we have a redirect path from where the user came
+  const returnPath = location.state?.returnPath || "/";
+  const redirectMessage = location.state?.message || "";
 
   const handleLogin = async () => {
     if(email.trim() == "" || password.trim() == ""){
@@ -28,14 +33,33 @@ function Login({logginUser}) {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await userCredential.user.getIdToken();
 
-        // Store the token securely
+      // Store the token securely
       setToken(idToken)
-      console.log(idToken)
+      
+      // Fetch user data immediately after login
+      try {
+        const response = await fetch("http://127.0.0.1:5000/users", {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${idToken}`,
+          },
+        });
+        
+        if (response.ok) {
+          console.log("Fetched user data after login");
+        }
+      } catch (error) {
+        console.error("Error fetching user data after login:", error);
+      }
+      
       logginUser()
-      navigate("/");
+      
+      // Redirect to the return path or homepage
+      navigate(returnPath);
       
     } catch (error) {
-      alert("Error logging in: " + error.message);
+      setErrMsg("Error logging in: " + error.message);
+      setFormError(true);
     }
   };
 
@@ -43,10 +67,14 @@ function Login({logginUser}) {
     <div className="login-container">
       <img src={LoginImage} alt="" />
 
-
-
        <form className="login-form">
           <h1>Login</h1>
+          
+          {/* Show redirect message if available */}
+          {redirectMessage && (
+            <p className="redirect-message">{redirectMessage}</p>
+          )}
+          
           <label>
           <LuUserRound />
           <input
@@ -67,7 +95,7 @@ function Login({logginUser}) {
             placeholder="Password"
           />
           </label>
-          <Link>Forgot password?</Link>
+          <Link to="/forgot-password">Forgot password?</Link>
           {formError && <p className="errorMsg">{errMsg}</p>}
           <button type="button" onClick={handleLogin} id="loginBtn">Login</button>
           <Link to="/signup" id="toCreate">Create an account</Link>

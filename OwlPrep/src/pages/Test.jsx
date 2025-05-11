@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom"
 import { MdOutlineAccessTime } from "react-icons/md";
 import { MdOutlineBookmarkAdd } from "react-icons/md";
 import { MdOutlineBookmarkAdded } from "react-icons/md";
+import { FaShare } from "react-icons/fa";
 import LoadingImg from "../assets/loading.png"
 import { useContext } from "react";
 import { TokenContext } from "../hooks/TokenContext";
@@ -23,7 +24,10 @@ export default function Test({saves, editSaves}){
     const [questionTypes, setQuestionTypes] = useState([])
     const {token, setToken} = useContext(TokenContext)
     const [loading, setLoading] = useState(true)
-    const [taken, setTaken] = useState(true)
+    const [testSubmissions, setTestSubmissions] = useState([])
+    const [hasSubmissions, setHasSubmissions] = useState(false)
+    const [lastScore, setLastScore] = useState(null)
+    const [showShareTooltip, setShowShareTooltip] = useState(false);
     
     const navigate = useNavigate()
     
@@ -39,8 +43,35 @@ export default function Test({saves, editSaves}){
             setTestDifficulty(data.test.difficulty)
             setTestDateCreated(data.test?.created ?? "2/32/32")
             setQuestionTypes(data.test.question_types)
+            setLoading(false)
         })
-    }, [])
+
+        if (token) {
+            fetch(`http://127.0.0.1:5000/submitted-tests`, {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }            
+            }).then(res=>res.json())
+            .then(data => {
+                if (data.submitted_tests && data.submitted_tests.length > 0) {
+                    const filteredSubmissions = data.submitted_tests.filter(
+                        submission => submission.original_test_id === id
+                    )
+                    
+                    setTestSubmissions(filteredSubmissions)
+                    setHasSubmissions(filteredSubmissions.length > 0)
+                    
+                    if (filteredSubmissions.length > 0) {
+                        setLastScore(filteredSubmissions[0].score_percentage)
+                    }
+                }
+            })
+            .catch(err => {
+                console.error("Error fetching test submissions:", err)
+            })
+        }
+    }, [id, token])
 
     const handleSaveOnClick = async()=>{
         if(token){
@@ -69,6 +100,18 @@ export default function Test({saves, editSaves}){
         }
     }
 
+    const handleShareOnClick = () => {
+        // Copy the test ID to clipboard
+        navigator.clipboard.writeText(id)
+            .then(() => {
+                setShowShareTooltip(true);
+                setTimeout(() => setShowShareTooltip(false), 2000);
+            })
+            .catch(err => {
+                console.error('Failed to copy test code: ', err);
+            });
+    }
+
     const saved = saves.includes(id)
 
 
@@ -80,7 +123,24 @@ export default function Test({saves, editSaves}){
 
     <div className="flex testTitleContainer">
     <h1>{testName}</h1>
-    <button type="button" className={saved ? "added" : ""} onClick={handleSaveOnClick}>{saved ? <MdBookmarkAdded className="added"/> : <MdOutlineBookmarkAdd/>}</button>
+    <div className="test-action-buttons">
+        <button 
+            type="button" 
+            className="share-button" 
+            onClick={handleShareOnClick}
+            title="Copy test code to share"
+        >
+            <FaShare />
+            {showShareTooltip && <span className="share-tooltip">Test code copied!</span>}
+        </button>
+        <button 
+            type="button" 
+            className={saved ? "added" : ""} 
+            onClick={handleSaveOnClick}
+        >
+            {saved ? <MdBookmarkAdded className="added"/> : <MdOutlineBookmarkAdd/>}
+        </button>
+    </div>
     </div>
 
     
@@ -95,24 +155,32 @@ export default function Test({saves, editSaves}){
 
     
     <div>
-        <p className="testDescription">Test Results</p>
+        <p className="testDescription">{hasSubmissions ? "Your Latest Result" : "Test Overview"}</p>
 
-        <div id="gradedResult" style={{ position: "relative", width: "max-content", margin: "auto"}}>
-        <ProgressBar progress={60} radius={100} />
-        <div
-        className="resultText"
-        style={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          fontSize: "40px",
-          fontWeight: "bold",
-        }}
-      >
-        64%
-      </div>
-    </div>
+        {loading ? (
+            <div className="test-loading">Loading test details...</div>
+        ) : hasSubmissions && lastScore !== null ? (
+            <div id="gradedResult" style={{ position: "relative", width: "max-content", margin: "auto"}}>
+                <ProgressBar progress={lastScore} radius={100} />
+                <div
+                    className="resultText"
+                    style={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        fontSize: "40px",
+                        fontWeight: "bold",
+                    }}
+                >
+                    {lastScore}%
+                </div>
+            </div>
+        ) : (
+            <div className="test-info-highlight">
+                <p>You haven't taken this test yet. Start the test to see your results here!</p>
+            </div>
+        )}
     </div>
     
 
@@ -157,7 +225,10 @@ export default function Test({saves, editSaves}){
         
     </div>
 
-    <Link to={`/tests/${id}/1`} id="takeTestBtn" className="mainBtn">Take this test</Link>
+    <div className="test-bottom-actions">
+        <Link to={`/tests/${id}/1`} id="takeTestBtn" className="mainBtn">Take this test</Link>
+        <Link to="/share-test" className="secondary-btn">Find shared tests</Link>
+    </div>
     </main>
     </>
 }

@@ -9,6 +9,8 @@ import { LuLetterText } from "react-icons/lu";
 import { GiOwl } from "react-icons/gi";
 import { RxHamburgerMenu } from "react-icons/rx";
 import { MdOutlineCalendarToday } from "react-icons/md";
+import { FaChalkboardTeacher } from "react-icons/fa";
+import { FaShare } from "react-icons/fa";
 import File_Dropzone from "../components/File_Dropzone";
 import { IoMdArrowDropdown } from "react-icons/io";
 import { VscFeedback } from "react-icons/vsc";
@@ -61,6 +63,8 @@ export default function Default({loggedIn, topics, setTopics, logout,closeDropdo
                 <NavLink to="/create-cheatsheet" className={({isActive})=>(isActive ? 'activeLink' : '')}><LuFileSpreadsheet/> Cheatsheet</NavLink>
                 <NavLink to="/create-test" className={({isActive})=>(isActive ? 'activeLink' : '')}><LuLetterText/> Practice Test</NavLink>
                 <NavLink to="/daily-quiz" className={({isActive})=>(isActive ? 'activeLink' : '')}><MdOutlineCalendarToday/> Daily Quiz</NavLink>
+                <NavLink to="/adaptive-pathway" className={({isActive})=>(isActive ? 'activeLink' : '')}><FaChalkboardTeacher/> Adaptive Learning</NavLink>
+                <NavLink to="/share-test" className={({isActive})=>(isActive ? 'activeLink' : '')}><FaShare/> Share Test</NavLink>
             </div>
 
             <div className="fileUploadArea sideNavSubContainer">
