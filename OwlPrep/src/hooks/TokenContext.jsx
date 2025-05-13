@@ -29,7 +29,13 @@ export const TokenProvider = ({ children }) => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
                 // Fetch and set a fresh ID token for authenticated users
+                console.log(user)
                 const idToken = await user.getIdToken(true);
+                const { metadata } = user;
+                if (metadata.creationTime === metadata.lastSignInTime) {
+                    // New account, don't store token
+                    return 
+                }
                 setToken(idToken);
 
                 const { exp } = JSON.parse(atob(idToken.split('.')[1]));

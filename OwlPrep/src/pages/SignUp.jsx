@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { db } from "../firebaseUtils";
@@ -7,6 +7,7 @@ import LoginImage from "../assets/svg.svg"
 import { LuUserRound } from "react-icons/lu";
 import { IoKeyOutline } from "react-icons/io5";
 import { MdOutlineEmail } from "react-icons/md";
+import { TokenContext } from "../hooks/TokenContext";
 
 
 function SignUp() {
@@ -15,10 +16,18 @@ function SignUp() {
   const [password, setPassword] = useState("");
   const [errMsg, setErrMsg] = useState("")
   const [formError, setFormError] = useState(false)
+  const {token} = useContext(TokenContext)
   // New state for last name
 
+ 
 
   const navigate = useNavigate();
+
+   useEffect(()=>{
+    if(token){
+      navigate("/")
+    }
+  }, [])
 
   useEffect(()=>{
     setFormError(false)

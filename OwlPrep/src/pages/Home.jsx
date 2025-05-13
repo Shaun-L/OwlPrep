@@ -22,6 +22,7 @@ export default function Home(){
     const [tfFilterSelected, setTFFilterSelected] = useState(true)
     const [smFilterSelected, setSMSelected] = useState(true)
     const [difficultyFilter, setDifficultyFilter] = useState("All")
+    const [contentFilter, setContentFilter] = useState("All")
     const [numberOfPages, setNumberOfPages] = useState(1)
     const [loading, setLoading] = useState(false)
     const [currentPage, setCurrentPage] = useState(1)
@@ -127,6 +128,7 @@ export default function Home(){
         setSMSelected(true)
         setShowFilterDropdown(false)
         setDifficultyFilter("All")
+        setContentFilter("All")
         console.log(items)
     }, [searchParams, token])
 
@@ -147,8 +149,10 @@ export default function Home(){
 
     const filteredItems = getAllItems().filter(item => {
         // Skip filtering for cheatsheets
-        if (item.test.type === "Cheatsheet") {
+        if (contentFilter == "Cheatsheet" && item.test.type === "Cheatsheet") {
             return true;
+        }else if(contentFilter == "Cheatsheet"){
+            return false
         }
         
         // Filter out daily quizzes
@@ -195,7 +199,7 @@ export default function Home(){
                 <NavLink to="/?q=history" className={({ isActive}) => searchParams.get("q") == "history" && isActive ? 'activeLink' : ''
   }><button>History</button></NavLink>
             </div>
-            <div className="home-tabs">
+            {/* <div className="home-tabs">
                 <button 
                     className={activeTab === "all" ? "tab-active" : ""} 
                     onClick={() => setActiveTab("all")}
@@ -214,7 +218,7 @@ export default function Home(){
                 >
                     Cheatsheets
                 </button>
-            </div>
+            </div> */}
             <div className="filter-container">
                 <button onClick={()=>{setShowFilterDropdown(!showFilterDropdown)}}>Filters <FaFilter/></button>
                 {showFilterDropdown && <div id="filter-dropdown">
@@ -232,6 +236,14 @@ export default function Home(){
                     <option value={"Easy"}>Easy</option>
                     <option value={"Medium"}>Medium</option>
                     <option value={"Hard"}>Hard</option>
+                </select>
+
+                <p>Study Content</p>
+                <select name="difficultyFilter" value={contentFilter} onChange={(e)=>setContentFilter(e.currentTarget.value)}>
+                    <option value={"All"}>Any</option>
+                    <option value={"Practice Test"}>Tests</option>
+                    <option value={"Cheatsheet"}>Cheatsheets</option>
+                    
                 </select>
                 
                 </div>}

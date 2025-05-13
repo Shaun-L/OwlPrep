@@ -210,17 +210,12 @@ const AdaptivePathway = () => {
 
     if (loading) {
         return (
-            <div className="adaptive-pathway-container">
-                <div className="loading-spinner">
-                    <TailSpin
-                        visible={true}
-                        height="50"
-                        width="50"
-                        color="var(--primary-color)"
-                        ariaLabel="tail-spin-loading"
-                    />
-                    <p>Loading your learning pathways...</p>
+            <div className="adaptive-pathway-container" style={{marginTop: "2rem", display: "flex", justifyContent: "center", flexDirection: "column", alignItems: "center", maxWidth: "1000px"}}>
+                <div className="loading-spinner" >
+                    
+                    
                 </div>
+                <p>Loading your learning pathways...</p>
             </div>
         );
     }

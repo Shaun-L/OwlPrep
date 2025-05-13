@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PropTypes from 'prop-types';
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
@@ -17,6 +17,13 @@ function Login({logginUser}) {
   const navigate = useNavigate();
   const location = useLocation();
   const { token, setToken } = useContext(TokenContext);
+
+
+  useEffect(()=>{
+    if(token){
+      navigate("/")
+    }
+  })
   
   // Check if we have a redirect path from where the user came
   const returnPath = location.state?.returnPath || "/";

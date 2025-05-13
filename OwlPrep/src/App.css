@@ -1762,7 +1762,7 @@ div.questionsLinkContainer a{
   border: 1px solid var(--border-color);
   border-radius: 2px;
   font-weight: 600;
-  width: 80px;
+
 }
 
 #feedbackForm textarea{
