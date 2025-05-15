@@ -24,14 +24,16 @@ export default function Home(){
     const [difficultyFilter, setDifficultyFilter] = useState("All")
     const [contentFilter, setContentFilter] = useState("All")
     const [numberOfPages, setNumberOfPages] = useState(1)
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(true)
     const [currentPage, setCurrentPage] = useState(1)
     const [activeTab, setActiveTab] = useState("all") // all, tests, cheatsheets
     const { token, setToken } = useContext(TokenContext)
+    const [fetchedTest, setFetchedTest] = useState(false)
+    const [fetchedCheetsheet, setFetchedCheatsheet] = useState(false)
 
     useEffect(()=>{
         const fetchTestData = async ()=> {
-            setLoading(true)
+            
             if(searchParams.get("q") && searchParams.get("q") !== ""){
                 try {
                     const res = await fetch(`http://127.0.0.1:5000/tests?q=${searchParams.get("q")}`, {method: "GET"});
@@ -60,9 +62,12 @@ export default function Home(){
                     console.error("Error fetching test data: ", error);
                 }
             }
+
+            setFetchedTest(true)
         }
 
         const fetchCheatsheetsData = async () => {
+            setLoading(true)
             if (token) {
                 try {
                     console.log("Fetching cheatsheets with token:", token);
@@ -104,6 +109,8 @@ export default function Home(){
                         console.warn("No cheatsheets found in the response");
                         setCheatsheets([]);
                     }
+
+                    
                 } catch (error) {
                     console.error("Error fetching cheatsheets:", error);
                     if (error.response) {
@@ -111,16 +118,26 @@ export default function Home(){
                         console.error("Response status:", error.response.status);
                     }
                     setCheatsheets([]);
+                    
                 }
             } else {
                 console.warn("No token available for fetching cheatsheets");
                 setCheatsheets([]);
+                
             }
-            setLoading(false);
+
+            setFetchedCheatsheet(true)
+
+            
         };
+
+        setLoading(true)
 
         fetchTestData();
         fetchCheatsheetsData();
+        
+
+        
         
         setMCFilterSelected(true)
         setSAFilterSelected(true)
@@ -131,6 +148,12 @@ export default function Home(){
         setContentFilter("All")
         console.log(items)
     }, [searchParams, token])
+
+    useEffect(()=>{
+        if(fetchedCheetsheet && fetchedTest){
+            setLoading(false)
+        }
+    }, [fetchedCheetsheet, fetchedTest])
 
     // Get all items based on the active tab
     const getAllItems = () => {
@@ -189,6 +212,7 @@ export default function Home(){
         />
     ));
 
+    console.log("Loading", loading)
     return(<>
         <div id="home-header">
             <div>
@@ -253,6 +277,7 @@ export default function Home(){
 
         <div id="itemsContainer">
             {
+                
                 loading ? (
                     <div className="homeLoadingContainer">
                         <TailSpin visible={true} height="40" width="40" color={getComputedStyle(document.documentElement).getPropertyValue('--secondary-text-color').trim()} ariaLabel="tail-spin-loading" radius="1" />
